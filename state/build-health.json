@@ -1,28 +1,29 @@
 {
-  "grade": "C",
-  "consecutive_passing": 0,
-  "last_run": "2026-05-16T22:19:00Z",
+  "grade": "B",
+  "consecutive_passing": 1,
+  "last_run": "2026-05-16T22:43:00Z",
   "last_error": null,
   "converged": false,
   "mode": "build",
   "findings": [
-    "Phase 1: PASS — headless exits 0, GAME_COMPLETE, 240 AGENT_ACTION events",
+    "Phase 1: PASS — headless exits 0, GAME_COMPLETE",
     "Phase 2: PASS — all 5 endpoints return 200",
-    "Phase 3: 240/240 decisions were fallback — Claude outputs markdown analysis but personality prompts lack JSON output format instruction. Speedrunner agent moved (6,20→4,3). Enemies moved. All dungeon scores 0 — agents died before scoring. No patches."
+    "Phase 3: 8 real Claude decisions (DECISIONS 240 > FALLBACK 232). Speedrunner moved (6,20→6,3). 1 PATCH_APPLIED. Only aggressive survived to end (HP 106). Arena skipped (1 seed). Dungeon scores all 0."
   ],
   "acceptance_results": {
     "build_passes": true,
     "headless_exits_0": true,
     "sprites_load": true,
     "dashboard_serves": true,
-    "real_decisions_made": false,
-    "patch_events_during_run": false,
+    "real_decisions_made": true,
+    "patch_events_during_run": true,
     "agent_movement_detected": true,
     "enemy_movement_detected": true
   },
   "history": [
     { "grade": "F", "timestamp": "2026-05-16T21:30:00Z" },
     { "grade": "C", "timestamp": "2026-05-16T22:02:00Z" },
-    { "grade": "C", "timestamp": "2026-05-16T22:19:00Z" }
+    { "grade": "C", "timestamp": "2026-05-16T22:19:00Z" },
+    { "grade": "B", "timestamp": "2026-05-16T22:43:00Z" }
   ]
 }
