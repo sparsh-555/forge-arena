@@ -1,5 +1,5 @@
 {
-  "_comment": "READ ONLY. Never patched. PatchApplier validates all patches against these values. Max ±30% deviation allowed.",
+  "_comment": "READ ONLY. Never patched. PatchApplier anchors all HoG patches to these values. Up: baseline*(1+n*0.20) cap 2.5x. Down: baseline*(1-n*0.12) floor 0.40x. Only constraint: newValue > 0.",
   "stamina": {
     "heavy_attack_cost": 30,
     "medium_attack_cost": 20,

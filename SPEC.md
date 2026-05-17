@@ -187,6 +187,11 @@ kill $SERVER_PID 2>/dev/null; wait $SERVER_PID 2>/dev/null
 - **`DashboardPayload` sends tiles as flat top-level fields** — `tiles: Tile[][]`, `mapWidth: number`, `mapHeight: number` — NOT nested under a `map` object. `toDashboardPayload()` must keep this shape; dashboard `GameView.tsx` reads `payload.tiles`, `payload.mapWidth`, `payload.mapHeight` directly.
 - **WebSocket emits two distinct message types.** `broadcast(state)` sends a full `DashboardPayload` snapshot every round. `broadcastPatch(patch)` sends `{ type: "PATCH_EVENT", patch: PatchEvent }` immediately when a patch is applied. Dashboard checks `msg.type === "PATCH_EVENT"` first, then parses as DashboardPayload. Never merge these into one message type.
 - **`GameLoop` must stamp `lastReasoning` on each `AgentState` before calling `broadcast`.** Set `agent.lastReasoning = action.reasoning` immediately after all agent decisions are collected, before `applyAgentAction`. Omitting this means the dashboard reasoning panels always show "waiting for decision..." regardless of real API activity.
+- **`AgentAPI` MUST use the Anthropic streaming API (`stream: true`) with early abort.** Parse the SSE stream and abort the request as soon as a valid JSON action block is extracted. Non-streaming waits for the full response (~6s/call); streaming with early abort reduces to ~1.5s/call. This is critical for `DEMO_MODE` 300ms rounds to feel responsive.
+- **`run-full-game.js` MUST reset `game-config.json` from `game-config.baseline.json` at startup.** Stale HoG patches from a previous run persist if `game-config.json` is not reset. Always write baseline values to `game-config.json` as the first action in `main()`.
+- **Arena entry MUST reset stamina costs to baseline values.** HoG patches dungeon stamina costs mid-game. These must not carry into arena fights. `runArenaPhase` must call `resetStaminaToBaseline()` (from `PatchApplier.ts`) before the first arena round. Failure causes arena agents to face heavily-distorted stamina economics.
+- **Item pickup MUST award `dungeonScore` immediately.** Each ground item collected via `pick_up_item` increments `agent.dungeonScore` by 1. Chest contents award one point per item collected. Score must update in real time — not only at game end.
+- **`bossKilled` flag MUST appear in `AgentStatePayload`.** Set `bossKilled: true` in `toAgentPayload()` once `agent.bossKilled` is true. Agents that already killed their boss must not re-enter the boss fight loop; speedrunner personality depends on this field to stop looping the boss entrance.
 
 ## Architecture Constraints
 
@@ -223,6 +228,7 @@ The `GamePhase` enum in types.ts must encode all six states. Server rejects inva
 |---|---|---|---|
 | `EnemyAction` | `newPosition?: Position` | optional | Set by EnemyAI for move actions; GameLoop reads this to update `enemy.position` |
 | `AgentState` | `lastReasoning?: string` | optional | Most recent reasoning string from Claude; GameLoop sets this before `broadcast()`; dashboard reads it for the reasoning panel |
+| `AgentStatePayload` | `bossKilled?: boolean` | optional | True once agent has killed their personal boss instance; agents stop targeting boss entrance after this; speedrunner uses it to exit boss-hunt loop |
 | `DungeonMap` | `width: number` | required | Must equal MAP_WIDTH (30) |
 | `DungeonMap` | `height: number` | required | Must equal MAP_HEIGHT (22) |
 | `DungeonMap` | `dungeonEntrancePosition: Position` | required | Bottom-left entrance room centre; all 4 agents spawn clustered within 5 tiles of this point |
@@ -325,7 +331,7 @@ game-server/src/
 | Type | HP | Damage | Behavior | Spawn Location | Dungeon Points |
 |---|---|---|---|---|---|
 | Grunt | 30 | 8 | Move toward nearest agent, attack if adjacent | All rooms | 1 |
-| Brute | 70 | 18 | Move toward nearest agent, telegraphs heavy strike 1 turn ahead | Medium/large rooms | 2 |
+| Brute | 70 | 10 | Move toward nearest agent, telegraphs heavy strike 1 turn ahead | Medium/large rooms | 2 |
 | Sentinel | 120 | 12 | Blocks every 3rd turn, summons Grunt at 30% HP | Large rooms | 3 |
 | Hex Caster | 50 | 14 | Stays at range 3–4 tiles, ranged hex attack (bypasses armor reduction) | Large rooms (>50 tiles), alongside Sentinel (50/50 split) | 2 |
 | Shade | 25 | 10 | Ambushes from unexplored corridors; 50% miss chance on first strike only | Corridors and unexplored tiles | 1 |
@@ -400,8 +406,8 @@ Leaderboard shown on dashboard throughout. Updates after each dungeon round and 
 
 ### Live Evolution (Hand of God)
 
-- After every 3 dungeon rounds or 3 arena turns, the Evaluator reads `state/game-events.jsonl`.
-- If a metric exceeds a threshold (e.g., one personality win rate > 75% over last 5 rounds), Evaluator writes a `PatchSuggestion` to `state/patch-queue.jsonl`.
+- After every 2 dungeon rounds or 2 arena turns, the Evaluator reads `state/game-events.jsonl`.
+- If `leadGap >= 2` (leading agent's kill count exceeds second-place by 2 or more) **or** any personality rate falls below 10%, the Evaluator writes a `PatchSuggestion` to `state/patch-queue.jsonl`. Classic win-rate thresholds (> 75%) also trigger patches but `leadGap` fires faster and more reliably during early rounds.
 - Balance worker validates and applies to `game-config.json` atomically.
 - **Next round**: all agents receive `recent_patches` in their payload. Agents are expected to read and reason about patches.
 - **Dungeon patches**: enemy stat adjustments + new enemy/item spawns in unexplored tiles.
@@ -422,7 +428,7 @@ All patchable values live in `game-config.json`. Workers must read from config �
 | `enemies.grunt_hp` | 30 | Yes | |
 | `enemies.grunt_damage` | 8 | Yes | |
 | `enemies.brute_hp` | 70 | Yes | |
-| `enemies.brute_damage` | 18 | Yes | |
+| `enemies.brute_damage` | 10 | Yes | Baseline set to 10 (was 18). At 18 a brute kills any 150-HP agent in 8 hits — too fast for strategic play |
 | `enemies.sentinel_hp` | 120 | Yes | |
 | `enemies.sentinel_damage` | 12 | Yes | |
 | `enemies.hex_caster_hp` | 50 | Yes | |
@@ -435,7 +441,7 @@ All patchable values live in `game-config.json`. Workers must read from config �
 | `agents.starting_stamina` | 100 | No | |
 | `agents.estus_heal_fraction` | 0.6 | No | Fraction of maxHp restored per charge |
 | `agents.estus_count` | 3 | No | Charges per agent |
-| `balance.max_patches_per_phase` | 3 | No | |
+| `balance.max_patches_per_phase` | 6 | No | Raised from 3 to sustain visible HoG activity across a full 5-minute demo session |
 | `balance.patch_trigger_kill_ratio` | 0.5 | No | Kill share threshold to trigger patch |
 | `balance.arena_win_bonus` | 15 | No | Score points for arena winner |
 | `balance.arena_runnerup_bonus` | 5 | No | Score points for arena runner-up |
@@ -487,7 +493,7 @@ Each personality is a CLAUDE.md file at `personalities/{agentId}/CLAUDE.md`. The
 |---|---|---|---|---|---|
 | aggressive | sword (baseDamage 15) | Maximize damage output at all costs | Highest base damage weapon always. Ignore armor/shield. | Heavy attacks. Never block. Heal only < 20% HP. | Prioritize enemies over items. Engage everything. |
 | cautious | dagger (baseDamage 8) + leather_armor (armorReduction 0.15) | Survive longest, outlast opponents | Max armor first, then shield, then weapon. | Block often. Medium attacks. Heal at < 50% HP. | Clear rooms methodically. Avoid risk. |
-| hoarder | dagger (baseDamage 8) | Collect everything, adapt in arena | Collect all items regardless of type. Use backpack swap strategy in arena. | Balanced approach, adapt to opponent gear. | Full map sweep. Never skip a chest. |
+| hoarder | dagger (baseDamage 8) | Sprint to every chest, flee dungeon enemies, deploy best gear in arena | Chest-first always. Skip enemies unless blocking path. Flee on HP < 50%. Swap to best gear each arena round. | Adapt to opponent — use heaviest weapon vs low-armor foes, equip shield vs high-damage attackers. | Beeline to nearest visible chest. Never engage enemies voluntarily. Full backpack = power spike at arena entry. |
 | speedrunner | dagger (baseDamage 8) | Race to boss, ignore everything else | Take first weapon found, nothing else. | Light attacks to save stamina for movement. Skip enemies unless blocking path. |
 
 **Starting weapon constraint:** Valid weapon names are `sword`, `axe`, `dagger`, `greatsword` only. `greatsword` is chest loot only — never a starting weapon (one-shots grunts, breaks early balance). Starting equipment is fixed per personality; workers must not change these.
@@ -583,6 +589,14 @@ The planner identified these risks during the architecture phase and designed mi
 - **Risk**: The dungeon score calculation in `run-full-game.js` checked `agent.status === "eliminated"` and zeroed the score. An agent who killed 5 enemies before dying got score 0. Surviving agents with 0 kills could outrank them for arena seeding.
 - **Mitigation**: Score calculation reads `agent.kills` directly regardless of elimination status. Dead agents retain their kill count for arena seeding purposes. The `eliminated` check was removed from the score loop.
 
+### PITFALL 11 — HoG Patch Inflation
+- **Risk**: Each HoG patch is computed as `currentValue ± delta`. After 3 patches to the same key, the value has drifted far from baseline: e.g., `grunt_hp` starts at 30, first patch → 25, second → 21, third → 18. But if the HoG intended "nerf grunt HP by 15%" each time, the third nerf is actually 40% off baseline. The patches compound and values spiral toward 0 or infinity.
+- **Mitigation**: All HoG patch values are anchored to `game-config.baseline.json`. Formula: up = `baseline × (1 + n × 0.20)`, capped at `baseline × 2.5`; down = `baseline × (1 - n × 0.12)`, floored at `baseline × 0.40`. `n` is the count of previous patches to that key this phase. `PatchApplier.ts` exports `getNestedValue(baseline, key)` for computing anchor deltas.
+
+### PITFALL 12 — Arena Stamina Contamination
+- **Risk**: HoG patches `game-config.json` stamina costs during the dungeon phase (e.g., `heavy_attack_cost` raised from 30 to 48 to nerf the aggressive agent). When the dungeon phase ends and arena begins, the game loop still reads from the same `game-config.json`. Arena agents face 48-stamina heavy attacks — 60% more expensive than designed. Aggressive agents run out of stamina in 2–3 turns.
+- **Mitigation**: `PatchApplier.ts` exports `resetStaminaToBaseline()`. `runArenaPhase()` calls this before the first arena round. It atomically rewrites all `stamina.*` keys in `game-config.json` back to baseline values. Enemy stat patches (grunt HP, brute damage) persist into the arena, but stamina economics are always reset.
+
 ### Out of Scope
 - Multiplayer (human players)
 - Infinite dungeon levels (single floor only)
@@ -602,10 +616,20 @@ The planner identified these risks during the architecture phase and designed mi
 
 | Script | Purpose | Must |
 |---|---|---|
-| `demo-start.sh` | Single command to start the live demo | Set `ANTHROPIC_API_KEY` from env, run `cd game-server && node dist/server.js` in background, open browser to localhost:3000, then run `node run-full-game.js` (no --headless). Exit cleanly when game ends. |
+| `demo-start.sh` | Single command to start the live demo | Set `ANTHROPIC_API_KEY` from env, run `cd game-server && node dist/server.js` in background, open browser to localhost:3000, then run `DEMO_MODE=true node run-full-game.js --seed 42`. Exit cleanly when game ends. |
 | `preflight.sh` | Pre-demo validation | Already provided. Run before demo: `bash preflight.sh` must exit 0. |
 
 Both scripts live at the repo root and must be executable (`chmod +x`).
+
+### Demo Modes
+
+| Mode | Dungeon Timer | Round Interval | API Timeout | Seed | When to use |
+|---|---|---|---|---|---|
+| `DEMO_MODE=true` | 45s | 300ms | 8000ms | Fixed (`--seed 42`) | Live audience demo — fast, reproducible, visually compelling |
+| `FAST_MODE=true` | 120s | 2000ms | 3500ms | Random | Evaluator CI runs — tests real code paths quickly |
+| _(neither)_ | 300s | 2000ms | 8000ms | Random | Full fidelity run — pre-demo validation only |
+
+`--seed <N>` and `--seed=<N>` both work. `DEMO_MODE=true` with `--seed 42` is the canonical demo invocation. Fixed seed ensures a consistent run if judges ask to see it again.
 
 ## Required Living Artifacts
 

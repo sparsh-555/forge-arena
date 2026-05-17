@@ -184,5 +184,60 @@ All implemented during the final polish sprint.
   - Battle mechanics reference informed arena turn-based UI design
 - This narrative proves the harness independently discovered and integrated external resources.
 
+## Sprint 6 — Demo Polish (2026-05-17)
+
+All of the following were discovered and implemented during the final demo polish session. Workers must not undo them.
+
+### Streaming API — Round Latency Collapse
+
+AgentAPI migrated from blocking fetch to Anthropic streaming API (`stream: true`). SSE stream is parsed in real time; the stream is **aborted** as soon as a valid JSON action block is extracted. Result: per-round latency dropped from ~6s (full response) to ~1.5s (early abort). This is required for `DEMO_MODE` 300ms rounds to feel snappy. Implementation in `AgentAPI.ts`: parse `content_block_delta` SSE events, accumulate text, `controller.abort()` on first valid JSON match containing `goal` and `reasoning`.
+
+### DEMO_MODE — Live Audience Parameters
+
+`DEMO_MODE=true` environment variable: 45s dungeon timer, 300ms round interval, 8000ms API timeout, fixed seed 42. Invocation: `DEMO_MODE=true node run-full-game.js --seed 42`. This is the canonical demo command and what `demo-start.sh` runs. `FAST_MODE=true` remains for evaluator CI (120s, 2s rounds, no seed).
+
+`--seed <N>` and `--seed=<N>` are both parsed. Seed is passed to `DungeonGen.ts` so the same map layout plays every demo run — judges can compare runs consistently.
+
+### HoG Patch Inflation — Root Cause and Fix
+
+**Root cause:** HoG chose `newValue = currentValue × factor`. After 3 patches to the same key, compounding pushed values below 0.4× baseline. `brute_damage` hit 6 on the 3rd intervention (started at 18, already patched twice). Irrelevant by round 4.
+
+**Fix:** All HoG patch values anchored to `game-config.baseline.json`. Up formula: `baseline × (1 + n × 0.20)`, cap at `baseline × 2.5`. Down formula: `baseline × (1 - n × 0.12)`, floor at `baseline × 0.40`. `n` = number of previous patches to that key in this phase. Patch counts tracked in `choosePatch()` via `patchCounts: Record<string, number>` passed from `runDungeonPhase()`.
+
+**game-config.json reset to baseline at run start:** Added `fs.copyFileSync(baselinePath, configPath)` at top of `main()` in `run-full-game.js`. Prevents stale patches from a previous run carrying over into the next.
+
+### Arena Stamina Contamination — Root Cause and Fix
+
+**Root cause:** HoG raised stamina costs during dungeon (e.g., `heavy_attack_cost` to 48 to nerf aggressive). Arena still read from `game-config.json` — arena agents faced 60% higher stamina costs than designed. Aggressive agent drained stamina in 2 turns.
+
+**Fix:** `PatchApplier.ts` exports `resetStaminaToBaseline()`. Atomically rewrites all `stamina.*` keys from baseline before first arena round. Enemy stat patches (grunt HP, brute damage) are intentionally preserved into arena — only stamina is reset.
+
+### HoG Trigger Tuning
+
+- **Frequency:** Every 2 dungeon rounds (was 3). Demo lasts 45s = ~22 rounds. At 3-round triggers = 7 patches max. At 2-round triggers = 11 patches max. More patches = more visible Hand of God activity.
+- **Trigger condition:** `leadGap >= 2` (leading agent kills ≥ 2 ahead of second place). Fires faster than the old `winRate > 75%` threshold — reacts within 4–6 rounds of a lead opening up.
+- **Max patches raised to 6** (was 3). With 45s demo, 3 patches weren't enough to show HoG meaningfully rebalancing.
+- **Patch rotation:** When leading agent is kill-dominant, rotate through `heavy_attack_cost` → `medium_attack_cost` → `light_attack_cost` cyclically (whichever has fewest prior patches). Prevents same key being spammed 6 times.
+
+### brute_damage Lethality Fix
+
+At `brute_damage = 18`: 150 HP / 18 = 8.3 hits to death. With 2s rounds and 1 brute in the room, an agent trapped against a wall dies in ~16s with no time for strategic decisions. Agents were dying before any HoG patch could fire.
+
+At `brute_damage = 10`: ~15 hits to death. Agent survives ~30s against a single brute — enough for 3–4 rounds of decisions. Baseline updated to 10. Old SPEC table entry of 18 was incorrect and removed.
+
+### Hoarder Personality Rewrite
+
+Old hoarder: generic balanced fighter with "collect everything" passive. Identical to cautious in practice.
+
+New hoarder: **chest-sprinter + flee-then-deploy**. Dungeon: beeline to nearest visible chest, flee all enemies (unless cornered), use `use_estus` at HP < 50% to survive long enough to reach the next chest. Never engage enemies voluntarily. Arena: backpack full of gear = first-turn equipment swap to best weapon + armor combo before any attacks. This creates a distinct, visible personality — judges can tell hoarder apart from cautious at a glance.
+
+### Item Pickup Score Events
+
+Item pickup (`pick_up_item`) now awards `dungeonScore += 1` immediately per item. Chest contents award 1 point per item in the chest. Score updates in real time during the dungeon phase — the leaderboard panel shows score ticking up as agents loot. This makes hoarder's strategy visually legible (score climbs from looting, not just kills).
+
+### bossKilled Payload Field
+
+`toAgentPayload()` now includes `bossKilled: boolean`. Agents whose boss is already dead receive `bossKilled: true`. Speedrunner personality uses this to exit the boss-hunt loop — without it, speedrunner re-enters the boss entrance tile every round after the kill, wasting turns.
+
 ## Blocked Items
 (None)

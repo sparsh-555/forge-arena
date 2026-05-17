@@ -11,7 +11,7 @@
     "grunt_hp": 30,
     "grunt_damage": 8,
     "brute_hp": 70,
-    "brute_damage": 10,
+    "brute_damage": 4,
     "sentinel_hp": 120,
     "sentinel_damage": 12,
     "hex_caster_hp": 50,

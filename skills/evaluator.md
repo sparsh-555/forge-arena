@@ -36,6 +36,24 @@ wait $SERVER_PID 2>/dev/null
 
 **Pass criteria:** ALL five curl commands return HTTP 200.
 
+Also run these static checks — failures here indicate broken core contracts:
+
+```bash
+# Streaming API must be enabled — non-streaming rounds take 6s+ and stall DEMO_MODE
+grep -c 'stream: true' game-server/src/AgentAPI.ts
+# Must be >= 1
+
+# Arena stamina reset must exist — prevents HoG contamination of arena stamina costs
+grep -c 'resetStaminaToBaseline' game-server/src/GameLoop.ts
+# Must be >= 1
+
+# game-config reset at run start
+grep -c 'copyFileSync.*baseline\|baseline.*copyFileSync\|resetStaminaToBaseline\|copyFile.*baseline' game-server/run-full-game.js
+# Must be >= 1
+```
+
+If any static check fails → downgrade final grade by one step (A→B, B→C).
+
 Common failures and their fixes:
 - `agent sprite: 404` → server.ts is not serving `game-server/public/` as a static directory. Add `app.use(express.static(path.join(__dirname, "../public")))` before the dashboard static call.
 - `dashboard: 000` (connection refused) → server crashed on start. Check for missing imports or unhandled errors in dist/.
@@ -59,6 +77,7 @@ cd game-server
 
 # Start the full live game — FAST_MODE keeps dungeon to 120s, still real API calls
 # No --headless. No NO_API. This runs exactly as the demo would.
+# Note: if DEMO_MODE=true is set, dungeon runs only 45s — adjust wait time accordingly.
 FAST_MODE=true timeout 600 node run-full-game.js 2>&1 | tee /tmp/forge-arena-run.log &
 GAME_PID=$!
 sleep 5
@@ -144,6 +163,33 @@ console.log('ARENA_COMPLETED:', arenaEnd);
 # Check 5 — Patches fired
 PATCHES=$(grep -c '"type":"PATCH_APPLIED"' ../state/game-events.jsonl 2>/dev/null || echo 0)
 echo "PATCHES_APPLIED: $PATCHES"
+
+# Check 6 — Item scoring (item pickup must award dungeonScore)
+node -e "
+const fs = require('fs');
+const lines = fs.readFileSync('../state/game-events.jsonl','utf8').trim().split('\n')
+  .map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+const pickupActions = lines.filter(e =>
+  e.type === 'AGENT_ACTION' && (e.data?.goal === 'pick_up_item' || e.data?.goal === 'pick_up_chest')
+);
+const scoreEvents = lines.filter(e => e.type === 'ROUND_STATE');
+// Verify at least one agent accumulated dungeonScore > 0 during dungeon
+const hasItemScore = scoreEvents.some(e =>
+  e.agents && Object.values(e.agents).some((a) => (a.dungeonScore ?? 0) > 0)
+);
+console.log('ITEM_PICKUP_ACTIONS:', pickupActions.length);
+console.log('ITEM_SCORING_PASS:', hasItemScore ? 'true' : 'false');
+" 2>/dev/null
+
+# Check 7 — Arena combat logging (arena must emit round events)
+node -e "
+const fs = require('fs');
+const lines = fs.readFileSync('../state/game-events.jsonl','utf8').trim().split('\n')
+  .map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+const arenaRounds = lines.filter(e => e.type === 'ROUND_STATE' && e.phase && e.phase.startsWith('ARENA'));
+console.log('ARENA_ROUND_EVENTS:', arenaRounds.length);
+console.log('ARENA_LOGGING_PASS:', arenaRounds.length > 0 ? 'true' : 'false');
+" 2>/dev/null
 ```
 
 **Pass criteria for Phase 2:**
@@ -237,12 +283,13 @@ To check: `[ "$DEMO_MODE" = "true" ] || exit 0`
 
 Watch live game, issue balance patches.
 
-1. Tail `state/game-events.jsonl` — new entries appear every round (~2s).
-2. After every 3 rounds, compute per-personality metrics from the last 10 rounds:
+1. Tail `state/game-events.jsonl` — new entries appear every round (~2s in live mode, ~300ms in DEMO_MODE).
+2. After every 2 rounds, compute per-personality metrics from the last 10 rounds:
    - Kill rate (dungeon) or win rate (arena) per personality
    - Stamina efficiency (damage dealt per stamina spent)
    - Item collection rate (items/minute)
 3. Trigger a patch suggestion if any metric crosses a threshold:
+   - `leadGap >= 2` (leading agent kills ≥ 2 ahead of second place): nerf their primary advantage — this fires faster than win rate thresholds
    - Single personality kill/win rate > 75%: nerf their primary advantage
    - Any personality rate < 10%: buff their primary strength
    - Boss kill rate = 0% after 2 minutes: reduce boss HP by 15%
@@ -250,8 +297,9 @@ Watch live game, issue balance patches.
    ```json
    { "key": "stamina.heavy_attack_cost", "newValue": 45, "reason": "aggressive win rate 87% last 5 rounds", "timestamp": "..." }
    ```
-5. Minimum 3 rounds between patches for the same key.
-6. Maximum 3 active patches per game phase.
+5. Minimum 2 rounds between patches for the same key.
+6. Maximum 6 active patches per game phase (raised from 3 to sustain visible HoG activity during a 45s demo).
+7. All patch values MUST be anchored to `game-config.baseline.json` using the compounding formula: up = `baseline × (1 + n × 0.20)`, down = `baseline × (1 - n × 0.12)`. Never compute `newValue = currentValue × factor` — that causes compounding inflation/deflation.
 7. After each patch, watch 3 rounds before issuing follow-up patches.
 
 ---
