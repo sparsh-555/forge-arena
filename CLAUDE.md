@@ -42,6 +42,31 @@ Invoke these by reading the corresponding skill file:
 - Never modify `SPEC.md` or `game-config.baseline.json`.
 - State files are the source of truth — read at session start, write at session end.
 
+## Git Commit and Push Protocol
+
+**After every completed task:** commit all changed files with a message describing what was implemented.
+
+```bash
+git add <files owned by this task>
+git commit -m "feat: <task name> — <one-line summary>"
+```
+
+**After every sprint (all tasks in a sprint complete):** push to the remote branch.
+
+```bash
+git push origin HEAD
+```
+
+**After Reconciler fixes a broken build:** commit the fix and push immediately.
+
+```bash
+git add <fixed files>
+git commit -m "fix: <what was broken>"
+git push origin HEAD
+```
+
+Never accumulate more than one sprint of uncommitted work. If the process is interrupted, the remote branch must reflect the last known good state.
+
 ## Convergence
 
 The harness converges when the Evaluator grades the headless run A or B for two consecutive reconciler cycles.
