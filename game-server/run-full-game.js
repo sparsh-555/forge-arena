@@ -33,11 +33,21 @@ const args = process.argv.slice(2);
 const headless = args.includes("--headless");
 const record = args.includes("--record");
 const replayMode = args.includes("--replay");
-const seedArg = args.find(a => a.startsWith("--seed="));
-let seed = seedArg ? parseInt(seedArg.split("=")[1], 10) : Math.floor(Math.random() * 1000000);
 const fastMode = process.env.FAST_MODE === "true";
 const demoMode = process.env.DEMO_MODE === "true";
 const noApi = process.env.NO_API === "true";
+
+// Seed: support --seed=42 and --seed 42 forms.
+// DEMO_MODE uses a fixed default so every demo shows the same map unless overridden.
+const DEMO_DEFAULT_SEED = 77142;
+const seedEqualsArg = args.find(a => a.startsWith("--seed="));
+const seedSpaceIdx = args.indexOf("--seed");
+const seedArg = seedEqualsArg
+  ? parseInt(seedEqualsArg.split("=")[1], 10)
+  : seedSpaceIdx >= 0 ? parseInt(args[seedSpaceIdx + 1], 10) : null;
+let seed = seedArg != null && !isNaN(seedArg)
+  ? seedArg
+  : demoMode ? DEMO_DEFAULT_SEED : Math.floor(Math.random() * 1000000);
 
 // Item factory — create Item objects from item name strings
 let _itemCounter = 0;
