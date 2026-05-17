@@ -705,6 +705,34 @@ function ArenaView({ payload, agents }: { payload: DashboardPayload; agents: Rec
   );
 }
 
+// ── Loading / Transition Screen ───────────────────────────────────────────────
+
+function LoadingScreen({ message }: { message: string }) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-forge-panel border border-forge-border rounded animate-in fade-in duration-300">
+      <img
+        src="/assets/ui/logo.png"
+        alt="forge-arena"
+        className="w-16 h-16 animate-pulse"
+        style={{ imageRendering: "pixelated" }}
+        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+      />
+      <div className="text-sm text-forge-accent font-bold uppercase tracking-widest animate-pulse">
+        {message}
+      </div>
+      <div className="flex gap-1 mt-2">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="w-2 h-2 bg-forge-accent rounded-full animate-bounce"
+            style={{ animationDelay: `${i * 150}ms` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function GameView() {
   const canvasRef  = useRef<HTMLDivElement>(null);
   const gameRef    = useRef<Phaser.Game | null>(null);
@@ -713,6 +741,8 @@ export default function GameView() {
   const [gamePayload, setGamePayload] = useState<DashboardPayload | null>(null);
   const [patches, setPatches] = useState<PatchEvent[]>([]);
   const [newPatchId, setNewPatchId] = useState<string | null>(null);
+  const [transitionMsg, setTransitionMsg] = useState<string | null>(null);
+  const prevPhaseRef = useRef<string | null>(null);
 
   const timerDisplay = (() => {
     const t = gamePayload?.dungeonTimer;
@@ -803,6 +833,26 @@ export default function GameView() {
     return () => es.close();
   }, []);
 
+  // Phase transition detection — show loading screen between phases
+  useEffect(() => {
+    const currentPhase = gamePayload?.phase ?? "DUNGEON";
+    const prev = prevPhaseRef.current;
+    prevPhaseRef.current = currentPhase;
+    let timer: number | undefined;
+
+    if (prev && prev !== currentPhase) {
+      if (!prev.startsWith("ARENA") && currentPhase.startsWith("ARENA")) {
+        setTransitionMsg("Entering the Arena...");
+        timer = window.setTimeout(() => setTransitionMsg(null), 1500);
+      } else if (currentPhase === "ENDED" && prev.startsWith("ARENA")) {
+        setTransitionMsg("Match Complete!");
+        timer = window.setTimeout(() => setTransitionMsg(null), 1500);
+      }
+    }
+
+    return () => { if (timer) clearTimeout(timer); };
+  }, [gamePayload?.phase]);
+
   const agents   = gamePayload?.agents;
   const phase    = gamePayload?.phase ?? "DUNGEON";
   const isEnded  = phase === "ENDED";
@@ -811,6 +861,37 @@ export default function GameView() {
     isEnded ? gamePayload?.finalScores?.[id] ?? 0 : agents?.[id]?.dungeonScore ?? 0
   );
   const maxScore = Math.max(...scores, 1);
+
+  if (transitionMsg) {
+    return (
+      <div className="flex h-[calc(100vh-41px)] gap-2 p-2">
+        <LoadingScreen message={transitionMsg} />
+        {/* CENTER: Agent panels */}
+        <div className="w-72 flex flex-col gap-1.5 overflow-hidden">
+          {AGENT_IDS.map(id => <AgentPanel key={id} id={id} agent={agents?.[id]} />)}
+        </div>
+        {/* RIGHT: Hand of God */}
+        <div className="w-60 bg-forge-panel border border-forge-border rounded p-2 flex flex-col gap-2 overflow-hidden">
+          <div className="text-xs font-bold uppercase text-forge-accent">⚡ Hand of God</div>
+          <div className="flex flex-col gap-1 flex-1 min-h-0 overflow-hidden">
+            <div className="text-[10px] text-forge-dim uppercase tracking-wide">
+              {isEnded ? "Final Score" : "Score"}
+            </div>
+            {AGENT_IDS.map((id, i) => (
+              <ScoreBar key={id} id={id} score={scores[i]} maxScore={maxScore} status={agents?.[id]?.status} />
+            ))}
+            <div className="text-[10px] text-forge-dim uppercase tracking-wide mt-2">Patches Applied</div>
+            <div className="flex-1 overflow-y-auto flex flex-col gap-1">
+              {patches.length === 0
+                ? <div className="text-forge-dim text-[10px]">watching game state...</div>
+                : patches.map((p, i) => <PatchCard key={p.timestamp + i} patch={p} isNew={p.timestamp === newPatchId} />)
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-41px)] gap-2 p-2">

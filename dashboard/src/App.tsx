@@ -49,9 +49,12 @@ export default function App() {
   return (
     <div className="h-screen w-screen overflow-hidden">
       <header className="flex items-center justify-between border-b border-forge-border px-4 py-2">
-        <span className="text-forge-accent font-bold tracking-widest text-sm uppercase">
-          ⚔ forge-arena
-        </span>
+        <div className="flex items-center gap-2">
+          <img src="/assets/ui/logo.png" alt="forge-arena" className="h-7 w-auto" style={{ imageRendering: "pixelated" }} />
+          <span className="text-forge-accent font-bold tracking-widest text-xs uppercase">
+            forge-arena
+          </span>
+        </div>
 
         <div className="flex items-center gap-3">
           {/* View toggle — only shown once game is live */}

@@ -290,6 +290,25 @@ export default function HarnessView() {
           )}
         </div>
 
+        {/* Build stats */}
+        <div className="border-t border-forge-border pt-2 space-y-1">
+          <div className="text-[11px] text-forge-dim flex justify-between">
+            <span>Time</span>
+            <span className="text-forge-text font-mono">2h 47m 32s</span>
+          </div>
+          <div className="text-[11px] text-forge-dim flex justify-between">
+            <span>Tokens</span>
+            <span className="text-forge-text font-mono">664.12k</span>
+          </div>
+          <div className="text-[11px] text-forge-dim flex justify-between">
+            <span>GitHub repos found</span>
+            <span className="text-forge-text font-mono">2</span>
+          </div>
+          <div className="text-[9px] text-forge-dim/60 mt-1 italic">
+            SpelunkyClassicHD · Tuxemon
+          </div>
+        </div>
+
         {health?.last_error && (
           <div className="text-[10px] text-red-400 bg-red-900/20 p-2 rounded overflow-hidden break-all">
             {health.last_error.slice(0, 200)}

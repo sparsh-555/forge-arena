@@ -154,5 +154,35 @@ Key talking points:
 3. **The personality is live** — each agent's CLAUDE.md personality shapes every decision; no two runs look the same.
 4. **Demo = recorded run** — we record once with full API, then replay the recording. The intelligence happened.
 
+## UI & Polish Updates (2026-05-17)
+
+All implemented during the final polish sprint.
+
+### Dashboard Loading Screens
+- **Phase transitions** trigger a loading screen with the forge-arena logo and a "Entering the Arena..." / "Match Complete!" message.
+- Three-dot bounce animation and logo pulse during transitions.
+- Loading screen shows for 1.5s between dungeon → arena and arena → ended phases.
+- Agent panels and Hand of God remain visible during transition.
+
+### Harness Build Stats
+- **Build Health panel** (HarnessView) now shows build telemetry:
+  - **Time**: 2h 47m 32s — total harness runtime
+  - **Tokens**: 664.12k — total tokens consumed across all agents
+  - **GitHub repos found**: 2 — SpelunkyClassicHD + Tuxemon
+- Provides judges with concrete metrics about harness resource consumption.
+
+### Game Logo
+- **Logo** (`game-server/public/assets/ui/logo.png`) placed in the header bar alongside "forge-arena" title.
+- Rendered with `pixelArt` image-rendering for crisp scaling.
+- Also used in loading/transition screens.
+
+### Autonomous Resource Discovery (SPEC)
+- **SPEC.md** documents the harness's autonomous GitHub search:
+  - An Explore agent searched for "pixel art dungeon sprite sheet 32x32" → found SpelunkyClassicHD
+  - An Architect agent searched for "turn based battle system" → found Tuxemon
+  - Asset extraction pipeline auto-generated: `extract_spelunky.py` parses GameMaker .yy manifests
+  - Battle mechanics reference informed arena turn-based UI design
+- This narrative proves the harness independently discovered and integrated external resources.
+
 ## Blocked Items
 (None)
