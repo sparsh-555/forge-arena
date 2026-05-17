@@ -58,6 +58,8 @@ interface DashboardPayload {
   dungeonTimer: number;
   agents: Record<AgentId, AgentState>;
   enemies: EnemyState[];
+  bossInstances?: Record<string, { position: { x: number; y: number }; hp: number; maxHp: number; phase: number; isAlive: boolean }>;
+  groundItems?: Array<{ position: { x: number; y: number }; item: { name: string; id: string } }>;
   map: {
     width: number;
     height: number;
@@ -84,6 +86,8 @@ class DungeonScene extends Phaser.Scene {
   private agentHpBars: Map<string, { bg: Phaser.GameObjects.Rectangle; fill: Phaser.GameObjects.Rectangle }> = new Map();
   private enemySprites: Map<string, Phaser.GameObjects.Image> = new Map();
   private enemyHpBars: Map<string, { bg: Phaser.GameObjects.Rectangle; fill: Phaser.GameObjects.Rectangle }> = new Map();
+  private bossSprites: Map<string, Phaser.GameObjects.Image> = new Map();
+  private bossHpBars: Map<string, { bg: Phaser.GameObjects.Rectangle; fill: Phaser.GameObjects.Rectangle }> = new Map();
   private initialized = false;
   public onPayload?: (payload: DashboardPayload) => void;
 
@@ -107,6 +111,10 @@ class DungeonScene extends Phaser.Scene {
     const tileTypes = ["floor", "wall", "wall_top", "wall_side", "wall_corner", "door",
       "boss_entrance", "arena_floor", "chest", "chest_open", "floor_cracked", "floor_mossy", "wall_torch"];
     tileTypes.forEach(t => this.load.image(t, `/assets/tiles/${t}.png`));
+
+    this.load.image("boss", "/assets/boss/boss.png");
+    this.load.image("boss_phase2", "/assets/boss/boss_phase2.png");
+    this.load.image("boss_death", "/assets/boss/boss_death.png");
   }
 
   create() {
@@ -120,6 +128,7 @@ class DungeonScene extends Phaser.Scene {
     }
     this.updateAgents(payload.agents, payload.phase);
     this.updateEnemies(payload.enemies ?? []);
+    this.updateBosses(payload.bossInstances ?? {});
     this.onPayload?.(payload);
   }
 
@@ -219,6 +228,46 @@ class DungeonScene extends Phaser.Scene {
       if (!seen.has(id)) sprite.setVisible(false);
     }
   }
+
+  private updateBosses(bossInstances: Partial<Record<AgentId, { position: { x: number; y: number }; hp: number; maxHp: number; phase: number; isAlive: boolean }>>) {
+    const seen = new Set<string>();
+    for (const [agentId, boss] of Object.entries(bossInstances)) {
+      if (!boss || !boss.isAlive) {
+        this.bossSprites.get(agentId)?.setVisible(false);
+        continue;
+      }
+      seen.add(agentId);
+      const px = boss.position.x * TILE_SIZE + TILE_SIZE / 2;
+      const py = boss.position.y * TILE_SIZE + TILE_SIZE / 2;
+      const texKey = boss.phase === 2 ? "boss_phase2" : "boss";
+
+      if (!this.bossSprites.has(agentId)) {
+        const sprite = this.add.image(px, py, texKey).setDisplaySize(TILE_SIZE * 2, TILE_SIZE * 2).setDepth(15);
+        this.bossSprites.set(agentId, sprite);
+      }
+      const sprite = this.bossSprites.get(agentId)!;
+      sprite.setPosition(px, py).setTexture(texKey).setVisible(true);
+
+      // Boss HP bar
+      const barW = TILE_SIZE * 2;
+      const barX = px - barW / 2;
+      const barY = py - TILE_SIZE - 8;
+      if (!this.bossHpBars.has(agentId)) {
+        const bg = this.add.rectangle(barX + barW / 2, barY, barW, 4, 0x333333).setDepth(16);
+        const fill = this.add.rectangle(barX + barW / 2, barY, barW, 4, 0xdc2626).setDepth(17);
+        this.bossHpBars.set(agentId, { bg, fill });
+      }
+      const { bg, fill } = this.bossHpBars.get(agentId)!;
+      const ratio = boss.maxHp > 0 ? boss.hp / boss.maxHp : 0;
+      fill.setPosition(barX + (ratio * barW) / 2, barY);
+      fill.setSize(ratio * barW, 4);
+      bg.setPosition(barX + barW / 2, barY);
+    }
+    // Hide removed boss sprites
+    for (const [agentId, sprite] of this.bossSprites) {
+      if (!seen.has(agentId)) sprite.setVisible(false);
+    }
+  }
 }
 
 // ── Agent Panel ──────────────────────────────────────────────────────────────
@@ -240,7 +289,7 @@ function AgentPanel({ id, agent }: { id: AgentId; agent: AgentState | undefined 
       {/* Header row: portrait + name + status */}
       <div className="flex items-center gap-2">
         <img
-          src={`/assets/portraits/${id}.png`}
+          src={`/assets/ui/portraits/${id}_portrait.png`}
           alt={id}
           className="w-10 h-10 rounded object-cover border border-forge-border shrink-0"
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
