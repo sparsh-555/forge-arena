@@ -8,7 +8,7 @@
 import express from "express";
 import { createServer } from "http";
 import path from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { WebSocketServer } from "ws";
 import type { GameState } from "./types.js";
 import { wsClients, sendSnapshot } from "./StateEmitter.js";
@@ -149,5 +149,7 @@ export function startServer(): void {
   });
 }
 
-// Start server when run directly
-startServer();
+// Self-invocation guard — only start server when run directly, not when imported (PITFALL 1)
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  startServer();
+}

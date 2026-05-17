@@ -1,27 +1,7 @@
 {
   "version": 1,
   "sprint": 2,
-  "tasks": [
-    {
-      "id": "S2-003",
-      "description": "Implement run-full-game.js — the headless game orchestration script. This is the entry point for acceptance testing and evaluator runs. Steps: 1) Load dotenv (import 'dotenv/config' or dotenv.config()). 2) Import generateDungeon and computeAgentSpawns/computeEnemySpawns/computeChestContents from DungeonGen. 3) Import runDungeonPhase, teleportToArena, runArenaMatch from GameLoop. 4) Import startServer, setGameState from server.ts. 5) Read game-config.json. 6) Call resetEnemyAIState() from EnemyAI. 7) Generate dungeon with a random seed. 8) Create initial GameState with 4 agents at spawn positions, enemies at spawn positions, ground items from chest contents. 9) Set initial agent states: starting_hp=150, starting_stamina=100, starting equipment per SPEC (aggressive=sword, cautious=dagger+leather_armor, hoarder=dagger, speedrunner=dagger), estusCount=3. 10) If --headless flag: skip server start, just run phases directly and print results. 11) If no --headless (live mode): start server (same process — PITFALL 1), set game state to play mode, run dungeon and arena phases. 12) After game ends: print GAME_COMPLETE to stdout with final scores per agent. Exit 0 on success. Support NO_API=true env var (skip real API calls, use getFallbackAction for all agent decisions). Support FAST_MODE=true (dungeon_timer=120 instead of 300, arena_turn_cap=20 instead of 30). Support --seed=N flag for deterministic runs.",
-      "scope": [
-        "game-server/run-full-game.js"
-      ],
-      "acceptance": "NO_API=true FAST_MODE=true node run-full-game.js --headless exits 0 and prints GAME_COMPLETE to stdout. All 4 agents make at least 1 decision. Dungeon timer fires and teleport occurs. 2 semis + 1 final resolve. Winner declared with final scores. ROUND_STATE events logged to game-events.jsonl. NO_API=true uses fallback actions only (no real API calls). FAST_MODE=true completes within 90 seconds. --seed=42 produces deterministic output. With real API key: real Claude decisions are made (not all fallback).",
-      "acceptance_criteria": [
-        "--headless flag skips server start — grep run-full-game.js for 'headless'",
-        "GAME_COMPLETE printed to stdout — grep run-full-game.js for 'GAME_COMPLETE'",
-        "NO_API=true uses fallback actions — grep run-full-game.js for 'NO_API' or 'getFallbackAction'",
-        "FAST_MODE=true sets dungeon_timer=120 — grep run-full-game.js for 'FAST_MODE' or '120'",
-        "resetEnemyAIState called before dungeon phase — grep run-full-game.js for 'resetEnemyAIState'",
-        "Same-process server start for live mode — grep run-full-game.js for 'startServer'"
-      ],
-      "branch": "worker/S2-003-implement-run-full-game",
-      "priority": 3,
-      "status": "pending"
-    }
-  ],
+  "tasks": [],
   "completed": [
     {
       "id": "S2-001",
@@ -61,6 +41,25 @@
       ],
       "branch": "worker/S2-002-implement-game-loop",
       "priority": 2,
+      "status": "completed"
+    },
+    {
+      "id": "S2-003",
+      "description": "Implement run-full-game.js — the headless game orchestration script. This is the entry point for acceptance testing and evaluator runs. Steps: 1) Load dotenv (import 'dotenv/config' or dotenv.config()). 2) Import generateDungeon and computeAgentSpawns/computeEnemySpawns/computeChestContents from DungeonGen. 3) Import runDungeonPhase, teleportToArena, runArenaMatch from GameLoop. 4) Import startServer, setGameState from server.ts. 5) Read game-config.json. 6) Call resetEnemyAIState() from EnemyAI. 7) Generate dungeon with a random seed. 8) Create initial GameState with 4 agents at spawn positions, enemies at spawn positions, ground items from chest contents. 9) Set initial agent states: starting_hp=150, starting_stamina=100, starting equipment per SPEC (aggressive=sword, cautious=dagger+leather_armor, hoarder=dagger, speedrunner=dagger), estusCount=3. 10) If --headless flag: skip server start, just run phases directly and print results. 11) If no --headless (live mode): start server (same process — PITFALL 1), set game state to play mode, run dungeon and arena phases. 12) After game ends: print GAME_COMPLETE to stdout with final scores per agent. Exit 0 on success. Support NO_API=true env var (skip real API calls, use getFallbackAction for all agent decisions). Support FAST_MODE=true (dungeon_timer=120 instead of 300, arena_turn_cap=20 instead of 30). Support --seed=N flag for deterministic runs.",
+      "scope": [
+        "game-server/run-full-game.js"
+      ],
+      "acceptance": "NO_API=true FAST_MODE=true node run-full-game.js --headless exits 0 and prints GAME_COMPLETE to stdout. All 4 agents make at least 1 decision. Dungeon timer fires and teleport occurs. 2 semis + 1 final resolve. Winner declared with final scores. ROUND_STATE events logged to game-events.jsonl. NO_API=true uses fallback actions only (no real API calls). FAST_MODE=true completes within 90 seconds. --seed=42 produces deterministic output. With real API key: real Claude decisions are made (not all fallback).",
+      "acceptance_criteria": [
+        "--headless flag skips server start — grep run-full-game.js for 'headless'",
+        "GAME_COMPLETE printed to stdout — grep run-full-game.js for 'GAME_COMPLETE'",
+        "NO_API=true uses fallback actions — grep run-full-game.js for 'NO_API' or 'getFallbackAction'",
+        "FAST_MODE=true sets dungeon_timer=120 — grep run-full-game.js for 'FAST_MODE' or '120'",
+        "resetEnemyAIState called before dungeon phase — grep run-full-game.js for 'resetEnemyAIState'",
+        "Same-process server start for live mode — grep run-full-game.js for 'startServer'"
+      ],
+      "branch": "worker/S2-003-implement-run-full-game",
+      "priority": 3,
       "status": "completed"
     }
   ]
