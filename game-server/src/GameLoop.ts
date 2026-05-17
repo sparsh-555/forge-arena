@@ -535,50 +535,41 @@ function choosePatch(
   const second = sorted[1];
 
   const leadGap = leader.score - second.score;
-  const isStrongLead = leadGap >= 3 && leader.score >= second.score * 2;
+  // Fire on any meaningful lead — leadGap >= 2 catches early-game divergence
+  const isStrongLead = leadGap >= 2 && leader.score > second.score;
 
   if (isStrongLead) {
-    // Identify the source of the lead
     const killLead = leader.kills - (sorted.map(a => a.kills).sort((a,b) => b-a)[1] ?? 0);
     const itemLead = leader.items - (sorted.map(a => a.items).sort((a,b) => b-a)[1] ?? 0);
 
     if (leader.bossKill && !sorted.slice(1).some(a => a.bossKill)) {
-      // Leader killed the boss; give others a fighting chance by reducing brute pressure
       const newVal = Math.floor(config.enemies.brute_damage * 0.88);
       return { key: "enemies.brute_damage", newValue: newVal, timestamp: ts,
         reason: `${leader.id} is the only boss killer — easing brute pressure for others` };
     }
 
-    if (killLead >= 3) {
-      // Kill-dominant → heavy attacks too strong, raise cost
+    if (killLead >= 2) {
       const newVal = Math.floor(config.stamina.heavy_attack_cost * 1.15);
       return { key: "stamina.heavy_attack_cost", newValue: newVal, timestamp: ts,
         reason: `${leader.id} leads on kills (+${killLead}) — heavy attack stamina cost raised` };
     }
 
-    if (itemLead >= 3) {
-      // Hoard-dominant → item accumulation paying off too much; nerf brutes so others can fight more
+    if (itemLead >= 2) {
       const newVal = Math.floor(config.enemies.brute_hp * 0.88);
       return { key: "enemies.brute_hp", newValue: newVal, timestamp: ts,
         reason: `${leader.id} leads on items (+${itemLead}) — lowering brute HP opens more rooms` };
     }
 
-    // Generic lead → raise light attack cost (benefits speedrunner/cautious most)
     const newVal = Math.floor(config.stamina.light_attack_cost * 1.2);
     return { key: "stamina.light_attack_cost", newValue: newVal, timestamp: ts,
       reason: `${leader.id} score lead ${leader.score} vs ${second.score} — light attack cost raised` };
   }
 
-  // ── Rule 4: Game is balanced — small tune to show Hand of God is active ──
-  // Slightly adjust base regen so agents can make more decisions per round.
-  // Only fire this if no prior patches have addressed balance.
-  const newRegen = Math.min(
-    Math.floor(config.stamina.base_regen_per_turn * 1.1),
-    24 // cap at ±30% of baseline 20
-  );
-  if (newRegen !== config.stamina.base_regen_per_turn) {
-    return { key: "stamina.base_regen_per_turn", newValue: newRegen, timestamp: ts,
-      reason: `game balanced (scores ${sorted.map(a => `${a.id}:${a.score}`).join(", ")}) — stamina regen tuned up` };
+  // ── Rule 4: Nobody scoring yet — open the dungeon up so agents can differentiate ──
+  if (active.every(a => a.score === 0)) {
+    const newVal = Math.max(1, Math.floor(config.enemies.grunt_hp * 0.85));
+    return { key: "enemies.grunt_hp", newValue: newVal, timestamp: ts,
+      reason: `all agents at 0 score (round ${state.roundNumber}) — reducing grunt HP to get play moving` };
   }
 
   return null;
