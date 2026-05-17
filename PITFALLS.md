@@ -123,6 +123,46 @@ Max 3 patches per phase (`config.balance.max_patches_per_phase`).
 
 ---
 
+## PITFALL 9: Dashboard Right Panel Must Be "Hand of God" — Not Just a Patch Log
+
+**What broke:** Agent built a minimal "Patch Feed" sidebar (10 lines of text). The demo story requires a dramatic Evolution panel that shows the AI *reasoning* about balance, not just logging events. Judges need to *see* the Hand of God moment — a patch fires and the game visibly responds.
+
+**Required layout in GameView.tsx — three columns, all visible simultaneously:**
+
+```
+┌──────────────────────┬──────────────────┬────────────────────┐
+│  LEFT: Phaser map    │ CENTER: 4 agent  │ RIGHT: Hand of God │
+│  (game canvas)       │ thought panels   │ (Evolution panel)  │
+└──────────────────────┴──────────────────┴────────────────────┘
+```
+
+**CENTER panel requirements (agent thoughts):**
+- HP bar per agent (colour shifts green→yellow→red)
+- Last `reasoning` string from Claude API response (scrollable)
+- Status badge: ALIVE / IN_BOSS_FIGHT / ELIMINATED
+- Source: poll `/api/game-state` every 2s
+
+**RIGHT panel requirements ("Hand of God" — w-64):**
+1. **Kill Balance meter** — bar chart of kills per agent (shows who's dominating)
+2. **"Evaluator thinks:"** — Balance Worker's latest reasoning text from `BALANCE_ANALYSIS` events via SSE `/api/events`
+3. **Patch cards** — each `PATCH_APPLIED` rendered as:
+   ```
+   ⚡ PATCH APPLIED
+   enemies.grunt_hp
+   30 → 20  (−33%)
+   "aggressive dominating kill ratio..."
+   ```
+   Flash yellow border for 2s on new patch, then fade. Newest at top.
+
+**Data sources:**
+- WebSocket `/ws/game` → DashboardPayload (tiles, agents, enemies, kills)
+- SSE `/api/events` → `game-events.jsonl` tail (BALANCE_ANALYSIS, PATCH_APPLIED, ROUND_END)
+- Poll `/api/game-state` every 2s → agent reasoning strings
+
+**HarnessView must also be substantial:** During the build phase, show tasks completing in real time with checkmarks, sprint number, active task name, and build grade. Not just a static "building..." message.
+
+---
+
 ## PITFALL 8: hex_caster and shade Never Spawn
 
 Types include them, sprites exist, but `computeEnemySpawns` never spawns them. Add:
