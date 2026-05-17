@@ -28,14 +28,22 @@ function passableCallback(state: GameState) {
  * Find the nearest active agent to a position (Manhattan distance).
  */
 export function findNearestAgent(position: Position, state: GameState): AgentId | null {
-  let best: AgentId | null = null;
-  let bestDist = Infinity;
+  // Weighted random selection: nearest agent has highest chance, but others can be picked
+  const candidates: { id: AgentId; dist: number }[] = [];
   for (const [id, agent] of Object.entries(state.agents)) {
     if (agent.status === "eliminated") continue;
     const d = Math.abs(agent.position.x - position.x) + Math.abs(agent.position.y - position.y);
-    if (d < bestDist) { bestDist = d; best = id as AgentId; }
+    candidates.push({ id: id as AgentId, dist: d });
   }
-  return best;
+  if (candidates.length === 0) return null;
+
+  // Sort by distance
+  candidates.sort((a, b) => a.dist - b.dist);
+
+  // 60% chance nearest, 25% second nearest, 10% third, 5% fourth
+  const r = Math.random();
+  const idx = r < 0.60 ? 0 : r < 0.85 ? 1 : r < 0.95 ? 2 : 3;
+  return candidates[Math.min(idx, candidates.length - 1)].id;
 }
 
 /**

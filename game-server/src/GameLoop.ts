@@ -11,7 +11,7 @@ import type {
 } from "./types.js";
 import { AGENT_IDS, CONFLICT_PRIORITY, PHASE_TRANSITIONS } from "./types.js";
 import { handleDecideRoute, getFallbackAction } from "./AgentAPI.js";
-import { resolveEnemyActions, pathfindStep, resetEnemyAIState } from "./EnemyAI.js";
+import { resolveEnemyActions, pathfindStep, resetEnemyAIState, isAdjacent } from "./EnemyAI.js";
 import { resolveCombat, resolveEnemyAttack, calcStaminaCost, calcStaminaRegen } from "./CombatSystem.js";
 import { broadcast, broadcastPatch, logEvent } from "./StateEmitter.js";
 import { readConfig, applyPatch } from "./PatchApplier.js";
@@ -296,11 +296,11 @@ export function applyAgentAction(
     }
   }
 
-  // Combat goals
+  // Combat goals — only valid if target is cardinally adjacent (4-dir)
   if (goal === "attack_heavy" || goal === "attack_medium" || goal === "attack_light") {
     if (action.targetId) {
       const targetEnemyIdx = state.enemies.findIndex(e => e.id === action.targetId && e.isAlive);
-      if (targetEnemyIdx >= 0) {
+      if (targetEnemyIdx >= 0 && isAdjacent(agent.position, state.enemies[targetEnemyIdx].position)) {
         const targetEnemy = state.enemies[targetEnemyIdx];
         const result = resolveCombat(
           agent.combat,
@@ -328,7 +328,7 @@ export function applyAgentAction(
       } else if (state.phase !== "DUNGEON") {
         // Agent vs agent — ARENA only (PvP disabled in dungeon)
         const targetAgent = state.agents[action.targetId as AgentId];
-        if (targetAgent && targetAgent.status !== "eliminated") {
+        if (targetAgent && targetAgent.status !== "eliminated" && isAdjacent(agent.position, targetAgent.position)) {
           const armorItem = targetAgent.inventory.equipped.armor;
           const armorReduction = armorItem?.stats?.armorReduction ?? 0;
           const result = resolveCombat(
@@ -787,6 +787,14 @@ export async function runArenaMatch(
 
   const aId = matchup.agentA;
   const bId = matchup.agentB;
+
+  // Position agents adjacent for arena combat
+  if (currentState.agents[aId] && currentState.agents[bId]) {
+    const arenaX = Math.floor(state.map.width / 2);
+    const arenaY = Math.floor(state.map.height / 2);
+    currentState.agents[aId].position = { x: arenaX, y: arenaY };
+    currentState.agents[bId].position = { x: arenaX + 1, y: arenaY };
+  }
 
   while (turnCount < turnCap) {
     turnCount++;

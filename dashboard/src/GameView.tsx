@@ -583,88 +583,116 @@ function ArenaView({ payload, agents }: { payload: DashboardPayload; agents: Rec
     : payload.phase === "ARENA_FINAL" ? "Final"
     : payload.phase;
 
-  // Find the two agents currently matched
   const currentMatchup = matchups[0];
   const agentA = currentMatchup ? agents?.[currentMatchup.agentA as AgentId] : undefined;
   const agentB = currentMatchup ? agents?.[currentMatchup.agentB as AgentId] : undefined;
 
-  function AgentBattleCard({ id, agent, flip }: { id: AgentId; agent: AgentState | undefined; flip: boolean }) {
+  // Determine whose turn it is (fresh reasoning = just acted)
+  const aReasoning = agentA?.lastReasoning?.replace(/^\[fallback\]\s*/i, "") ?? "";
+  const bReasoning = agentB?.lastReasoning?.replace(/^\[fallback\]\s*/i, "") ?? "";
+  const activeSide = isEnded ? null : aReasoning && (!bReasoning || aReasoning.length >= bReasoning.length) ? "a" : "b";
+
+  const AgBattleCard = ({ id, agent, isActive }: { id: AgentId; agent: AgentState | undefined; isActive: boolean }) => {
     const hpRatio = agent ? agent.combat.hp / agent.combat.maxHp : 0;
     const stamRatio = agent ? agent.combat.stamina / agent.combat.maxStamina : 0;
     const hpColor = hpRatio > 0.5 ? "bg-green-500" : hpRatio > 0.25 ? "bg-yellow-400" : "bg-red-500";
-    const stamColor = "bg-blue-400";
     const eliminated = agent?.status === "eliminated" || (agent?.combat?.hp ?? 0) <= 0;
 
     return (
-      <div className={`flex flex-col items-center gap-2 ${eliminated ? "opacity-40" : ""}`}>
-        <div className={`flex ${flip ? "flex-row-reverse" : ""} items-end gap-3`}>
-          <img
-            src={`/assets/ui/portraits/${id}_portrait.png`}
-            alt={id}
-            className={`w-20 h-20 rounded border-2 object-cover shrink-0 ${eliminated ? "border-red-500/30" : "border-yellow-400/50"}`}
-            style={{ imageRendering: "pixelated", transform: flip ? "scaleX(-1)" : "" }}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-          />
-          <div className="flex flex-col gap-2 min-w-[120px]">
-            {/* HP */}
+      <div className={`flex flex-col items-center gap-2 transition-all duration-300 ${eliminated ? "opacity-30 scale-95" : ""}`}>
+        {/* Active indicator */}
+        <div className={`text-[10px] font-bold uppercase transition-opacity duration-200 ${isActive && !eliminated ? "text-yellow-400 opacity-100" : "text-yellow-400/0"}`}>
+          ⚔ ATTACKING
+        </div>
+        {/* Portrait + bars */}
+        <div className="flex items-end gap-3">
+          <div className="relative">
+            <img
+              src={`/assets/ui/portraits/${id}_portrait.png`}
+              alt={id}
+              className={`w-24 h-24 rounded border-2 object-cover shrink-0 transition-all duration-300 ${eliminated ? "border-red-500/30 grayscale" : isActive ? "border-yellow-400 shadow-lg shadow-yellow-400/30 scale-105" : "border-forge-border"}`}
+              style={{ imageRendering: "pixelated" }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+            {isActive && !eliminated && (
+              <div className="absolute inset-0 rounded bg-yellow-400/10 animate-pulse pointer-events-none" />
+            )}
+          </div>
+          <div className="flex flex-col gap-2 min-w-[140px]">
             <div>
-              <div className="flex justify-between text-[9px] mb-0.5">
+              <div className="flex justify-between text-[10px] mb-0.5">
                 <span className="text-forge-dim">HP</span>
-                <span className="text-forge-text">{agent?.combat?.hp ?? 0} / {agent?.combat?.maxHp ?? "?"}</span>
+                <span className="text-forge-text font-bold">{agent?.combat?.hp ?? 0} / {agent?.combat?.maxHp ?? "?"}</span>
               </div>
-              <div className="h-2 bg-forge-border rounded overflow-hidden">
-                <div className={`h-full ${hpColor} transition-all duration-300`} style={{ width: `${(hpRatio * 100).toFixed(0)}%` }} />
+              <div className="h-3 bg-forge-border rounded overflow-hidden border border-forge-border/50">
+                <div className={`h-full ${hpColor} transition-all duration-500`} style={{ width: `${Math.max(0, hpRatio * 100).toFixed(0)}%` }} />
               </div>
             </div>
-            {/* Stamina */}
             <div>
-              <div className="flex justify-between text-[9px] mb-0.5">
+              <div className="flex justify-between text-[10px] mb-0.5">
                 <span className="text-forge-dim">ST</span>
                 <span className="text-forge-text">{agent?.combat?.stamina ?? 0} / {agent?.combat?.maxStamina ?? "?"}</span>
               </div>
-              <div className="h-1.5 bg-forge-border rounded overflow-hidden">
-                <div className={`h-full ${stamColor} transition-all duration-300`} style={{ width: `${(stamRatio * 100).toFixed(0)}%` }} />
+              <div className="h-2 bg-forge-border rounded overflow-hidden">
+                <div className="h-full bg-blue-400 transition-all duration-300" style={{ width: `${(stamRatio * 100).toFixed(0)}%` }} />
               </div>
             </div>
           </div>
         </div>
-        <div className={`text-xs font-bold uppercase ${AGENT_TEXT_COLORS[id]}`}>{id}</div>
+        <div className={`text-sm font-bold uppercase tracking-wide ${AGENT_TEXT_COLORS[id]} ${eliminated ? "line-through" : ""}`}>
+          {id}
+        </div>
         {agent?.lastReasoning && (
-          <div className="text-[9px] text-forge-dim italic text-center max-w-[180px] leading-tight line-clamp-2">
-            {agent.lastReasoning.replace(/^\[fallback\]\s*/i, "").slice(0, 100)}
+          <div className="text-[10px] text-forge-dim italic text-center max-w-[200px] leading-tight bg-forge-panel/50 px-2 py-1 rounded border border-forge-border/30">
+            "{agent.lastReasoning.replace(/^\[fallback\]\s*/i, "").slice(0, 120)}"
           </div>
         )}
       </div>
     );
-  }
+  };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-4 p-4">
-      <div className="text-sm text-forge-accent font-bold uppercase tracking-widest">{phaseLabel}</div>
-
-      <div className="flex items-center gap-8">
-        <AgentBattleCard id={currentMatchup?.agentA as AgentId ?? "aggressive"} agent={agentA} flip={false} />
-        <div className="text-2xl text-forge-dim font-bold">VS</div>
-        <AgentBattleCard id={currentMatchup?.agentB as AgentId ?? "cautious"} agent={agentB} flip={true} />
+    <div className="flex-1 flex flex-col items-center justify-center gap-3 p-4 bg-gradient-to-b from-forge-panel/50 to-transparent">
+      {/* Phase banner */}
+      <div className="flex items-center gap-3">
+        <div className="h-px w-12 bg-forge-border" />
+        <div className="text-sm text-forge-accent font-bold uppercase tracking-widest">{phaseLabel}</div>
+        <div className="h-px w-12 bg-forge-border" />
       </div>
 
-      {/* Score indicators */}
-      <div className="flex gap-8 mt-2">
-        <div className="text-[10px] text-forge-dim text-center">
-          <div>Score: {agentA?.dungeonScore ?? 0}</div>
-          <div className="text-[9px]">Kills: {agentA?.kills ? agentA.kills.grunt + agentA.kills.brute + agentA.kills.sentinel : 0}</div>
+      {/* Battle arena */}
+      <div className="flex items-start gap-6">
+        <AgBattleCard
+          id={currentMatchup?.agentA as AgentId ?? "aggressive"}
+          agent={agentA}
+          isActive={activeSide === "a"}
+        />
+        <div className="flex flex-col items-center gap-2 pt-16">
+          <div className="text-3xl font-black text-forge-border">VS</div>
+          <div className="text-[9px] text-forge-dim uppercase tracking-widest">Turn-Based Combat</div>
         </div>
-        <div className="text-[10px] text-forge-dim text-center">
-          <div>Score: {agentB?.dungeonScore ?? 0}</div>
-          <div className="text-[9px]">Kills: {agentB?.kills ? agentB.kills.grunt + agentB.kills.brute + agentB.kills.sentinel : 0}</div>
+        <AgBattleCard
+          id={currentMatchup?.agentB as AgentId ?? "cautious"}
+          agent={agentB}
+          isActive={activeSide === "b"}
+        />
+      </div>
+
+      {/* Score bar */}
+      <div className="flex gap-8 mt-2">
+        <div className="text-[11px] text-forge-dim text-center bg-forge-panel/50 px-3 py-1 rounded">
+          Score: <span className="text-forge-text font-bold">{agentA?.dungeonScore ?? 0}</span>
+          <span className="text-[9px] ml-1">({agentA?.kills ? agentA.kills.grunt + agentA.kills.brute + agentA.kills.sentinel : 0} kills)</span>
+        </div>
+        <div className="text-[11px] text-forge-dim text-center bg-forge-panel/50 px-3 py-1 rounded">
+          Score: <span className="text-forge-text font-bold">{agentB?.dungeonScore ?? 0}</span>
+          <span className="text-[9px] ml-1">({agentB?.kills ? agentB.kills.grunt + agentB.kills.brute + agentB.kills.sentinel : 0} kills)</span>
         </div>
       </div>
 
       {isEnded && (
-        <div className="text-sm text-yellow-400 font-bold mt-2">
-          {payload.finalScores ? (
-            <>Winner: {Object.entries(payload.finalScores).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "?"}</>
-          ) : "Match Complete"}
+        <div className="text-base text-yellow-400 font-bold mt-2 animate-pulse">
+          🏆 Winner: {Object.entries(payload.finalScores ?? {}).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "?"}
         </div>
       )}
     </div>
