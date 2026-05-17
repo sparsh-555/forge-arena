@@ -14,7 +14,7 @@ import { handleDecideRoute, getFallbackAction } from "./AgentAPI.js";
 import { resolveEnemyActions, pathfindStep, resetEnemyAIState, isAdjacent } from "./EnemyAI.js";
 import { resolveCombat, resolveEnemyAttack, calcStaminaCost, calcStaminaRegen } from "./CombatSystem.js";
 import { broadcast, broadcastPatch, logEvent } from "./StateEmitter.js";
-import { readConfig, applyPatch, readBaseline, getNestedValue } from "./PatchApplier.js";
+import { readConfig, applyPatch, readBaseline, getNestedValue, resetStaminaToBaseline } from "./PatchApplier.js";
 import { toAgentPayload } from "./DungeonBridge.js";
 import ROT from "rot-js";
 
@@ -848,9 +848,12 @@ export async function teleportToArena(state: GameState): Promise<GameState> {
     matchups.push({ agentA: ranked[0], agentB: ranked[1], turnCount: 0 });
   }
 
-  // Transition to ARENA_SEMI1
+  // Reset stamina costs in game-config.json to baseline so arena agents see sane values
+  resetStaminaToBaseline();
+
+  // Transition to ARENA_SEMI1; clear dungeon patch history so agents don't inherit inflated costs
   let newState = transitionPhase(state, "ARENA_SEMI1");
-  newState = { ...newState, arenaMatchups: matchups };
+  newState = { ...newState, arenaMatchups: matchups, recentPatches: [] };
 
   // Log teleport event
   logEvent({

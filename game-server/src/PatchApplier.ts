@@ -80,6 +80,28 @@ export function setNestedValue(
  * Apply a validated patch to game-config.json.
  * Validates value > 0. Writes atomically via tmp → rename.
  */
+/**
+ * Reset stamina costs in game-config.json back to baseline values.
+ * Called on arena entry so agents see sane stamina costs, not dungeon-patched ones.
+ */
+export function resetStaminaToBaseline(): void {
+  const baseline = readBaseline();
+  const current = readConfig();
+  const keys: Array<keyof typeof baseline.stamina> = [
+    "heavy_attack_cost",
+    "medium_attack_cost",
+    "light_attack_cost",
+    "block_cost",
+    "base_regen_per_turn",
+  ];
+  let updated: Record<string, unknown> = current as unknown as Record<string, unknown>;
+  for (const k of keys) {
+    updated = setNestedValue(updated, `stamina.${k}`, baseline.stamina[k]);
+  }
+  writeFileSync(CONFIG_TMP_PATH, JSON.stringify(updated, null, 2) + "\n");
+  renameSync(CONFIG_TMP_PATH, CONFIG_PATH);
+}
+
 export function applyPatch(suggestion: PatchSuggestion): PatchEvent | null {
   // Validate positive
   if (suggestion.newValue <= 0) {
