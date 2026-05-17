@@ -122,9 +122,18 @@ class DungeonScene extends Phaser.Scene {
   }
 
   applyPayload(payload: DashboardPayload) {
-    if (!this.initialized && payload.map) {
-      this.buildMap(payload.map);
-      this.initialized = true;
+    if (payload.map) {
+      this.updateMap(payload.map);
+      if (!this.initialized) {
+        const mapW = payload.map.width * TILE_SIZE;
+        const mapH = payload.map.height * TILE_SIZE;
+        this.cameras.main.setBounds(0, 0, mapW, mapH);
+        this.cameras.main.centerOn(mapW / 2, mapH / 2);
+        const scaleX = this.scale.width / mapW;
+        const scaleY = this.scale.height / mapH;
+        this.cameras.main.setZoom(Math.min(scaleX, scaleY));
+        this.initialized = true;
+      }
     }
     this.updateAgents(payload.agents, payload.phase);
     this.updateEnemies(payload.enemies ?? []);
@@ -132,7 +141,7 @@ class DungeonScene extends Phaser.Scene {
     this.onPayload?.(payload);
   }
 
-  private buildMap(map: DashboardPayload["map"]) {
+  private updateMap(map: DashboardPayload["map"]) {
     const { width, height, tiles } = map;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
@@ -142,19 +151,15 @@ class DungeonScene extends Phaser.Scene {
         const key = `${x},${y}`;
         const px = x * TILE_SIZE + TILE_SIZE / 2;
         const py = y * TILE_SIZE + TILE_SIZE / 2;
-        const img = this.add.image(px, py, tileType).setDisplaySize(TILE_SIZE, TILE_SIZE);
-        this.tileSprites.set(key, img);
+        const existing = this.tileSprites.get(key);
+        if (existing) {
+          existing.setTexture(tileType);
+        } else {
+          const img = this.add.image(px, py, tileType).setDisplaySize(TILE_SIZE, TILE_SIZE);
+          this.tileSprites.set(key, img);
+        }
       }
     }
-    // Fit camera to map
-    const mapW = width * TILE_SIZE;
-    const mapH = height * TILE_SIZE;
-    this.cameras.main.setBounds(0, 0, mapW, mapH);
-    this.cameras.main.centerOn(mapW / 2, mapH / 2);
-    // Scale camera to fit canvas
-    const scaleX = this.scale.width / mapW;
-    const scaleY = this.scale.height / mapH;
-    this.cameras.main.setZoom(Math.min(scaleX, scaleY));
   }
 
   private updateAgents(agents: Record<AgentId, AgentState>, phase: string) {
