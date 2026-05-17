@@ -19,6 +19,7 @@ Invoke these by reading the corresponding skill file:
 | Planner emits a complex task | Subplanner | `skills/subplanner.md` |
 | Task is small enough (1–3 files) | Worker | `skills/worker.md` |
 | All sprint tasks complete, before reconciler | Verifier | `skills/verifier.md` |
+| Verifier passes, before reconciler | Architect Reviewer | `skills/architect-reviewer.md` |
 | Every 3 completed tasks or any failure | Reconciler | `skills/reconciler.md` |
 | Build is green, run headless test | Evaluator | `skills/evaluator.md` |
 | Evaluator issues patch suggestion | Balance Worker | `skills/balance-worker.md` |
@@ -72,7 +73,7 @@ Never accumulate more than one sprint of uncommitted work. If the process is int
 
 The harness converges when the Evaluator grades the headless run A or B for two consecutive reconciler cycles.
 
-After convergence: read skills/evaluator.md and follow the Evolution Mode section.
+After convergence: the harness stops. Start the live demo manually with `DEMO_MODE=true` — the evaluator will then enter Evolution Mode.
 
 ## Mechanical Verification
 

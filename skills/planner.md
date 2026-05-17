@@ -113,7 +113,11 @@ Output a single JSON object with two fields:
       "id": "task-001",
       "description": "Detailed description with full context.",
       "scope": ["src/file1.ts", "src/file2.ts"],
-      "acceptance": "Verifiable criteria.",
+      "acceptance": "Verifiable criteria (prose summary for the worker).",
+      "acceptance_criteria": [
+        "Falsifiable behavioral claim 1 — include how to verify: what to grep, read, or run",
+        "Falsifiable behavioral claim 2 — e.g. 'functionA() calls functionB() — grep src/file1.ts for functionB'"
+      ],
       "branch": "worker/task-001-detailed-description-with-full-context",
       "priority": 1
     }
@@ -195,6 +199,27 @@ Every task must include a clear **definition of done** in its `acceptance` field
 1. **Verification** — Build/type-check command and expected result. What tests must exist AND pass — not "tests pass," but which scenarios: happy path, error cases, boundary conditions.
 2. **Integration** — What call sites should work after this change. API contracts: request/response shapes, error formats, status codes. What consumers of this module expect.
 3. **Quality bar** — Name the existing patterns to follow and where to find them (e.g., "follow the error handling in `src/utils/errors.ts`"). List the edge cases that must be handled.
+
+### acceptance_criteria: behavioral wiring claims
+
+The `acceptance_criteria` array is a **separate machine-checkable list** used by the Architect Reviewer after workers mark tasks complete. Each entry is a falsifiable claim about cross-module wiring that can be verified with grep, read, or a short run command.
+
+**Rules for writing good criteria:**
+- Each claim must be independently verifiable — no ambiguity about pass/fail
+- Include HOW to verify inline: what to grep, which file to read, what command to run, what output to look for
+- Focus on wiring and connections (does A call B? does the field get written? does the event get logged?) — not on style or naming
+- If a criterion requires runtime evidence, include the exact command to run and what to check in the output
+
+**Bad vs. good criteria:**
+
+| Bad | Good |
+|-----|------|
+| "Module A works correctly" | "`processOrder()` calls `validateStock()` before writing — grep `src/orders.ts` for `validateStock`" |
+| "Types are correct" | "`OrderEvent` interface in `src/types.ts` has a `timestamp` field — grep `src/types.ts` for `timestamp`" |
+| "Events are logged" | "After running the test command from CLAUDE.md, `grep -c '\"type\":\"ORDER_PLACED\"' state/events.jsonl` returns > 0" |
+| "Result is applied" | "`user.role` is assigned from `permissions.resolve()` result in `src/auth.ts` — grep for `permissions.resolve`" |
+
+Write at least 2–4 criteria per task that touches module boundaries. Tasks that only add internal logic to a single file may have 0–1 criteria.
 
 ### Bad vs. good acceptance:
 

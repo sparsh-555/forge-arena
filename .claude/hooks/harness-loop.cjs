@@ -33,14 +33,10 @@ function readJSON(file) {
 const health = readJSON(BUILD_HEALTH);
 const tasks  = readJSON(TASKS_FILE);
 
-// Converged — hand off to evaluator's Evolution Mode, do not stop
+// Converged — allow stop. Evolution Mode starts separately when user sets DEMO_MODE=true.
 if (health && health.converged === true) {
   appendHarnessEvent({ type: 'CONVERGED', grade: health.grade });
-  const reason =
-    `HARNESS LOOP — build converged (grade A/B). Entering Evolution Mode. ` +
-    `Read skills/evaluator.md and follow the "Evolution Mode" section exactly. ` +
-    `Do NOT set converged back to false.`;
-  console.log(JSON.stringify({ decision: 'block', reason }));
+  console.log(JSON.stringify({ decision: 'allow' }));
   process.exit(0);
 }
 
@@ -81,25 +77,12 @@ if (!tasks || (pending.length === 0 && completed === 0)) {
 } else if (completed > 0 && pending.length === 0) {
   // All tasks done — verify first, then Reconciler/Evaluator/Planner
   appendHarnessEvent({ type: 'SPRINT_END', sprint, completed, grade });
-  if (grade === null || grade === 'F' || grade === 'D') {
-    reason =
-      `HARNESS LOOP — sprint ${sprint} tasks complete (${completed} done). Build grade: ${grade ?? 'unknown'}. ` +
-      `First: read skills/verifier.md and act as Verifier — re-check each completed task against state/deliverables.json with fresh evidence. ` +
-      `Any tasks that fail verification: re-queue them to pending in state/tasks.json. ` +
-      `If tasks were re-queued: stop here, the next harness tick will dispatch workers to fix them. ` +
-      `If all tasks verified: read skills/reconciler.md and act as Reconciler. ` +
-      `Fix build errors, then re-run the build. Update state/build-health.json. ` +
-      `After the build is green, invoke Evaluator (skills/evaluator.md).`;
-  } else {
-    reason =
-      `HARNESS LOOP — sprint ${sprint} tasks complete (${completed} done). Build grade: ${grade}. ` +
-      `First: read skills/verifier.md and act as Verifier — re-check each completed task against state/deliverables.json with fresh evidence. ` +
-      `Any tasks that fail verification: re-queue them to pending in state/tasks.json. ` +
-      `If tasks were re-queued: stop here, the next harness tick will dispatch workers to fix them. ` +
-      `If all tasks verified: read skills/evaluator.md and act as Evaluator. Run all three evaluation phases. ` +
-      `If grade is A or B for 2 consecutive cycles, write converged:true to state/build-health.json. ` +
-      `Otherwise read skills/planner.md and plan the next sprint.`;
-  }
+  reason =
+    `HARNESS LOOP — sprint ${sprint} tasks complete (${completed} done). Build grade: ${grade ?? 'unknown'}. ` +
+    `Read skills/verifier.md and act as Verifier — re-check each completed task against state/deliverables.json with fresh evidence, and run the anti-stub scan. ` +
+    `Any tasks that fail verification: re-queue them to pending in state/tasks.json. ` +
+    `If tasks were re-queued: stop here, the next harness tick will dispatch workers to fix them. ` +
+    `If all tasks verified: the verifier skill will chain you to Architect Reviewer and then Reconciler or Evaluator automatically. Follow the skill files.`;
 }
 
 console.log(JSON.stringify({ decision: 'block', reason }));

@@ -43,7 +43,19 @@ For each completed task:
 
 Run all commands yourself. Do not trust worker claims.
 
-### 4. Assess each check
+### 4. Anti-stub scan
+
+For each completed task, grep every file in its scope for stub markers:
+
+```bash
+grep -rn "TODO\|FIXME\|placeholder\|not implemented\|stub" <files in scope>
+```
+
+If any match is found in a code path that the task's acceptance criteria or description claims to implement: treat it as FAILED. A function that says `// TODO: implement` is not implemented regardless of what the worker reported.
+
+Do not fail for TODOs in comments that describe future optional work unrelated to this task's scope. Only fail when the stub is in a code path the task was supposed to deliver.
+
+### 5. Assess each check
 
 For each check, assign:
 
@@ -53,7 +65,7 @@ For each check, assign:
 | **PARTIAL** | Some sub-checks pass, others missing or unclear |
 | **FAILED** | Check exited non-zero, output matched fail pattern, or state file condition not met |
 
-### 5. Issue verdict per task
+### 6. Issue verdict per task
 
 | Task Verdict | Condition |
 |---|---|
@@ -88,9 +100,9 @@ The harness loop will dispatch a worker to fix the re-queued task on the next cy
 
 ---
 
-## On Success: Hand Off to Reconciler
+## On Success: Hand Off to Architect Reviewer
 
-If all tasks are VERIFIED (or PARTIAL with no FAILED):
+If all tasks are VERIFIED (or PARTIAL with no FAILED), and the anti-stub scan found no blocking stubs:
 
 1. Append to `state/harness-events.jsonl`:
 
@@ -98,7 +110,7 @@ If all tasks are VERIFIED (or PARTIAL with no FAILED):
 {"type":"VERIFY_PASS","sprint":<n>,"tasks_verified":<count>,"timestamp":"<ISO>"}
 ```
 
-2. Read `skills/reconciler.md` and proceed as Reconciler.
+2. Read `skills/architect-reviewer.md` and proceed as Architect Reviewer.
 
 ---
 

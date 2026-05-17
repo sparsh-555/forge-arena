@@ -51,6 +51,59 @@ cd game-server && npm run build && node dist/server.js &
 curl http://localhost:3000/api/game-state  # returns JSON with mode field
 ```
 
+## Behavioral Acceptance Tests
+
+These tests are run by the Evaluator in Phase 3 after the live game completes. All must pass for grade A.
+
+```bash
+# 6. Enemy movement — enemies must leave their spawn positions
+# Run after a NO_API headless game completes.
+ROUND_COUNT=$(grep '"type":"ROUND_STATE"' state/game-events.jsonl 2>/dev/null | wc -l | tr -d ' ')
+echo "round_state_events: $ROUND_COUNT"
+# Must be > 0. If 0: ROUND_STATE not implemented — grade capped at B.
+
+# Compare first and last ROUND_STATE: at least one enemy must have moved.
+# Extract first enemy position from round 1 and last round, check they differ.
+node -e "
+const fs = require('fs');
+const lines = fs.readFileSync('state/game-events.jsonl','utf8').trim().split('\n')
+  .map(l => { try { return JSON.parse(l); } catch { return null; } })
+  .filter(e => e && e.type === 'ROUND_STATE');
+if (lines.length < 2) { console.log('ENEMIES_MOVED: SKIP (fewer than 2 rounds)'); process.exit(0); }
+const first = lines[0].enemies, last = lines[lines.length-1].enemies;
+const moved = first.some((e,i) => last[i] && (last[i].position.x !== e.position.x || last[i].position.y !== e.position.y));
+console.log('ENEMIES_MOVED:', moved);
+" 2>/dev/null
+# Must print: ENEMIES_MOVED: true
+
+# 7. Agent movement — all active agents must leave their spawn positions
+node -e "
+const fs = require('fs');
+const lines = fs.readFileSync('state/game-events.jsonl','utf8').trim().split('\n')
+  .map(l => { try { return JSON.parse(l); } catch { return null; } })
+  .filter(e => e && e.type === 'ROUND_STATE');
+if (lines.length < 2) { console.log('AGENTS_MOVED: SKIP'); process.exit(0); }
+const first = lines[0].agents, last = lines[lines.length-1].agents;
+const moved = Object.keys(first).some(id => last[id] && (last[id].position.x !== first[id].position.x || last[id].position.y !== first[id].position.y));
+console.log('AGENTS_MOVED:', moved);
+" 2>/dev/null
+# Must print: AGENTS_MOVED: true
+
+# 8. Dungeon scores — at least 2 agents must have earned points
+node -e "
+const fs = require('fs');
+const lines = fs.readFileSync('state/game-events.jsonl','utf8').trim().split('\n')
+  .map(l => { try { return JSON.parse(l); } catch { return null; } })
+  .filter(e => e && e.type === 'ROUND_STATE');
+if (!lines.length) { console.log('DUNGEON_SCORES: SKIP'); process.exit(0); }
+" 2>/dev/null
+# Dungeon scores are validated by the existing GAME_COMPLETE stdout (scores printed per agent).
+# At least 2 agents must have dungeonScore > 0 in the final results line.
+grep 'dungeon=' ../../state/game-events.jsonl 2>/dev/null || echo "check GAME_COMPLETE stdout for dungeonScore values"
+```
+
+---
+
 ## Non-Negotiables
 
 - No TODOs, placeholders, or unimplemented stubs in any code path exercised by run-full-game.js.
@@ -89,6 +142,36 @@ BUILD → DUNGEON → ARENA_SEMI1 → ARENA_SEMI2 → ARENA_FINAL → ENDED
 The `GamePhase` enum in types.ts must encode all six states. Server rejects invalid transitions.
 
 ### Contracts
+
+**Cross-module type contracts** (enforced by tsc — workers must not omit these fields):
+
+| Interface | Field | Type | Purpose |
+|---|---|---|---|
+| `EnemyAction` | `newPosition?: Position` | optional | Set by EnemyAI for move actions; GameLoop reads this to update `enemy.position` |
+| `AgentState` | `lastReasoning?: string` | optional | Most recent reasoning string from Claude; DashboardPayload sends this to the renderer |
+| `DungeonMap` | `width: number` | required | Must equal MAP_WIDTH (30) |
+| `DungeonMap` | `height: number` | required | Must equal MAP_HEIGHT (22) |
+
+**ROUND_STATE event** (required every round in DUNGEON and ARENA phases):
+
+GameLoop must append this event to `state/game-events.jsonl` at the end of each resolved round:
+
+```json
+{
+  "type": "ROUND_STATE",
+  "round": 5,
+  "phase": "DUNGEON",
+  "timestamp": "<ISO>",
+  "agents": {
+    "aggressive": { "position": { "x": 5, "y": 3 }, "hp": 140, "status": "active" }
+  },
+  "enemies": [
+    { "id": "enemy_0", "position": { "x": 10, "y": 7 }, "hp": 22, "isAlive": true }
+  ]
+}
+```
+
+This event is the source of truth for behavioral verification (enemy movement, agent movement, survival rates). It is required for the evaluator to issue grade A.
 
 **Round loop (DUNGEON phase):**
 1. GameLoop reads `game-config.json` (picks up any patches written since last round)
@@ -145,7 +228,7 @@ game-server/src/
 
 ### Dungeon Phase
 
-- **Map**: rot.js BSP, fixed seed per session (~20 rooms, corridors connecting them). Doors between rooms.
+- **Map**: rot.js BSP, fixed seed per session (~20 rooms, corridors connecting them). **MAP_WIDTH=30, MAP_HEIGHT=22** (1920×1408px at 64px/tile — fits a 1080p screen without scrolling). Doors between rooms.
 - **Timer**: 300 seconds (5 minutes). `FAST_MODE=true` → 120 seconds (2 minutes).
 - **Agents**: All 4 spawn simultaneously at separate starting positions. No PvP. Each has independent FOV (rot.js FOV, radius 6 tiles).
 - **Round**: Every 2 seconds. Agent API calls fire in parallel (staggered 150ms). Enemy actions resolve after agents each round.

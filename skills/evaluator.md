@@ -107,14 +107,18 @@ wait $GAME_PID 2>/dev/null
 - At least 1 real decision: `DECISIONS > FALLBACK` (not all fallback)
 - At least 1 patch applied: `PATCHES >= 1`
 
+**Behavioral acceptance tests** (run after the game exits):
+
+Read the `## Behavioral Acceptance Tests` section of `SPEC.md`. Run each command listed there. Record pass/fail per test. Any behavioral test that fails prevents grade A — record in `findings` and downgrade from A to B.
+
 ---
 
 ### Grading
 
 | Grade | Condition |
 |---|---|
-| **A** | All 3 phases pass. Real decisions made. ≥1 patch applied. |
-| **B** | All 3 phases pass. Real decisions made. No patches (patch wiring broken). |
+| **A** | All 3 phases pass. Real decisions made. ≥1 patch applied. All SPEC behavioral acceptance tests pass. |
+| **B** | All 3 phases pass. Real decisions made. Missing patches OR ≥1 SPEC behavioral test fails. |
 | **C** | Phase 1+2 pass. Phase 3 skipped (no API key) OR all decisions are `[fallback]`. |
 | **D** | Phase 1 passes. Phase 2 fails (live demo broken — sprites 404, server crash, dead endpoint). |
 | **F** | Phase 1 fails (game doesn't even run). |
@@ -160,6 +164,14 @@ Rules:
 
 4. If `consecutive_passing >= 2` and grade is A or B → set `converged: true`, transition to Evolution Mode.
 5. If grade is C or below → write up to 3 specific fix tasks to `state/tasks.json` targeting the exact Phase 2 or Phase 3 failures. Cite the exact curl output or game-events evidence. Do not attempt fixes yourself.
+
+---
+
+## Evolution Mode (live demo only — requires DEMO_MODE=true)
+
+**Do not enter Evolution Mode during the build phase.** Evolution Mode only runs when the env var `DEMO_MODE=true` is set. If it is not set, the harness stops cleanly after convergence and waits for the user to start the demo manually.
+
+To check: `[ "$DEMO_MODE" = "true" ] || exit 0`
 
 ---
 
