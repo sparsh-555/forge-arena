@@ -3,25 +3,6 @@
   "sprint": 1,
   "tasks": [
     {
-      "id": "S1-005",
-      "description": "Implement EnemyAI.ts — resolveEnemyActions, resolveOneEnemy, findNearestAgent, pathfindStep, and resetEnemyAIState. This is rule-based only — zero Claude API calls. CRITICAL: PITFALL 2 — module-level Maps/Sets (bruteTurnCounters, sentinelTurnCounters, sentinelHasSummoned) must be wrapped in resetEnemyAIState() which is called at game start. Per-tier behavior: Grunt — pathfind toward nearest agent (A* via rot.js ROT.Path.AStar), attack if isAdjacent, damage = config.enemies.grunt_damage. Brute — move toward nearest agent, on odd turns telegraph 'heavy_strike' (set telegraphedAction on EnemyState), on even turns execute if adjacent to target. Sentinel — counts turns; every 3rd turn: block (reduce incoming damage 50%); at or below 30% HP: summon one grunt on nearest empty tile (once only). Hex Caster — maintain distance 3-4 from nearest agent; if too close, pathfind away; if at range, hex attack (bypasses armor). Shade — if on unexplored tile and first strike: 50% miss chance; otherwise attack nearest agent. findNearestAgent: returns closest living agent. pathfindStep: use ROT.Path.AStar to compute next tile toward target, return single step. Import EnemyAction with newPosition for moves. Use Manhattan distance for isAdjacent. All functions use immutable patterns on state.",
-      "scope": [
-        "game-server/src/EnemyAI.ts"
-      ],
-      "acceptance": "npm run build exits 0. resolveEnemyActions iterates all alive enemies and returns EnemyAction[] with one action per enemy. Grunt moves toward nearest agent when not adjacent, attacks when adjacent. Brute alternates telegraph/attack. Sentinel blocks on turn 3,6,9... and summons grunt once at ≤30% HP. Hex Caster maintains range 3-4, attacks from range. Shade has first-strike miss chance only from unexplored tiles. findNearestAgent returns closest living agent by Manhattan distance. pathfindStep returns adjacent position toward target using A*. resetEnemyAIState clears all internal counters — safe for multiple game runs in same process. EnemyAction includes newPosition for move actions. No Claude API calls anywhere in this module.",
-      "acceptance_criteria": [
-        "ROT.Path.AStar imported — grep EnemyAI.ts for 'ROT.Path' or 'AStar'",
-        "resetEnemyAIState exported and clears bruteTurnCounters/sentinelTurnCounters/sentinelHasSummoned — grep EnemyAI.ts for 'resetEnemyAIState'",
-        "resolveEnemyActions produces EnemyAction[] with enemyId and action fields — grep EnemyAI.ts for 'EnemyAction'",
-        "Hex caster behavior maintains range 3-4 — grep EnemyAI.ts for 'hex_caster'",
-        "Shade behavior has miss chance on first strike from unexplored tiles — grep EnemyAI.ts for 'shade'",
-        "findNearestAgent exported — grep EnemyAI.ts for 'findNearestAgent'"
-      ],
-      "branch": "worker/S1-005-implement-enemy-ai",
-      "priority": 1,
-      "status": "pending"
-    },
-    {
       "id": "S1-006",
       "description": "Implement StateEmitter.ts — broadcast, logEvent, broadcastPatch, and sendSnapshot. CRITICAL: PITFALL 1 — wsClients is an in-process Set populated by server.ts WebSocket connection handler. broadcast must work within the same Node.js process. broadcast(state): convert state to DashboardPayload via DungeonBridge.toDashboardPayload, JSON.stringify, send to every WebSocket in wsClients whose readyState is OPEN. Wrap in try-catch per client — one dead connection must not kill the loop. logEvent(event): append one NDJSON line to state/game-events.jsonl using fs.appendFileSync (safe for single-process synchronous game loop). Include event type, round, phase, timestamp, and data. broadcastPatch(patch): construct PatchEvent { type: 'PATCH_APPLIED', key, oldValue, newValue, reason, timestamp }, call logEvent, then broadcast to all clients. sendSnapshot(ws, state): send current DashboardPayload to a single newly-connected WebSocket client. Import DungeonBridge.toDashboardPayload. Path to game-events.jsonl must resolve relative to project root (use path.resolve + fileURLToPath for ESM).",
       "scope": [
@@ -111,6 +92,25 @@
         "getVisibleEntities computes distance field — grep DungeonBridge.ts for 'distance'"
       ],
       "branch": "worker/S1-004-implement-dungeon-bridge",
+      "priority": 1,
+      "status": "completed"
+    },
+    {
+      "id": "S1-005",
+      "description": "Implement EnemyAI.ts — resolveEnemyActions, resolveOneEnemy, findNearestAgent, pathfindStep, and resetEnemyAIState. This is rule-based only — zero Claude API calls. CRITICAL: PITFALL 2 — module-level Maps/Sets (bruteTurnCounters, sentinelTurnCounters, sentinelHasSummoned) must be wrapped in resetEnemyAIState() which is called at game start. Per-tier behavior: Grunt — pathfind toward nearest agent (A* via rot.js ROT.Path.AStar), attack if isAdjacent, damage = config.enemies.grunt_damage. Brute — move toward nearest agent, on odd turns telegraph 'heavy_strike' (set telegraphedAction on EnemyState), on even turns execute if adjacent to target. Sentinel — counts turns; every 3rd turn: block (reduce incoming damage 50%); at or below 30% HP: summon one grunt on nearest empty tile (once only). Hex Caster — maintain distance 3-4 from nearest agent; if too close, pathfind away; if at range, hex attack (bypasses armor). Shade — if on unexplored tile and first strike: 50% miss chance; otherwise attack nearest agent. findNearestAgent: returns closest living agent. pathfindStep: use ROT.Path.AStar to compute next tile toward target, return single step. Import EnemyAction with newPosition for moves. Use Manhattan distance for isAdjacent. All functions use immutable patterns on state.",
+      "scope": [
+        "game-server/src/EnemyAI.ts"
+      ],
+      "acceptance": "npm run build exits 0. resolveEnemyActions iterates all alive enemies and returns EnemyAction[] with one action per enemy. Grunt moves toward nearest agent when not adjacent, attacks when adjacent. Brute alternates telegraph/attack. Sentinel blocks on turn 3,6,9... and summons grunt once at ≤30% HP. Hex Caster maintains range 3-4, attacks from range. Shade has first-strike miss chance only from unexplored tiles. findNearestAgent returns closest living agent by Manhattan distance. pathfindStep returns adjacent position toward target using A*. resetEnemyAIState clears all internal counters — safe for multiple game runs in same process. EnemyAction includes newPosition for move actions. No Claude API calls anywhere in this module.",
+      "acceptance_criteria": [
+        "ROT.Path.AStar imported — grep EnemyAI.ts for 'ROT.Path' or 'AStar'",
+        "resetEnemyAIState exported and clears bruteTurnCounters/sentinelTurnCounters/sentinelHasSummoned — grep EnemyAI.ts for 'resetEnemyAIState'",
+        "resolveEnemyActions produces EnemyAction[] with enemyId and action fields — grep EnemyAI.ts for 'EnemyAction'",
+        "Hex caster behavior maintains range 3-4 — grep EnemyAI.ts for 'hex_caster'",
+        "Shade behavior has miss chance on first strike from unexplored tiles — grep EnemyAI.ts for 'shade'",
+        "findNearestAgent exported — grep EnemyAI.ts for 'findNearestAgent'"
+      ],
+      "branch": "worker/S1-005-implement-enemy-ai",
       "priority": 1,
       "status": "completed"
     }
