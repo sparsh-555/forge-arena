@@ -51,10 +51,13 @@ if (!tasks || (pending.length === 0 && completed === 0)) {
   // Tasks exist — keep working
   reason =
     `HARNESS LOOP — sprint ${sprint}, ${pending.length} task(s) pending, ${completed} done. ` +
-    `Read state/tasks.json. Pick the highest-priority pending task. ` +
-    `Read skills/worker.md and implement it. ` +
-    `Write result back to state/tasks.json (move task to completed). ` +
-    `Do NOT stop when the task is done — this hook will fire again and direct you to the next task.`;
+    `Read state/tasks.json. Find the highest priority level among pending tasks. ` +
+    `Collect ALL pending tasks at that priority level — they are independent and must run in parallel. ` +
+    `If there are 2 or more tasks at that priority: use the Agent tool to dispatch one subagent per task simultaneously (parallel, not sequential). ` +
+    `Brief each subagent with the full task description and instruct it to read skills/worker.md then implement the task. ` +
+    `Each subagent must update state/tasks.json when done (move its task to completed). ` +
+    `If there is only one task at that priority: read skills/worker.md and implement it directly. ` +
+    `Do NOT stop when tasks complete — this hook will fire again and direct you to the next batch.`;
 
 } else if (completed > 0 && pending.length === 0) {
   // All tasks done — run Reconciler, then Evaluator or Planner
