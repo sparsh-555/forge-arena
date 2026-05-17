@@ -14,7 +14,7 @@ import { handleDecideRoute, getFallbackAction } from "./AgentAPI.js";
 import { resolveEnemyActions, pathfindStep, resetEnemyAIState, isAdjacent } from "./EnemyAI.js";
 import { resolveCombat, resolveEnemyAttack, calcStaminaCost, calcStaminaRegen } from "./CombatSystem.js";
 import { broadcast, broadcastPatch, logEvent } from "./StateEmitter.js";
-import { readConfig, applyPatch } from "./PatchApplier.js";
+import { readConfig, applyPatch, readBaseline, getNestedValue } from "./PatchApplier.js";
 import { toAgentPayload } from "./DungeonBridge.js";
 import ROT from "rot-js";
 
@@ -496,19 +496,30 @@ export function applyAgentAction(
  */
 function choosePatch(
   state: GameState,
-  config: GameConfig
+  _config: GameConfig
 ): { key: string; newValue: number; reason: string; timestamp: string } | null {
   const ts = new Date().toISOString();
+  const baseline = readBaseline();
 
-  // Count how many times each key has already been patched (for escalation + rotation)
+  // Count patches per key (for escalation and rotation)
   const patchCounts: Record<string, number> = {};
   for (const p of (state.recentPatches ?? [])) {
     patchCounts[p.key] = (patchCounts[p.key] ?? 0) + 1;
   }
 
-  // Escalating multiplier: the more times a key has been hit, the harder the next hit
-  const upMult   = (key: string, base = 1.15) => base + (patchCounts[key] ?? 0) * 0.08;
-  const downMult = (key: string, base = 0.88) => base - (patchCounts[key] ?? 0) * 0.04;
+  // All new values are anchored to baseline to prevent compounding inflation.
+  // Up: baseline * (1 + n * 0.20), capped at baseline * 2.5
+  // Down: baseline * (1 - n * 0.12), floored at baseline * 0.40
+  const upFromBaseline = (key: string): number => {
+    const base = getNestedValue(baseline as unknown as Record<string, unknown>, key);
+    const n = (patchCounts[key] ?? 0) + 1;
+    return Math.min(Math.floor(base * (1 + n * 0.20)), Math.floor(base * 2.5));
+  };
+  const downFromBaseline = (key: string): number => {
+    const base = getNestedValue(baseline as unknown as Record<string, unknown>, key);
+    const n = (patchCounts[key] ?? 0) + 1;
+    return Math.max(Math.floor(base * (1 - n * 0.12)), Math.floor(base * 0.40));
+  };
 
   // Summarise per-agent stats
   const agentStats = AGENT_IDS.map(id => {
@@ -525,17 +536,19 @@ function choosePatch(
 
   // ── Rule 1: Mass casualties → enemies too lethal ──────────────────────────
   if (eliminated.length >= 2) {
-    const mult = downMult("enemies.grunt_hp");
-    return { key: "enemies.grunt_hp", newValue: Math.max(1, Math.floor(config.enemies.grunt_hp * mult)), timestamp: ts,
-      reason: `${eliminated.length} agents eliminated — grunt HP cut ×${mult.toFixed(2)} to keep game alive` };
+    const newVal = downFromBaseline("enemies.grunt_hp");
+    const n = patchCounts["enemies.grunt_hp"] ?? 0;
+    return { key: "enemies.grunt_hp", newValue: newVal, timestamp: ts,
+      reason: `${eliminated.length} agents eliminated — grunt HP reduced (intervention ${n + 1})` };
   }
 
-  // ── Rule 2: No one is scoring → game is too hard ──────────────────────────
+  // ── Rule 2: No one scoring → game is too hard ────────────────────────────
   const totalScore = agentStats.reduce((s, a) => s + a.score, 0);
   if (totalScore === 0 && state.roundNumber > 6) {
-    const mult = downMult("enemies.grunt_hp");
-    return { key: "enemies.grunt_hp", newValue: Math.max(1, Math.floor(config.enemies.grunt_hp * mult)), timestamp: ts,
-      reason: `all agents 0 score — reducing grunt HP ×${mult.toFixed(2)} to open up play` };
+    const newVal = downFromBaseline("enemies.grunt_hp");
+    const n = patchCounts["enemies.grunt_hp"] ?? 0;
+    return { key: "enemies.grunt_hp", newValue: newVal, timestamp: ts,
+      reason: `all agents 0 score — grunt HP reduced (intervention ${n + 1})` };
   }
 
   if (active.length < 2) return null;
@@ -549,60 +562,65 @@ function choosePatch(
   const isStrongLead = leadGap >= 2 && leader.score > second.score;
 
   if (isStrongLead) {
-    const killLead = leader.kills - (sorted.map(a => a.kills).sort((a,b) => b-a)[1] ?? 0);
-    const itemLead = leader.items - (sorted.map(a => a.items).sort((a,b) => b-a)[1] ?? 0);
+    const killLead = leader.kills - (sorted.map(a => a.kills).sort((a, b) => b - a)[1] ?? 0);
+    const itemLead = leader.items - (sorted.map(a => a.items).sort((a, b) => b - a)[1] ?? 0);
 
     if (leader.bossKill && !sorted.slice(1).some(a => a.bossKill)) {
-      const mult = downMult("enemies.brute_damage");
-      return { key: "enemies.brute_damage", newValue: Math.max(1, Math.floor(config.enemies.brute_damage * mult)), timestamp: ts,
-        reason: `${leader.id} only boss killer — brute pressure eased ×${mult.toFixed(2)}` };
+      const newVal = downFromBaseline("enemies.brute_damage");
+      const n = patchCounts["enemies.brute_damage"] ?? 0;
+      return { key: "enemies.brute_damage", newValue: newVal, timestamp: ts,
+        reason: `${leader.id} only boss killer — brute damage reduced (intervention ${n + 1})` };
     }
 
     if (killLead >= 2) {
-      // Rotate through all three attack cost types so the same key isn't spammed.
-      // Pick whichever has been patched least; escalate multiplier on repeats.
+      // Rotate through attack cost types; pick whichever has been patched least
       const heavyCount = patchCounts["stamina.heavy_attack_cost"] ?? 0;
       const medCount   = patchCounts["stamina.medium_attack_cost"] ?? 0;
       const lightCount = patchCounts["stamina.light_attack_cost"] ?? 0;
 
-      let key: string; let currentVal: number; let count: number;
+      let key: string;
       if (heavyCount <= medCount && heavyCount <= lightCount) {
-        key = "stamina.heavy_attack_cost"; currentVal = config.stamina.heavy_attack_cost; count = heavyCount;
+        key = "stamina.heavy_attack_cost";
       } else if (medCount <= lightCount) {
-        key = "stamina.medium_attack_cost"; currentVal = config.stamina.medium_attack_cost; count = medCount;
+        key = "stamina.medium_attack_cost";
       } else {
-        key = "stamina.light_attack_cost"; currentVal = config.stamina.light_attack_cost; count = lightCount;
+        key = "stamina.light_attack_cost";
       }
-      const mult = upMult(key);
+      const newVal = upFromBaseline(key);
+      const n = patchCounts[key] ?? 0;
       const label = key.split(".")[1].replace(/_/g, " ");
-      return { key, newValue: Math.floor(currentVal * mult), timestamp: ts,
-        reason: `${leader.id} kill-dominant (+${killLead}) — ${label} ×${mult.toFixed(2)} (intervention ${count + 1})` };
+      return { key, newValue: newVal, timestamp: ts,
+        reason: `${leader.id} kill-dominant (+${killLead}) — ${label} raised (intervention ${n + 1})` };
     }
 
     if (itemLead >= 2) {
-      const mult = downMult("enemies.brute_hp");
-      return { key: "enemies.brute_hp", newValue: Math.max(1, Math.floor(config.enemies.brute_hp * mult)), timestamp: ts,
-        reason: `${leader.id} item-dominant (+${itemLead}) — brute HP ×${mult.toFixed(2)} opens more rooms` };
+      const newVal = downFromBaseline("enemies.brute_hp");
+      const n = patchCounts["enemies.brute_hp"] ?? 0;
+      return { key: "enemies.brute_hp", newValue: newVal, timestamp: ts,
+        reason: `${leader.id} item-dominant (+${itemLead}) — brute HP reduced (intervention ${n + 1})` };
     }
 
-    // Generic score lead — alternate between light cost and medium cost
+    // Generic score lead — alternate light / medium cost
     const lightCount = patchCounts["stamina.light_attack_cost"] ?? 0;
     const medCount   = patchCounts["stamina.medium_attack_cost"] ?? 0;
     if (lightCount <= medCount) {
-      const mult = upMult("stamina.light_attack_cost", 1.18);
-      return { key: "stamina.light_attack_cost", newValue: Math.floor(config.stamina.light_attack_cost * mult), timestamp: ts,
-        reason: `${leader.id} score lead (${leader.score} vs ${second.score}) — light attack cost ×${mult.toFixed(2)}` };
+      const newVal = upFromBaseline("stamina.light_attack_cost");
+      const n = patchCounts["stamina.light_attack_cost"] ?? 0;
+      return { key: "stamina.light_attack_cost", newValue: newVal, timestamp: ts,
+        reason: `${leader.id} score lead (${leader.score} vs ${second.score}) — light attack cost raised (intervention ${n + 1})` };
     }
-    const mult = upMult("stamina.medium_attack_cost", 1.15);
-    return { key: "stamina.medium_attack_cost", newValue: Math.floor(config.stamina.medium_attack_cost * mult), timestamp: ts,
-      reason: `${leader.id} score lead (${leader.score} vs ${second.score}) — medium attack cost ×${mult.toFixed(2)}` };
+    const newVal = upFromBaseline("stamina.medium_attack_cost");
+    const n = patchCounts["stamina.medium_attack_cost"] ?? 0;
+    return { key: "stamina.medium_attack_cost", newValue: newVal, timestamp: ts,
+      reason: `${leader.id} score lead (${leader.score} vs ${second.score}) — medium attack cost raised (intervention ${n + 1})` };
   }
 
   // ── Rule 4: Nobody scoring yet — open the dungeon up ─────────────────────
   if (active.every(a => a.score === 0)) {
-    const mult = downMult("enemies.grunt_hp");
-    return { key: "enemies.grunt_hp", newValue: Math.max(1, Math.floor(config.enemies.grunt_hp * mult)), timestamp: ts,
-      reason: `all agents 0 score (round ${state.roundNumber}) — grunt HP ×${mult.toFixed(2)}` };
+    const newVal = downFromBaseline("enemies.grunt_hp");
+    const n = patchCounts["enemies.grunt_hp"] ?? 0;
+    return { key: "enemies.grunt_hp", newValue: newVal, timestamp: ts,
+      reason: `all agents 0 score (round ${state.roundNumber}) — grunt HP reduced (intervention ${n + 1})` };
   }
 
   return null;
