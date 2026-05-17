@@ -79,6 +79,7 @@ async function callClaudeOnce(
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
+    // Streaming request — abort once JSON decision arrives (typically 1-2s vs 6s for full response)
     const response = await fetch(ANTHROPIC_API_URL, {
       method: "POST",
       headers: {
@@ -92,6 +93,7 @@ async function callClaudeOnce(
         messages: [{ role: "user", content: JSON.stringify(payload, null, 2) }],
         max_tokens: 600,
         temperature: 0.7,
+        stream: true,
       }),
       signal: controller.signal,
     });
@@ -100,37 +102,75 @@ async function callClaudeOnce(
       throw new Error(`Anthropic API error: ${response.status} ${response.statusText}`);
     }
 
-    const json = await response.json() as {
-      content: Array<{ text: string }>;
-    };
-
-    const text = json.content?.[0]?.text;
-    if (!text) {
-      throw new Error("Empty response from Claude API");
+    if (!response.body) {
+      throw new Error("No response body for streaming");
     }
 
-    // Extract JSON from response — personalities output JSON FIRST, then analysis prose.
-    // Find the first valid JSON object that contains goal + reasoning fields.
-    const jsonMatches = text.match(/\{[^{}]*\}/g);
+    // Parse SSE stream — accumulate text, abort on first valid JSON decision
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let accumulatedText = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        try {
+          const event = JSON.parse(line.slice(6));
+          if (event.type === "content_block_delta" && event.delta?.text) {
+            accumulatedText += event.delta.text;
+          }
+          // Try to extract valid JSON once we have enough text
+          if (event.type === "content_block_delta" || event.type === "content_block_stop") {
+            const jsonMatches = accumulatedText.match(/\{[^{}]*\}/g);
+            if (jsonMatches) {
+              const match = jsonMatches.find(m => m.includes('"goal"'));
+              if (match) {
+                try {
+                  const parsed = JSON.parse(match) as Record<string, unknown>;
+                  if (typeof parsed.reasoning === "string" && parsed.reasoning.trim() &&
+                      typeof parsed.goal === "string" && VALID_GOALS.has(parsed.goal)) {
+                    controller.abort(); // abort the stream — we got what we needed
+                    return {
+                      goal: parsed.goal as AgentAction["goal"],
+                      targetId: typeof parsed.targetId === "string" ? parsed.targetId : undefined,
+                      reasoning: parsed.reasoning,
+                    };
+                  }
+                } catch { /* JSON incomplete, keep reading */ }
+              }
+            }
+          }
+          if (event.type === "message_stop") break;
+        } catch { /* skip malformed SSE lines */ }
+      }
+    }
+
+    // Stream ended without valid JSON — try parsing accumulated text as fallback
+    const jsonMatches = accumulatedText.match(/\{[^{}]*\}/g);
     if (!jsonMatches || jsonMatches.length === 0) {
-      throw new Error(`No JSON found in Claude response: ${text.slice(0, 200)}`);
+      throw new Error(`No JSON found in stream: ${accumulatedText.slice(0, 200)}`);
     }
     const lastJson = jsonMatches.find(m => m.includes('"goal"')) ?? jsonMatches[0];
-
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(lastJson) as Record<string, unknown>;
     } catch {
-      throw new Error(`Invalid JSON in Claude response: ${lastJson.slice(0, 200)}`);
+      throw new Error(`Invalid JSON in stream: ${lastJson.slice(0, 200)}`);
     }
-
     if (typeof parsed.reasoning !== "string" || !parsed.reasoning.trim()) {
-      throw new Error("Claude response missing required 'reasoning' field");
+      throw new Error("Stream missing required 'reasoning' field");
     }
     if (typeof parsed.goal !== "string" || !VALID_GOALS.has(parsed.goal)) {
-      throw new Error(`Invalid or missing goal in Claude response: ${String(parsed.goal)}`);
+      throw new Error(`Invalid or missing goal in stream: ${String(parsed.goal)}`);
     }
-
     return {
       goal: parsed.goal as AgentAction["goal"],
       targetId: typeof parsed.targetId === "string" ? parsed.targetId : undefined,
