@@ -3,24 +3,6 @@
   "sprint": 1,
   "tasks": [
     {
-      "id": "S1-002",
-      "description": "Implement DungeonGen.ts — all 5 stubbed functions. Use rot.js ROT.Map.Digger (NOT BspDungeon — does not exist in rot.js 2.2.0). MAP_WIDTH=30, MAP_HEIGHT=22 (import from types.ts). generateDungeon(seed): create a Digger map, generate ~20 rooms connected by corridors, convert to DungeonMap with Tile[][] grid. Mark boss_entrance tile in the deepest room (furthest from center). computeAgentSpawns: place 4 agents in 4 different rooms, each at least 8 tiles apart. computeEnemySpawns: place grunts in all rooms (1-2 per room), brutes in medium/large rooms, sentinels and hex_casters 50/50 in large rooms, shades in corridors/unexplored. computeChestContents: scatter 6-8 chests with random items from the valid weapon list (sword/axe/dagger/greatsword) plus armor/shield/estus/potions. spawnEnemyInUnexplored: place one enemy of given tier on an unexplored floor tile. Import ROT from 'rot-js' as ESM default import. Set ROT.RNG.setSeed(seed) for deterministic generation.",
-      "scope": [
-        "game-server/src/DungeonGen.ts"
-      ],
-      "acceptance": "npm run build exits 0. generateDungeon(42) returns a DungeonMap with width=30, height=22, tiles array of 22 rows × 30 cols. At least 15 rooms generated. Boss entrance tile present and marked. computeAgentSpawns returns 4 positions in distinct rooms. computeEnemySpawns returns at least 15 enemies with tier distribution including grunts, brutes, and sentinels. computeChestContents returns items with valid weapon names only. spawnEnemyInUnexplored returns a valid EnemyState. All functions use immutable patterns — create new objects, never mutate inputs. ROT.RNG.setSeed called before generation.",
-      "acceptance_criteria": [
-        "generateDungeon(42) produces map with correct dimensions — write a quick smoke test or verify tsc accepts DungeonMap return type",
-        "ROT.Map.Digger imported from 'rot-js' — grep DungeonGen.ts for 'ROT.Map.Digger'",
-        "MAP_WIDTH and MAP_HEIGHT imported from types.ts — grep DungeonGen.ts for 'MAP_WIDTH'",
-        "Boss entrance tile set to 'boss_entrance' type — grep DungeonGen.ts for 'boss_entrance'",
-        "computeEnemySpawns produces hex_caster entries (not just grunt/brute/sentinel) — grep DungeonGen.ts for 'hex_caster'"
-      ],
-      "branch": "worker/S1-002-implement-dungeon-gen",
-      "priority": 1,
-      "status": "pending"
-    },
-    {
       "id": "S1-003",
       "description": "Implement CombatSystem.ts — all 6 stubbed functions. calcStaminaCost(action, config): return config.stamina[action + '_cost'] or 0 for pass/use_estus/equip_from_backpack. calcDamage(inventory, attackType, armorReduction): get equipped weapon's baseDamage (default 5 if no weapon), multiply by attackMultiplier (heavy=1.5, medium=1.0, light=0.6), then multiply by (1 - armorReduction). Return integer damage (min 1). calcEquipmentLoad(inventory): sum loadContribution from all 4 equipped slots, return 0-100. calcStaminaRegen(combat, config): base regen from config, apply load tier modifier from LOAD_REGEN_MODIFIER. resolveCombat: compute attacker damage via calcDamage, subtract from defender HP (with block reduction if blocking), return CombatResult with damage dealt, remaining HP, stamina after cost. resolveEnemyAttack: simplified version using enemy tier base damage from EnemyBaseStats. Import all needed types and constants from types.ts. Never hardcode config values — always read from the config parameter.",
       "scope": [
@@ -111,6 +93,24 @@
         "EnemyAction has newPosition?: Position — grep types.ts for 'newPosition'"
       ],
       "branch": "worker/S1-001-fix-types-gaps",
+      "priority": 1,
+      "status": "completed"
+    },
+    {
+      "id": "S1-002",
+      "description": "Implement DungeonGen.ts — all 5 stubbed functions. Use rot.js ROT.Map.Digger (NOT BspDungeon — does not exist in rot.js 2.2.0). MAP_WIDTH=30, MAP_HEIGHT=22 (import from types.ts). generateDungeon(seed): create a Digger map, generate ~20 rooms connected by corridors, convert to DungeonMap with Tile[][] grid. Mark boss_entrance tile in the deepest room (furthest from center). computeAgentSpawns: place 4 agents in 4 different rooms, each at least 8 tiles apart. computeEnemySpawns: place grunts in all rooms (1-2 per room), brutes in medium/large rooms, sentinels and hex_casters 50/50 in large rooms, shades in corridors/unexplored. computeChestContents: scatter 6-8 chests with random items from the valid weapon list (sword/axe/dagger/greatsword) plus armor/shield/estus/potions. spawnEnemyInUnexplored: place one enemy of given tier on an unexplored floor tile. Import ROT from 'rot-js' as ESM default import. Set ROT.RNG.setSeed(seed) for deterministic generation.",
+      "scope": [
+        "game-server/src/DungeonGen.ts"
+      ],
+      "acceptance": "npm run build exits 0. generateDungeon(42) returns a DungeonMap with width=30, height=22, tiles array of 22 rows × 30 cols. At least 15 rooms generated. Boss entrance tile present and marked. computeAgentSpawns returns 4 positions in distinct rooms. computeEnemySpawns returns at least 15 enemies with tier distribution including grunts, brutes, and sentinels. computeChestContents returns items with valid weapon names only. spawnEnemyInUnexplored returns a valid EnemyState. All functions use immutable patterns — create new objects, never mutate inputs. ROT.RNG.setSeed called before generation.",
+      "acceptance_criteria": [
+        "generateDungeon(42) produces map with correct dimensions — write a quick smoke test or verify tsc accepts DungeonMap return type",
+        "ROT.Map.Digger imported from 'rot-js' — grep DungeonGen.ts for 'ROT.Map.Digger'",
+        "MAP_WIDTH and MAP_HEIGHT imported from types.ts — grep DungeonGen.ts for 'MAP_WIDTH'",
+        "Boss entrance tile set to 'boss_entrance' type — grep DungeonGen.ts for 'boss_entrance'",
+        "computeEnemySpawns produces hex_caster entries (not just grunt/brute/sentinel) — grep DungeonGen.ts for 'hex_caster'"
+      ],
+      "branch": "worker/S1-002-implement-dungeon-gen",
       "priority": 1,
       "status": "completed"
     }

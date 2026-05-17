@@ -1,87 +1,283 @@
-// DungeonGen: procedural dungeon generation using rot.js BSP.
+// DungeonGen: procedural dungeon generation using rot.js Digger.
 // Output is consumed by DungeonBridge — never by other modules directly.
-//
-// TODO (workers implementing this file): add these imports at top:
-//   import { Map as RotMap, Path, FOV } from "rot-js";
 
-import type { DungeonMap, Position } from "./types.js";
+import ROT from "rot-js";
+import type { DungeonMap, Position, Room, Tile } from "./types.js";
+import { MAP_WIDTH, MAP_HEIGHT } from "./types.js";
 
-/**
- * Generate a dungeon map using rot.js BSP algorithm.
- * @param seed - deterministic seed for reproducible maps (use new ROT.RNG().setSeed(seed))
- * @returns DungeonMap with ~20 rooms connected by corridors
- *
- * Implementation notes:
- * - new RotMap.BspDungeon(width, height) — typical: 60×40
- * - bsp.create(digger) callback — record floor tiles
- * - Use RotMap.Corridor or RotMap.Rogue for corridor connection
- * - Identify boss room: room furthest from map center (Euclidean distance of room center)
- * - Place boss_entrance tile at entrance to boss room (first floor tile adjacent to corridor)
- * - Place 3-5 chests in random non-boss rooms (1 per room max)
- * - All tiles initialized: { explored: false, visibleTo: [] }
- */
-export function generateDungeon(_seed: number): DungeonMap {
-  throw new Error("generateDungeon not implemented");
+const ITEM_POOL = [
+  "sword", "axe", "dagger", "greatsword",
+  "leather_armor", "chain_armor", "plate_armor", "shield",
+  "estus", "strength_potion"
+];
+
+function roomArea(r: Room): number {
+  return r.width * r.height;
 }
 
 /**
- * Compute spawn positions for all 4 agents.
- * Agents must start in different rooms, each near room center.
- *
- * Implementation notes:
- * - Select 4 rooms (excluding boss room and corridor-only areas)
- * - Return center position of each room (closest floor tile to room center)
- * - Keys: "aggressive", "cautious", "hoarder", "speedrunner"
+ * Generate a dungeon map using rot.js Digger algorithm.
+ * ~20 rooms connected by corridors. MAP_WIDTH=30, MAP_HEIGHT=22.
  */
-export function computeAgentSpawns(_map: DungeonMap): Record<string, Position> {
-  throw new Error("computeAgentSpawns not implemented");
+export function generateDungeon(seed: number): DungeonMap {
+  ROT.RNG.setSeed(seed);
+
+  const digger = new ROT.Map.Digger(MAP_WIDTH, MAP_HEIGHT, {
+    roomWidth: [3, 7],
+    roomHeight: [3, 5],
+    corridorLength: [2, 6],
+    dugPercentage: 0.25,
+  });
+
+  // Build tile grid from digger callback
+  const tiles: Tile[][] = Array.from({ length: MAP_HEIGHT }, () =>
+    Array.from({ length: MAP_WIDTH }, (): Tile => ({
+      type: "wall" as const,
+      explored: false,
+      visibleTo: [],
+    }))
+  );
+
+  digger.create((x, y, value) => {
+    if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) return;
+    if (value === 0) {
+      tiles[y][x].type = "floor";
+    } else if (value === 2) {
+      tiles[y][x].type = "door";
+    }
+    // value 1 = wall — leave as default
+  });
+
+  // Convert rot.js rooms to our Room format
+  const rotRooms = digger.getRooms();
+  const rooms: Room[] = rotRooms.map((r, i) => ({
+    id: `room_${i}`,
+    x: r.getLeft(),
+    y: r.getTop(),
+    width: r.getRight() - r.getLeft() + 1,
+    height: r.getBottom() - r.getTop() + 1,
+  }));
+
+  // Boss room = deepest (furthest from map center)
+  const cx = MAP_WIDTH / 2;
+  const cy = MAP_HEIGHT / 2;
+  let bossRoomIdx = 0;
+  let maxDist = -1;
+  rooms.forEach((r, i) => {
+    const rx = r.x + r.width / 2;
+    const ry = r.y + r.height / 2;
+    const d = (rx - cx) ** 2 + (ry - cy) ** 2;
+    if (d > maxDist) { maxDist = d; bossRoomIdx = i; }
+  });
+
+  // Place boss entrance at center of boss room
+  const bossRoom = rooms[bossRoomIdx];
+  const bossX = Math.round(bossRoom.x + bossRoom.width / 2);
+  const bossY = Math.round(bossRoom.y + bossRoom.height / 2);
+  if (bossX >= 0 && bossX < MAP_WIDTH && bossY >= 0 && bossY < MAP_HEIGHT) {
+    tiles[bossY][bossX].type = "boss_entrance";
+  }
+
+  return { width: MAP_WIDTH, height: MAP_HEIGHT, tiles, rooms, bossEntrancePosition: { x: bossX, y: bossY } };
+}
+
+/**
+ * Compute spawn positions for all 4 agents in distinct rooms.
+ * Agents start near room centers, at least 8 tiles apart.
+ */
+export function computeAgentSpawns(map: DungeonMap): Record<string, Position> {
+  const agentIds = ["aggressive", "cautious", "hoarder", "speedrunner"];
+  const bossPos = map.bossEntrancePosition;
+
+  // Rank rooms by distance from boss (closest room gets the speedrunner)
+  const candidates = map.rooms
+    .filter(r => r.width >= 3 && r.height >= 3)
+    .map(r => {
+      const rx = Math.round(r.x + r.width / 2);
+      const ry = Math.round(r.y + r.height / 2);
+      const dist = Math.abs(rx - bossPos.x) + Math.abs(ry - bossPos.y);
+      return { room: r, cx: rx, cy: ry, dist };
+    })
+    .sort((a, b) => b.dist - a.dist); // furthest from boss first
+
+  const result: Record<string, Position> = {};
+
+  // Assign agents to the 4 best candidate rooms (spaced at least 8 tiles apart)
+  const picked: typeof candidates = [];
+  for (const c of candidates) {
+    const tooClose = picked.some(p => Math.abs(p.cx - c.cx) + Math.abs(p.cy - c.cy) < 8);
+    if (!tooClose && picked.length < 4) {
+      picked.push(c);
+    }
+  }
+
+  agentIds.forEach((id, i) => {
+    if (i < picked.length) {
+      result[id] = { x: picked[i].cx, y: picked[i].cy };
+    }
+  });
+
+  return result;
 }
 
 /**
  * Compute enemy spawn positions and tiers.
- * Called once at dungeon generation. Returns initial enemy list.
- *
- * Implementation notes:
- * - Grunt: rooms with area < 25 tiles
- * - Brute: rooms with area 25-50 tiles
- * - Sentinel: rooms with area > 50 tiles
- * - At least 1 enemy per non-agent, non-boss room
- * - Total: aim for 15-25 enemies across dungeon
- * - Never spawn in agent start rooms or boss room
+ * Grunts in all rooms, brutes in medium/large rooms, sentinels/hex_casters 50/50 in large rooms.
  */
-export function computeEnemySpawns(_map: DungeonMap): Array<{
-  tier: "grunt" | "brute" | "sentinel";
+export function computeEnemySpawns(map: DungeonMap): Array<{
+  tier: "grunt" | "brute" | "sentinel" | "hex_caster" | "shade";
   position: Position;
 }> {
-  throw new Error("computeEnemySpawns not implemented");
+  const enemies: Array<{
+    tier: "grunt" | "brute" | "sentinel" | "hex_caster" | "shade";
+    position: Position;
+  }> = [];
+
+  // Categorize rooms by size
+  const small: Room[] = [];
+  const medium: Room[] = [];
+  const large: Room[] = [];
+  for (const r of map.rooms) {
+    const area = roomArea(r);
+    if (area < 25) small.push(r);
+    else if (area <= 50) medium.push(r);
+    else large.push(r);
+  }
+
+  const floorTiles = (r: Room): Position[] => {
+    const pts: Position[] = [];
+    for (let y = r.y; y < r.y + r.height; y++) {
+      for (let x = r.x; x < r.x + r.width; x++) {
+        if (y >= 0 && y < map.height && x >= 0 && x < map.width &&
+            map.tiles[y][x].type !== "wall" && map.tiles[y][x].type !== "boss_entrance") {
+          pts.push({ x, y });
+        }
+      }
+    }
+    return pts;
+  };
+
+  const pickRandom = (pts: Position[]): Position | null => {
+    if (pts.length === 0) return null;
+    return pts[Math.floor(ROT.RNG.getUniform() * pts.length)];
+  };
+
+  // Grunts: 1-2 per room in all rooms
+  for (const r of map.rooms) {
+    const pts = floorTiles(r);
+    const count = r.width >= 5 ? 2 : 1;
+    for (let i = 0; i < count; i++) {
+      const pos = pickRandom(pts);
+      if (pos) {
+        enemies.push({ tier: "grunt", position: pos });
+        pts.splice(pts.findIndex(p => p.x === pos.x && p.y === pos.y), 1);
+      }
+    }
+  }
+
+  // Brutes: 1 per medium room
+  for (const r of medium) {
+    const pos = pickRandom(floorTiles(r));
+    if (pos) enemies.push({ tier: "brute", position: pos });
+  }
+
+  // Sentinels and hex_casters: 50/50 split in large rooms
+  for (const r of large) {
+    const isSentinel = ROT.RNG.getUniform() < 0.5;
+    const pos = pickRandom(floorTiles(r));
+    if (pos) enemies.push({ tier: isSentinel ? "sentinel" : "hex_caster", position: pos });
+  }
+
+  // Shades: 3-5 placed on floor tiles in corridors (tiles not in any room)
+  const roomFloorSet = new Set<string>();
+  for (const r of map.rooms) {
+    for (let y = r.y; y < r.y + r.height; y++) {
+      for (let x = r.x; x < r.x + r.width; x++) {
+        roomFloorSet.add(`${x},${y}`);
+      }
+    }
+  }
+  const corridorTiles: Position[] = [];
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      if (!roomFloorSet.has(`${x},${y}`) && map.tiles[y][x].type === "floor") {
+        corridorTiles.push({ x, y });
+      }
+    }
+  }
+  const shadeCount = Math.min(5, Math.max(3, Math.floor(corridorTiles.length / 8)));
+  for (let i = 0; i < shadeCount; i++) {
+    const pos = pickRandom(corridorTiles);
+    if (pos) {
+      enemies.push({ tier: "shade", position: pos });
+      corridorTiles.splice(corridorTiles.findIndex(p => p.x === pos.x && p.y === pos.y), 1);
+    }
+  }
+
+  return enemies;
 }
 
 /**
- * Compute initial chest contents.
- * Each chest gets 1-3 items drawn from the item pool.
- *
- * Implementation notes:
- * - Key: "${x},${y}" for each chest tile position
- * - Items from predefined pool: weapons, armor, consumables
- * - Rare items (boss reward) NOT in chest pool — only from boss kill
+ * Compute initial chest contents. 6-8 chests scattered in random non-boss rooms.
+ * Returns map of "x,y" key to array of item names.
  */
-export function computeChestContents(_map: DungeonMap): Record<string, string[]> {
-  throw new Error("computeChestContents not implemented");
+export function computeChestContents(map: DungeonMap): Record<string, string[]> {
+  const contents: Record<string, string[]> = {};
+  const chestCount = 6 + Math.floor(ROT.RNG.getUniform() * 3); // 6-8
+
+  // Pick random non-boss rooms
+  const nonBossRooms = map.rooms.filter(r => {
+    const cx = Math.round(r.x + r.width / 2);
+    const cy = Math.round(r.y + r.height / 2);
+    return map.tiles[cy]?.[cx]?.type !== "boss_entrance";
+  });
+
+  const placed = new Set<string>();
+  for (let i = 0; i < chestCount && nonBossRooms.length > 0; i++) {
+    const room = nonBossRooms[Math.floor(ROT.RNG.getUniform() * nonBossRooms.length)];
+    // Pick a random floor tile in the room
+    const candidates: Position[] = [];
+    for (let y = room.y; y < room.y + room.height; y++) {
+      for (let x = room.x; x < room.x + room.width; x++) {
+        if (map.tiles[y]?.[x]?.type === "floor" && !placed.has(`${x},${y}`)) {
+          candidates.push({ x, y });
+        }
+      }
+    }
+    if (candidates.length === 0) continue;
+    const pos = candidates[Math.floor(ROT.RNG.getUniform() * candidates.length)];
+    const key = `${pos.x},${pos.y}`;
+    placed.add(key);
+
+    // 1-3 items per chest
+    const itemCount = 1 + Math.floor(ROT.RNG.getUniform() * 3);
+    const items: string[] = [];
+    for (let j = 0; j < itemCount; j++) {
+      items.push(ITEM_POOL[Math.floor(ROT.RNG.getUniform() * ITEM_POOL.length)]);
+    }
+    contents[key] = items;
+  }
+
+  return contents;
 }
 
 /**
- * Spawn a new enemy in an unexplored tile (Hand of God mechanic).
- * Called by Balance Worker when Evaluator requests a mid-game spawn.
- * Returns null if no valid unexplored tile exists.
- *
- * Implementation notes:
- * - Filter: tiles where explored === false AND type === "floor"
- * - Return random position from that set, or null if empty
- * - hex_caster and shade are special variants of grunt/brute with personality tags
+ * Spawn a new enemy in an unexplored floor tile (Hand of God mechanic).
+ * Returns position or null if no valid tile exists.
  */
 export function spawnEnemyInUnexplored(
-  _map: DungeonMap,
+  map: DungeonMap,
   _tier: "grunt" | "brute" | "sentinel" | "hex_caster" | "shade"
 ): Position | null {
-  throw new Error("spawnEnemyInUnexplored not implemented");
+  const candidates: Position[] = [];
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      const tile = map.tiles[y][x];
+      if (!tile.explored && tile.type === "floor") {
+        candidates.push({ x, y });
+      }
+    }
+  }
+  if (candidates.length === 0) return null;
+  return candidates[Math.floor(ROT.RNG.getUniform() * candidates.length)];
 }

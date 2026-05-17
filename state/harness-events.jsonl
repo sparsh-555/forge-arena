@@ -1,3 +1,4 @@
 {"type":"SPRINT_START","sprint":1,"timestamp":"2026-05-16T12:45:47.731Z"}
 {"type":"SPRINT_START","sprint":1,"timestamp":"2026-05-16T20:50:00.000Z"}
 {"type":"TASK_COMPLETED","task":"S1-001","sprint":1,"timestamp":"2026-05-16T20:55:00.000Z"}
+{"type":"TASK_COMPLETED","task":"S1-002","sprint":1,"timestamp":"2026-05-16T21:10:00.000Z"}
