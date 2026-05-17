@@ -30,7 +30,7 @@
     "estus_count": 3
   },
   "balance": {
-    "max_patches_per_phase": 3,
+    "max_patches_per_phase": 6,
     "patch_trigger_kill_ratio": 0.5,
     "arena_win_bonus": 15,
     "arena_runnerup_bonus": 5

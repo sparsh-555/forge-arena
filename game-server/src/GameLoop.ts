@@ -735,7 +735,8 @@ export async function runDungeonPhase(initialState: GameState, config: GameConfi
 
         // Patch trigger: evaluate every 3 rounds, up to 3 patches per dungeon phase
         const patchesApplied = state.recentPatches?.length ?? 0;
-        if (roundNumber > 2 && roundNumber % 3 === 0 && patchesApplied < 3) {
+        const maxPatches = liveConfig.balance?.max_patches_per_phase ?? 6;
+        if (roundNumber > 2 && roundNumber % 2 === 0 && patchesApplied < maxPatches) {
           const suggestion = choosePatch(state, liveConfig);
           if (suggestion) {
             const patchEvent = applyPatch(suggestion);

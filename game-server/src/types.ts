@@ -241,6 +241,8 @@ export interface GameConfig {
   stamina: StaminaCosts & StaminaRegen;
   enemies: EnemyBaseStats;
   boss: BossBaseStats;
+  agents?: { starting_hp: number; starting_stamina: number; estus_heal_fraction: number; estus_count: number };
+  balance?: { max_patches_per_phase: number; patch_trigger_kill_ratio: number; arena_win_bonus: number; arena_runnerup_bonus: number };
   dungeon_timer_seconds: number;
   boss_grace_seconds: number;
   arena_turn_cap: number; // 0 = unlimited
