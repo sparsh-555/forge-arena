@@ -1,18 +1,15 @@
 // AgentAPI: handles all Claude API calls for agent decisions.
-// Called by GameLoop for each agent every round. No Express route — direct function calls only.
-//
-// Required imports when implementing:
-//   import { readFileSync } from "fs";
-//   import path from "path";
-//   import { fileURLToPath } from "url";
-//   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-//   const PERSONALITIES_DIR = path.join(__dirname, "../../personalities");
+// Called by GameLoop for each agent every round. Direct function calls — no Express routes.
 
+import { readFileSync } from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import type { AgentAction, AgentId, AgentStatePayload } from "./types.js";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PERSONALITIES_DIR = path.resolve(__dirname, "../../personalities");
+
 // Model routing per game phase.
-// Haiku for dungeon/semis (high frequency, tactical — fast + cheap).
-// Sonnet for arena final only (high-stakes reasoning showcase for judges).
 export const MODEL_BY_PHASE: Record<string, string> = {
   DUNGEON: "claude-haiku-4-5-20251001",
   ARENA_SEMI1: "claude-haiku-4-5-20251001",
@@ -20,69 +17,122 @@ export const MODEL_BY_PHASE: Record<string, string> = {
   ARENA_FINAL: "claude-sonnet-4-6",
 };
 
-// Anthropic API base — no SDK dependency (direct fetch per SPEC banned-deps list)
 export const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 export const ANTHROPIC_API_VERSION = "2023-06-01";
 
+const VALID_GOALS = new Set([
+  "move_to_item", "move_to_enemy", "move_to_boss", "move_to_safe",
+  "attack_heavy", "attack_medium", "attack_light",
+  "block", "use_estus", "pick_up_item", "equip_from_backpack", "pass",
+]);
+
 /**
  * Load personality system prompt for a given agent.
- * Reads personalities/{agentId}/CLAUDE.md at call time (not cached — allows hot updates).
- *
- * Implementation: readFileSync(path.join(PERSONALITIES_DIR, agentId, "CLAUDE.md"), "utf8")
- * Throw descriptive error if file missing — missing personality is a hard error.
  */
-export function loadPersonalityPrompt(_agentId: AgentId): string {
-  throw new Error("loadPersonalityPrompt not implemented");
+export function loadPersonalityPrompt(agentId: AgentId): string {
+  const filePath = path.join(PERSONALITIES_DIR, agentId, "CLAUDE.md");
+  try {
+    return readFileSync(filePath, "utf8");
+  } catch {
+    throw new Error(`Personality file missing for agent ${agentId}: ${filePath}`);
+  }
 }
 
 /**
  * Call Claude API with agent state payload and personality system prompt.
- * Returns parsed AgentAction. Throws on API error (caller handles with getFallbackAction).
- *
- * Implementation notes:
- * 1. loadPersonalityPrompt(agentId) → system prompt
- * 2. MODEL_BY_PHASE[payload.phase] → model; ANTHROPIC_API_KEY from process.env
- * 3. User message: JSON.stringify(payload, null, 2)
- * 4. POST ANTHROPIC_API_URL with headers:
- *    "x-api-key": process.env.ANTHROPIC_API_KEY
- *    "anthropic-version": ANTHROPIC_API_VERSION
- *    "content-type": "application/json"
- *    body: { model, system, messages: [{ role: "user", content }], max_tokens: 512 }
- * 5. Parse response.content[0].text → JSON → AgentAction
- * 6. Validate: action.reasoning must be non-empty string
- * 7. Validate: action.goal must be a valid AgentGoal value
- * 8. AbortController + setTimeout(timeoutMs) for deadline enforcement
  */
 export async function callClaude(
-  _agentId: AgentId,
-  _payload: AgentStatePayload,
-  _timeoutMs: number
+  agentId: AgentId,
+  payload: AgentStatePayload,
+  timeoutMs: number
 ): Promise<AgentAction> {
-  throw new Error("callClaude not implemented");
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("ANTHROPIC_API_KEY not set in environment");
+  }
+
+  const systemPrompt = loadPersonalityPrompt(agentId);
+  const model = MODEL_BY_PHASE[payload.phase] ?? MODEL_BY_PHASE.DUNGEON;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(ANTHROPIC_API_URL, {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": ANTHROPIC_API_VERSION,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        system: systemPrompt,
+        messages: [{ role: "user", content: JSON.stringify(payload, null, 2) }],
+        max_tokens: 300,
+        temperature: 0.7,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Anthropic API error: ${response.status} ${response.statusText}`);
+    }
+
+    const json = await response.json() as {
+      content: Array<{ text: string }>;
+    };
+
+    const text = json.content?.[0]?.text;
+    if (!text) {
+      throw new Error("Empty response from Claude API");
+    }
+
+    // Extract JSON from response — may be wrapped in markdown or have leading text
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error(`No JSON found in Claude response: ${text.slice(0, 200)}`);
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+
+    if (typeof parsed.reasoning !== "string" || !parsed.reasoning.trim()) {
+      throw new Error("Claude response missing required 'reasoning' field");
+    }
+    if (typeof parsed.goal !== "string" || !VALID_GOALS.has(parsed.goal)) {
+      throw new Error(`Invalid or missing goal in Claude response: ${String(parsed.goal)}`);
+    }
+
+    return {
+      goal: parsed.goal as AgentAction["goal"],
+      targetId: typeof parsed.targetId === "string" ? parsed.targetId : undefined,
+      reasoning: parsed.reasoning,
+    };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
- * Express route handler: POST /decide/:agentId
- * Called by GameLoop in parallel for all agents each round.
- *
- * Implementation notes:
- * - Validate agentId is a valid AgentId (reject 400 if not)
- * - Parse req.body as AgentStatePayload
- * - try { return await callClaude(...) } catch { return getFallbackAction(agentId) }
- * - Log each decision: agentId, goal, first 100 chars of reasoning
+ * Main entry point for agent decisions. Wraps callClaude with fallback on error.
  */
 export async function handleDecideRoute(
-  _agentId: AgentId,
-  _payload: AgentStatePayload,
-  _timeoutMs: number
+  agentId: AgentId,
+  payload: AgentStatePayload,
+  timeoutMs: number
 ): Promise<AgentAction> {
-  throw new Error("handleDecideRoute not implemented");
+  try {
+    return await callClaude(agentId, payload, timeoutMs);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const fallback = getFallbackAction(agentId);
+    console.error(`[AgentAPI] ${agentId} fallback: ${msg}`);
+    return fallback;
+  }
 }
 
 /**
  * Fallback action when Claude call fails or times out.
- * Returns a personality-appropriate default action.
- * Never throws. Called in catch blocks.
  */
 export function getFallbackAction(agentId: AgentId): AgentAction {
   const fallbacks: Record<AgentId, AgentAction> = {
