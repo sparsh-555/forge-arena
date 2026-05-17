@@ -440,6 +440,7 @@ export function applyAgentAction(
           ...agent.inventory,
           backpack: [...agent.inventory.backpack, ...chestItems.map(gi => gi.item)],
         };
+        agent.dungeonScore = (agent.dungeonScore ?? 0) + chestItems.length;
       }
       const itemIds = new Set(chestItems.map(gi => gi.item.id));
       const newGroundItems = state.groundItems.filter(gi => !itemIds.has(gi.item.id));
@@ -458,14 +459,15 @@ export function applyAgentAction(
     } else {
       const itemIdx = state.groundItems.findIndex(gi => gi.item.id === action.targetId);
       if (itemIdx >= 0) {
-      const groundItem = state.groundItems[itemIdx];
-      agent.inventory = {
-        ...agent.inventory,
-        backpack: [...agent.inventory.backpack, groundItem.item],
-      };
-      const newGroundItems = state.groundItems.filter((_, i) => i !== itemIdx);
-      return { ...state, agents: { ...state.agents, [agentId]: agent }, groundItems: newGroundItems };
-    }
+        const groundItem = state.groundItems[itemIdx];
+        agent.inventory = {
+          ...agent.inventory,
+          backpack: [...agent.inventory.backpack, groundItem.item],
+        };
+        agent.dungeonScore = (agent.dungeonScore ?? 0) + 1;
+        const newGroundItems = state.groundItems.filter((_, i) => i !== itemIdx);
+        return { ...state, agents: { ...state.agents, [agentId]: agent }, groundItems: newGroundItems };
+      }
     }
   }
 
@@ -853,7 +855,6 @@ export async function runArenaMatch(
   config: GameConfig,
   matchup: ArenaMatchup
 ): Promise<AgentId> {
-  const turnCap = config.arena_turn_cap > 0 ? config.arena_turn_cap : 30;
   const arenaTimeout = config.agent_api_timeout_ms ?? AGENT_TIMEOUT_MS;
   let turnCount = 0;
   let currentState = deepClone(state);
@@ -869,7 +870,7 @@ export async function runArenaMatch(
     currentState.agents[bId].position = { x: arenaX + 1, y: arenaY };
   }
 
-  while (turnCount < turnCap) {
+  while (true) {
     turnCount++;
 
     // Agent A's turn — broadcast with arenaActiveTurn so dashboard highlights A
@@ -922,9 +923,4 @@ export async function runArenaMatch(
     currentState = { ...currentState, arenaActiveTurn: null };
     broadcast(currentState);
   }
-
-  // Turn cap reached: higher HP% wins
-  const aHpPct = (currentState.agents[aId]?.combat?.hp ?? 0) / (currentState.agents[aId]?.combat?.maxHp ?? 1);
-  const bHpPct = (currentState.agents[bId]?.combat?.hp ?? 0) / (currentState.agents[bId]?.combat?.maxHp ?? 1);
-  return aHpPct >= bHpPct ? aId : bId;
 }
