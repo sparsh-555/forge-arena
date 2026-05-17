@@ -9,6 +9,7 @@ You work alone on your own branch. There are no other workers, no planners, no c
 ## Workflow: Plan → Execute → Verify
 
 ### 1. Plan (before writing any code)
+- **Read `PITFALLS.md` first.** These are runtime traps that cannot be caught by the build. If your task touches game server code, dashboard code, or EnemyAI, read it before writing a single line.
 - Read the task description and acceptance criteria completely.
 - Explore relevant files — read the code in scope, search for patterns, understand how it connects.
 - Form a concrete approach: what to change, what to create, what to call.

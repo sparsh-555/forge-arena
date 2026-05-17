@@ -102,6 +102,40 @@ if (!lines.length) { console.log('DUNGEON_SCORES: SKIP'); process.exit(0); }
 grep 'dungeon=' ../../state/game-events.jsonl 2>/dev/null || echo "check GAME_COMPLETE stdout for dungeonScore values"
 ```
 
+```bash
+# 9. Dashboard static checks (no browser needed — catches empty Phaser init)
+grep -c 'new Phaser.Game' dashboard/src/GameView.tsx
+# Must be >= 1. Zero means Phaser never initializes — dashboard is a blank div.
+
+grep -c 'this.load.image\|this\.load\.image' dashboard/src/GameView.tsx
+# Must be >= 1. Zero means sprites are never loaded — dashboard renders boxes.
+
+grep -rn 'new WebSocket\|WebSocket(' dashboard/src/
+# Must match. No WebSocket = dashboard never receives game state updates.
+
+# 10. Personality file completeness
+for id in aggressive cautious hoarder speedrunner; do
+  for section in "## Identity" "## Core Drive" "## Item Priority" "## Combat Style" \
+                 "## Exploration Strategy" "## Boss Encounter Strategy" "## Patch Awareness"; do
+    grep -q "$section" personalities/$id/CLAUDE.md \
+      && echo "OK: $id $section" \
+      || echo "MISSING: $id $section"
+  done
+done
+# All 28 lines must print OK.
+
+# 11. State persistence — game state survives after run completes
+# Start server, verify /api/game-state returns a non-empty game state (not mode: build)
+node dist/server.js &
+SERVER_PID=$!
+sleep 2
+MODE=$(curl -sf http://localhost:3000/api/game-state | grep -o '"mode":"[^"]*"' | cut -d'"' -f4)
+echo "api game-state mode: $MODE"
+kill $SERVER_PID 2>/dev/null; wait $SERVER_PID 2>/dev/null
+# If mode is "build" after a game ran — currentGameState was never persisted to server memory.
+# Fix: ensure setGameState() is called with the final state, and server.ts serves it from memory.
+```
+
 ---
 
 ## Non-Negotiables
@@ -452,6 +486,15 @@ Each personality is a CLAUDE.md file at `personalities/{agentId}/CLAUDE.md`. The
 - Parallelism: high (DungeonGen, CombatSystem, AgentAPI, EnemyAI, dashboard panels all independent)
 - Personality files: generated in first sprint, priority 1
 - Runtime target: game playable (headless test passes) within 2 hours of harness start
+
+## Required Runnable Scripts
+
+| Script | Purpose | Must |
+|---|---|---|
+| `demo-start.sh` | Single command to start the live demo | Set `ANTHROPIC_API_KEY` from env, run `cd game-server && node dist/server.js` in background, open browser to localhost:3000, then run `node run-full-game.js` (no --headless). Exit cleanly when game ends. |
+| `preflight.sh` | Pre-demo validation | Already provided. Run before demo: `bash preflight.sh` must exit 0. |
+
+Both scripts live at the repo root and must be executable (`chmod +x`).
 
 ## Required Living Artifacts
 
