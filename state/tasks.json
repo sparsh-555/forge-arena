@@ -3,6 +3,24 @@
   "sprint": 4,
   "tasks": [
     {
+      "id": "S4-002",
+      "description": "Add a game-events-based patch system that triggers after enough rounds. EVALUATOR FINDING: 0 patches applied — the balance/patch system is completely inactive. The SPEC requires at least 1 patch event during a run. Create a simple patch trigger in GameLoop.ts: after every 5 dungeon rounds, if any agent has a kill count above threshold, write a PatchSuggestion to state/patch-queue.jsonl and apply it via PatchApplier. Trigger condition: if aggressive.kills > other agents' kills combined, increase heavy_attack_cost by 20% (within ±30% of baseline). Log PATCH_APPLIED events so the evaluator can count them. This is a minimum viable patch system — just enough to satisfy the 'patch_events_during_run: true' acceptance criterion.",
+      "scope": [
+        "game-server/src/GameLoop.ts"
+      ],
+      "acceptance": "npm run build exits 0. After running headless game: grep -c 'PATCH_APPLIED' state/game-events.jsonl returns >= 1. Headless run with --seed=42 produces at least 1 patch event in a full game.",
+      "acceptance_criteria": [
+        "Patch suggestion logic in GameLoop — grep GameLoop.ts for 'PatchSuggestion' or 'patch'",
+        "applyPatch called — grep GameLoop.ts for 'applyPatch'",
+        "After NO_API run: patch-queue.jsonl or game-events.jsonl contains PATCH_APPLIED"
+      ],
+      "branch": "worker/S4-002-minimum-patch-system",
+      "priority": 1,
+      "status": "pending"
+    }
+  ],
+  "completed": [
+    {
       "id": "S4-001",
       "description": "Fix personality CLAUDE.md files to include JSON output format instruction. EVALUATOR FINDING: All 240 agent decisions were fallback because Claude returns markdown analysis but the AgentAPI JSON parser expects a JSON block. Each personality file needs a new required section '## Output Format' that instructs the agent to ALWAYS end their response with a JSON action block: ```json { \"goal\": \"<goal>\", \"targetId\": \"<entity_id>\", \"reasoning\": \"<summary>\" } ```. Valid goals: move_to_item, move_to_enemy, move_to_boss, move_to_safe, attack_heavy, attack_medium, attack_light, block, use_estus, pick_up_item, equip_from_backpack, pass. The JSON MUST be the last thing in the response. After writing analysis, the agent MUST output exactly the JSON block on its own line. Update all 4 personality files: personalities/aggressive/CLAUDE.md, personalities/cautious/CLAUDE.md, personalities/hoarder/CLAUDE.md, personalities/speedrunner/CLAUDE.md.",
       "scope": [
@@ -19,22 +37,7 @@
       ],
       "branch": "worker/S4-001-personality-json-output-format",
       "priority": 1,
-      "status": "pending"
-    },
-    {
-      "id": "S4-002",
-      "description": "Add a game-events-based patch system that triggers after enough rounds. EVALUATOR FINDING: 0 patches applied — the balance/patch system is completely inactive. The SPEC requires at least 1 patch event during a run. Create a simple patch trigger in GameLoop.ts: after every 5 dungeon rounds, if any agent has a kill count above threshold, write a PatchSuggestion to state/patch-queue.jsonl and apply it via PatchApplier. Trigger condition: if aggressive.kills > other agents' kills combined, increase heavy_attack_cost by 20% (within ±30% of baseline). Log PATCH_APPLIED events so the evaluator can count them. This is a minimum viable patch system — just enough to satisfy the 'patch_events_during_run: true' acceptance criterion.",
-      "scope": ["game-server/src/GameLoop.ts"],
-      "acceptance": "npm run build exits 0. After running headless game: grep -c 'PATCH_APPLIED' state/game-events.jsonl returns >= 1. Headless run with --seed=42 produces at least 1 patch event in a full game.",
-      "acceptance_criteria": [
-        "Patch suggestion logic in GameLoop — grep GameLoop.ts for 'PatchSuggestion' or 'patch'",
-        "applyPatch called — grep GameLoop.ts for 'applyPatch'",
-        "After NO_API run: patch-queue.jsonl or game-events.jsonl contains PATCH_APPLIED"
-      ],
-      "branch": "worker/S4-002-minimum-patch-system",
-      "priority": 1,
-      "status": "pending"
+      "status": "completed"
     }
-  ],
-  "completed": []
+  ]
 }

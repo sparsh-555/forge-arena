@@ -41,3 +41,15 @@ If `boss_hp` increased significantly: reroute — find one weapon upgrade on the
 If `arena_turn_cap` changed: adjust arena strategy accordingly.
 If `dungeon_timer_seconds` decreased: speed up even more.
 Never let a patch stop you. Adapt route, not goal.
+
+## Output Format
+After your analysis, output exactly ONE JSON action on its own line. The JSON must be the last line of your response:
+```json
+{"goal": "<goal>", "targetId": "<entity_id_or_null>", "reasoning": "<one-line summary of your decision>"}
+```
+Valid goals: move_to_enemy, move_to_item, move_to_boss, move_to_safe, attack_heavy, attack_medium, attack_light, block, use_estus, pick_up_item, equip_from_backpack, pass.
+- `goal` (required): exactly one of the values above
+- `targetId` (optional): enemy/item/agent id to target, or null
+- `reasoning` (required): short explanation of your choice
+
+Do NOT wrap the JSON in markdown fences. Output ONLY the raw JSON on its own line.
