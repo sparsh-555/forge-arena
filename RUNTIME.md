@@ -6,10 +6,10 @@
 - Rewrite sections as priorities change. Do not append contradictions.
 
 ## Current Phase
-BUILD — Sprint 0. No tasks emitted yet. Planner runs next.
+BUILD — Sprint 1 (Foundation). 6 tasks emitted: types.ts fixes (S1-001), DungeonGen (S1-002), CombatSystem (S1-003), DungeonBridge (S1-004), EnemyAI (S1-005), StateEmitter (S1-006). All priority 1, fully independent. After these land: Sprint 2 will wire GameLoop, AgentAPI, PatchApplier, and run-full-game.js.
 
 ## Active Constraints
-- types.ts is the complete shared vocabulary — do not modify
+- types.ts is being modified in S1-001 (additive only — MAP_WIDTH, EnemyTier expansion, ROUND_STATE, missing fields)
 - game-config.baseline.json is read-only — PatchApplier validates against it, never writes it
 - No LLM SDK — direct Anthropic REST calls only (fetch API)
 - ANTHROPIC_API_KEY must ALWAYS come from `process.env` — NEVER hardcoded

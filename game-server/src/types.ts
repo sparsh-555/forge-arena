@@ -1,6 +1,11 @@
 // Single source of truth for all shared types in forge-arena.
 // Workers must import from here. Never redefine types in implementation files.
 
+// ─── Map Constants ─────────────────────────────────────────────────────────────
+
+export const MAP_WIDTH = 30;
+export const MAP_HEIGHT = 22;
+
 // ─── Agent Identity ───────────────────────────────────────────────────────────
 
 export type AgentId = "aggressive" | "cautious" | "hoarder" | "speedrunner";
@@ -137,11 +142,12 @@ export interface AgentState {
   dungeonScore: number;
   kills: { grunt: number; brute: number; sentinel: number };
   bossKilled: boolean;
+  lastReasoning?: string;
 }
 
 // ─── Enemies ──────────────────────────────────────────────────────────────────
 
-export type EnemyTier = "grunt" | "brute" | "sentinel";
+export type EnemyTier = "grunt" | "brute" | "sentinel" | "hex_caster" | "shade";
 
 export type BossTier = "dungeon_boss";
 
@@ -196,6 +202,7 @@ export interface EnemyAction {
   enemyId: string;
   action: EnemyActionType;
   targetAgentId?: AgentId;
+  newPosition?: Position;
 }
 
 // ─── Game Config (live patch surface) ────────────────────────────────────────
@@ -218,6 +225,10 @@ export interface EnemyBaseStats {
   brute_damage: number;
   sentinel_hp: number;
   sentinel_damage: number;
+  hex_caster_hp: number;
+  hex_caster_damage: number;
+  shade_hp: number;
+  shade_damage: number;
 }
 
 export interface BossBaseStats {
@@ -331,6 +342,7 @@ export interface DashboardPayload {
 
 export type GameEventType =
   | "ROUND_START"
+  | "ROUND_STATE"
   | "AGENT_ACTION"
   | "ENEMY_ACTION"
   | "COMBAT_RESULT"
