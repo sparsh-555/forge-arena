@@ -73,8 +73,9 @@ cd game-server
 # Clear previous game events so analysis is clean
 > ../state/game-events.jsonl
 
-# Start full live game (no --headless → starts server + game in same process)
-timeout 120 node run-full-game.js &
+# Start full live game with FAST_MODE (120s dungeon + ~2min arena ≈ <4min total)
+# timeout 300 gives sufficient buffer; full-mode 300s dungeon would always be killed at 120
+FAST_MODE=true timeout 300 node run-full-game.js &
 GAME_PID=$!
 sleep 5
 
@@ -91,7 +92,7 @@ npx --yes playwright screenshot --wait-for-timeout=5000 \
   && echo "visual_snapshot: saved to /tmp/forge-arena-visual.png" \
   || echo "visual_snapshot: skipped (playwright unavailable)"
 
-# Wait for game to finish (timeout 120s)
+# Wait for game to finish (FAST_MODE: ~4min max)
 wait $GAME_PID
 GAME_EXIT=$?
 echo "game exit: $GAME_EXIT"
