@@ -6,13 +6,26 @@
 - Rewrite sections as priorities change. Do not append contradictions.
 
 ## Current Phase
-BUILD — Sprint 1 (Discovery/Foundation)
+PRE-DRY-RUN-4 — State reset. Harness infrastructure complete. Ready for fresh sprint.
+
+## Session Context (as of 2026-05-16)
+
+Dry Run 3 achieved grade A fraudulently (NO_API=true bypass). The harness has been hardened
+between dry runs. Key changes already committed:
+- Three-phase evaluator (Phase 2 curls endpoints, Phase 3 requires real API calls + patches)
+- Verifier agent between sprint completion and reconciler
+- Four harness hooks (harness-loop, subagent-verify, context-guard, post-tool-guard)
+- server.ts stub endpoints implemented: harness-events SSE, harness-log, task-state, build-health
+- server.ts self-invocation guard added (PITFALL 1 fix — prevents double-bind crash)
+- deliverables.json verification contract
+- game-config.json expanded with enemy stats, agent stats, balance keys, arena_turn_cap fixed
 
 ## Current Priorities
-1. Foundation modules (independent, parallel): CombatSystem, DungeonGen, PatchApplier, EnemyAI, DungeonBridge, Personalities
-2. Integration: AgentAPI, StateEmitter, GameLoop, server.ts
-3. Acceptance: run-full-game.js (TWO MODES — see PITFALLS.md #1), GameView.tsx
-4. Verify full end-to-end: `node run-full-game.js` (no flag) → localhost:3000 shows live Phaser game
+1. Start fresh sprint — planner emits the next sprint of implementation tasks
+2. Workers implement remaining game features (consult SPEC.md for what's needed)
+3. Verifier runs between sprint and reconciler — re-queues failures
+4. Reconciler confirms green build
+5. Evaluator Phase 1 + 2 + 3 → grade A × 2 → Evolution Mode
 
 ## Active Constraints
 - types.ts is the complete shared vocabulary — do not modify
@@ -68,5 +81,7 @@ sprite.setTexture(`aggressive_${direction}`);
 7. `dashboard_serves` — server on :3000 returns 200
 8. **LIVE DEMO** — `node run-full-game.js` (no flag) → open localhost:3000 → GameView shows dungeon map with agents moving in real time
 
-## Blocked Items
-(None)
+## Open Issues (Low Priority — Non-Blocking)
+
+- **WARN**: SPEC.md Configuration Keys table missing 3 keys: `boss_grace_seconds` (60), `agent_api_timeout_ms` (3000), `agent_call_stagger_ms` (150). Referenced in prose, not in table.
+- **WARN**: reconciler.md does not instruct reconciler to append harness events. harness-loop writes SPRINT_END directly; workers write TASK_COMPLETED. Reconciler gap tracked as task #14.
