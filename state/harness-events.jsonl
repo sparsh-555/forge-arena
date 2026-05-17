@@ -24,3 +24,10 @@
 {"type":"HARNESS_TICK","sprint":3,"pending":2,"completed":0,"grade":"C","timestamp":"2026-05-16T14:06:22.928Z"}
 {"type":"TASK_COMPLETED","task":"S3-001","sprint":3,"timestamp":"2026-05-16T22:11:00.000Z"}
 {"type":"TASK_COMPLETED","task":"S3-002","sprint":3,"timestamp":"2026-05-16T22:11:00.000Z"}
+{"type":"SPRINT_END","sprint":3,"completed":2,"grade":"C","timestamp":"2026-05-16T14:12:02.274Z"}
+{"type":"VERIFY_PASS","sprint":3,"tasks_verified":2,"timestamp":"2026-05-16T22:13:00.000Z"}
+{"type":"ARCHITECT_PASS","sprint":3,"tasks_verified":2,"timestamp":"2026-05-16T22:13:00.000Z"}
+{"type":"SPRINT_END","sprint":3,"completed":2,"grade":"C","timestamp":"2026-05-16T14:17:16.225Z"}
+{"type":"SPRINT_END","sprint":3,"completed":2,"grade":"C","timestamp":"2026-05-16T14:18:03.786Z"}
+{"type":"BUILD_HEALTH","timestamp":"2026-05-16T22:20:00.000Z","grade":"C","sprint":3,"phase1_pass":true,"phase2_pass":true,"phase3_pass":false}
+{"type":"SPRINT_START","sprint":4,"timestamp":"2026-05-16T22:21:00.000Z"}

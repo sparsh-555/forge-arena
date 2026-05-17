@@ -1,43 +1,40 @@
 {
   "version": 1,
-  "sprint": 3,
-  "tasks": [],
-  "completed": [
+  "sprint": 4,
+  "tasks": [
     {
-      "id": "S3-001",
-      "description": "Fix AgentAPI fallback actions to include movement and targeting. EVALUATOR FINDING: Phase 3 all agents died without moving — fallback actions (attack_medium with no target, block, pass, move_to_boss) don't help agents engage enemies or survive. Fix getFallbackAction in AgentAPI.ts to import findNearestAgent and pathfindStep from EnemyAI, and produce smarter fallbacks: aggressive → attack nearest enemy with targetId set, cautious → move away from nearest enemy (pathfindAway) if adjacent else block, hoarder → move toward nearest item, speedrunner → move toward boss entrance. Also log AGENT_ACTION events with reasoning strings to game-events.jsonl in GameLoop.ts after each agent decision — use logEvent({ type: 'AGENT_ACTION', ... }) with the agentId, goal, targetId, and reasoning. This enables the evaluator's decision-vs-fallback counting.",
+      "id": "S4-001",
+      "description": "Fix personality CLAUDE.md files to include JSON output format instruction. EVALUATOR FINDING: All 240 agent decisions were fallback because Claude returns markdown analysis but the AgentAPI JSON parser expects a JSON block. Each personality file needs a new required section '## Output Format' that instructs the agent to ALWAYS end their response with a JSON action block: ```json { \"goal\": \"<goal>\", \"targetId\": \"<entity_id>\", \"reasoning\": \"<summary>\" } ```. Valid goals: move_to_item, move_to_enemy, move_to_boss, move_to_safe, attack_heavy, attack_medium, attack_light, block, use_estus, pick_up_item, equip_from_backpack, pass. The JSON MUST be the last thing in the response. After writing analysis, the agent MUST output exactly the JSON block on its own line. Update all 4 personality files: personalities/aggressive/CLAUDE.md, personalities/cautious/CLAUDE.md, personalities/hoarder/CLAUDE.md, personalities/speedrunner/CLAUDE.md.",
       "scope": [
-        "game-server/src/AgentAPI.ts",
-        "game-server/src/GameLoop.ts"
+        "personalities/aggressive/CLAUDE.md",
+        "personalities/cautious/CLAUDE.md",
+        "personalities/hoarder/CLAUDE.md",
+        "personalities/speedrunner/CLAUDE.md"
       ],
-      "acceptance": "npm run build exits 0. getFallbackAction for aggressive includes targetId for nearest enemy. getFallbackAction for cautious includes movement away from threats. GameLoop logs AGENT_ACTION event after each agent decision with reasoning field. NO_API=true FAST_MODE=true headless run: agents move from spawn positions (grep game-events.jsonl for AGENT_ACTION events).",
+      "acceptance": "All 4 personality files contain '## Output Format' section with JSON format instructions. Section explains valid goals, required fields (goal, reasoning), and optional targetId. Instructs agent to output JSON as last part of response. Preflight script personality check still passes (all 7 original sections + new Output Format section). Verify: grep -c '## Output Format' personalities/*/CLAUDE.md returns 4.",
       "acceptance_criteria": [
-        "AGENT_ACTION events logged in GameLoop — grep GameLoop.ts for 'AGENT_ACTION'",
-        "Fallback for aggressive includes findNearestAgent — grep AgentAPI.ts for 'findNearestAgent' in getFallbackAction context",
-        "Fallback for cautious includes pathfindAway — grep AgentAPI.ts for 'pathfind'",
-        "AGENT_ACTION events contain reasoning field — grep GameLoop.ts for 'reasoning' near logEvent call"
+        "All 4 personalities have ## Output Format section — grep -c '## Output Format' personalities/aggressive/CLAUDE.md personalities/cautious/CLAUDE.md personalities/hoarder/CLAUDE.md personalities/speedrunner/CLAUDE.md",
+        "Section includes JSON format with goal field — grep 'goal' personalities/aggressive/CLAUDE.md",
+        "Section includes valid goal list — grep 'move_to_enemy\\|attack_heavy' personalities/aggressive/CLAUDE.md"
       ],
-      "branch": "worker/S3-001-fix-fallback-and-event-logging",
+      "branch": "worker/S4-001-personality-json-output-format",
       "priority": 1,
-      "status": "completed"
+      "status": "pending"
     },
     {
-      "id": "S3-002",
-      "description": "Fix API timeout and agent survivability. EVALUATOR FINDING: All first-round API calls timed out at 3s. Anthropic Haiku cold-start latency is 4-8 seconds, so initial calls always fall back. Fix: increase agent_api_timeout_ms from 3000 to 10000 in game-config.json. In AgentAPI.callClaude: add exponential backoff retry — if first call times out, retry once with 15s timeout. In GameLoop.ts: add a 2-second initial delay before starting the round loop to give API connections time to warm up. Also ensure agents don't take damage before their first decision — skip enemy attacks in round 1 (agents haven't acted yet).",
-      "scope": [
-        "game-server/src/AgentAPI.ts",
-        "game-server/src/GameLoop.ts",
-        "game-server/game-config.json"
-      ],
-      "acceptance": "npm run build exits 0. game-config.json has agent_api_timeout_ms: 10000. AgentAPI retries once on timeout. GameLoop delays first round by 2s or skips enemy attacks in round 1. Headless run with API key: first-round decisions are real (not all fallback).",
+      "id": "S4-002",
+      "description": "Add a game-events-based patch system that triggers after enough rounds. EVALUATOR FINDING: 0 patches applied — the balance/patch system is completely inactive. The SPEC requires at least 1 patch event during a run. Create a simple patch trigger in GameLoop.ts: after every 5 dungeon rounds, if any agent has a kill count above threshold, write a PatchSuggestion to state/patch-queue.jsonl and apply it via PatchApplier. Trigger condition: if aggressive.kills > other agents' kills combined, increase heavy_attack_cost by 20% (within ±30% of baseline). Log PATCH_APPLIED events so the evaluator can count them. This is a minimum viable patch system — just enough to satisfy the 'patch_events_during_run: true' acceptance criterion.",
+      "scope": ["game-server/src/GameLoop.ts"],
+      "acceptance": "npm run build exits 0. After running headless game: grep -c 'PATCH_APPLIED' state/game-events.jsonl returns >= 1. Headless run with --seed=42 produces at least 1 patch event in a full game.",
       "acceptance_criteria": [
-        "agent_api_timeout_ms = 10000 in game-config.json — grep game-config.json for 'agent_api_timeout_ms'",
-        "Retry logic in callClaude — grep AgentAPI.ts for 'retry' or second fetch attempt",
-        "Round 1 enemy skip or warmup delay — grep GameLoop.ts for 'roundNumber === 1' or 'warmup'"
+        "Patch suggestion logic in GameLoop — grep GameLoop.ts for 'PatchSuggestion' or 'patch'",
+        "applyPatch called — grep GameLoop.ts for 'applyPatch'",
+        "After NO_API run: patch-queue.jsonl or game-events.jsonl contains PATCH_APPLIED"
       ],
-      "branch": "worker/S3-002-fix-api-timeout-and-survival",
+      "branch": "worker/S4-002-minimum-patch-system",
       "priority": 1,
-      "status": "completed"
+      "status": "pending"
     }
-  ]
+  ],
+  "completed": []
 }
