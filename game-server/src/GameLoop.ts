@@ -402,6 +402,26 @@ export function applyAgentAction(
         ...agent.inventory,
         estusCount: agent.inventory.estusCount - 1,
       };
+    } else {
+      // No estus — flee instead of wasting the turn
+      const nearestEnemy = state.enemies
+        .filter(e => e.isAlive)
+        .sort((a, b) =>
+          (Math.abs(a.position.x - agent.position.x) + Math.abs(a.position.y - agent.position.y)) -
+          (Math.abs(b.position.x - agent.position.x) + Math.abs(b.position.y - agent.position.y))
+        )[0];
+      if (nearestEnemy) {
+        const dx = agent.position.x - nearestEnemy.position.x;
+        const dy = agent.position.y - nearestEnemy.position.y;
+        const fleeX = agent.position.x + (dx > 0 ? 1 : dx < 0 ? -1 : 0);
+        const fleeY = agent.position.y + (dy > 0 ? 1 : dy < 0 ? -1 : 0);
+        const nextX = Math.max(0, Math.min(state.map.width - 1, fleeX));
+        const nextY = Math.max(0, Math.min(state.map.height - 1, fleeY));
+        const tile = state.map.tiles[nextY]?.[nextX];
+        if (tile && tile.type !== "wall") {
+          agent.position = { x: nextX, y: nextY };
+        }
+      }
     }
   }
 
