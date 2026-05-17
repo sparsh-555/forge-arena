@@ -87,7 +87,7 @@ async function callClaudeOnce(
         model,
         system: systemPrompt,
         messages: [{ role: "user", content: JSON.stringify(payload, null, 2) }],
-        max_tokens: 300,
+        max_tokens: 600,
         temperature: 0.7,
       }),
       signal: controller.signal,
@@ -106,13 +106,13 @@ async function callClaudeOnce(
       throw new Error("Empty response from Claude API");
     }
 
-    // Extract JSON from response — find the last JSON line (greedy match for last {..})
-    const jsonMatches = text.match(/\{[\s\S]*\}/g);
+    // Extract JSON from response — personalities output JSON FIRST, then analysis prose.
+    // Find the first valid JSON object that contains goal + reasoning fields.
+    const jsonMatches = text.match(/\{[^{}]*\}/g);
     if (!jsonMatches || jsonMatches.length === 0) {
       throw new Error(`No JSON found in Claude response: ${text.slice(0, 200)}`);
     }
-    // Use the LAST JSON-like block (personalities instructed to output JSON as last line)
-    const lastJson = jsonMatches[jsonMatches.length - 1];
+    const lastJson = jsonMatches.find(m => m.includes('"goal"')) ?? jsonMatches[0];
 
     let parsed: Record<string, unknown>;
     try {

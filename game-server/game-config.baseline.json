@@ -40,6 +40,6 @@
   "arena_turn_cap": 30,
   "fov_radius": 6,
   "round_interval_ms": 2000,
-  "agent_api_timeout_ms": 3000,
+  "agent_api_timeout_ms": 8000,
   "agent_call_stagger_ms": 150
 }
