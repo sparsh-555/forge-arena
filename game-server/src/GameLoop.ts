@@ -257,7 +257,16 @@ export function applyAgentAction(
         }
       }
     }
-    // Fallback: if target entity not found, find nearest matching type (replay resilience)
+    // Handle chest targets for move_to_item (chest_X_Y → position from coordinates)
+    if (goal === "move_to_item" && action.targetId?.startsWith("chest_")) {
+      const parts = action.targetId.split("_");
+      const cx = parseInt(parts[1], 10);
+      const cy = parseInt(parts[2], 10);
+      if (!isNaN(cx) && !isNaN(cy)) {
+        targetPos = { x: cx, y: cy };
+      }
+    }
+    // Fallback: if target entity not found, find nearest matching type
     if (targetPos.x === agent.position.x && targetPos.y === agent.position.y) {
       if (goal === "move_to_enemy") {
         const nearest = state.enemies.filter(e => e.isAlive).sort((a, b) =>
@@ -399,7 +408,7 @@ export function applyAgentAction(
   // Pick up item: move from ground to backpack
   if (goal === "pick_up_item" && action.targetId) {
     if (action.targetId.startsWith("chest_")) {
-      // Chest target: open chest, collect all items at that position
+      // Chest target: open chest, collect all items at that position, mark opened even if empty
       const parts = action.targetId.split("_");
       const chestX = parseInt(parts[1], 10);
       const chestY = parseInt(parts[2], 10);
@@ -411,21 +420,21 @@ export function applyAgentAction(
           ...agent.inventory,
           backpack: [...agent.inventory.backpack, ...chestItems.map(gi => gi.item)],
         };
-        const itemIds = new Set(chestItems.map(gi => gi.item.id));
-        const newGroundItems = state.groundItems.filter(gi => !itemIds.has(gi.item.id));
-        // Mark chest tile as opened
-        const updatedTiles = state.map.tiles.map((row, y) =>
-          y === chestY
-            ? row.map((tile, x) => (x === chestX && tile.type === "chest" ? { ...tile, type: "chest_open" as const } : tile))
-            : row
-        );
-        return {
-          ...state,
-          agents: { ...state.agents, [agentId]: agent },
-          groundItems: newGroundItems,
-          map: { ...state.map, tiles: updatedTiles },
-        };
       }
+      const itemIds = new Set(chestItems.map(gi => gi.item.id));
+      const newGroundItems = state.groundItems.filter(gi => !itemIds.has(gi.item.id));
+      // Mark chest tile as opened (always, even if empty — breaks the loop)
+      const updatedTiles = state.map.tiles.map((row, y) =>
+        y === chestY
+          ? row.map((tile, x) => (x === chestX && tile.type === "chest" ? { ...tile, type: "chest_open" as const } : tile))
+          : row
+      );
+      return {
+        ...state,
+        agents: { ...state.agents, [agentId]: agent },
+        groundItems: newGroundItems,
+        map: { ...state.map, tiles: updatedTiles },
+      };
     } else {
       const itemIdx = state.groundItems.findIndex(gi => gi.item.id === action.targetId);
       if (itemIdx >= 0) {
