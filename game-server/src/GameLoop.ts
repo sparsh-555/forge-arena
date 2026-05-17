@@ -64,6 +64,114 @@ export function transitionPhase(state: GameState, to: GamePhase): GameState {
 }
 
 /**
+ * Check if any active agent is on a boss entrance tile and spawn a boss instance.
+ */
+function processBossSpawns(state: GameState, config: GameConfig): GameState {
+  const newBossInstances = { ...state.bossInstances };
+
+  for (const id of AGENT_IDS) {
+    const agent = state.agents[id];
+    if (!agent || agent.status === "eliminated") continue;
+    if (newBossInstances[id]) continue; // already has a boss
+
+    const tile = state.map.tiles[agent.position.y]?.[agent.position.x];
+    if (tile?.type === "boss_entrance") {
+      const bossHp = config.boss.boss_hp;
+      newBossInstances[id] = {
+        agentId: id,
+        position: { x: agent.position.x + 1, y: agent.position.y },
+        hp: bossHp,
+        maxHp: bossHp,
+        phase: 1,
+        isAlive: true,
+      };
+      logEvent({
+        type: "BOSS_SPAWN",
+        timestamp: new Date().toISOString(),
+        round: state.roundNumber,
+        phase: state.phase,
+        data: { agentId: id, position: agent.position, hp: bossHp },
+      });
+    }
+  }
+
+  return { ...state, bossInstances: newBossInstances };
+}
+
+/**
+ * Process boss-agent combat each round (automatic back-and-forth).
+ * Boss takes damage (agent attacks), agent takes damage (boss attacks).
+ */
+function processBossCombat(state: GameState, config: GameConfig): GameState {
+  const bossInstances = { ...state.bossInstances };
+  const agents = { ...state.agents };
+  let changed = false;
+
+  for (const ownerId of AGENT_IDS) {
+    const boss = bossInstances[ownerId];
+    if (!boss || !boss.isAlive) continue;
+    const agent = agents[ownerId];
+    if (!agent || agent.status === "eliminated") continue;
+
+    // Agent damage to boss (auto-attack based on equipped weapon)
+    const weapon = agent.inventory.equipped.weapon;
+    const baseDamage = weapon?.stats?.baseDamage ?? 10;
+    const mult = weapon?.stats?.attackMultiplier ?? 1.0;
+    const agentDamage = Math.floor(baseDamage * mult);
+
+    // Phase 2 at 50% HP
+    const newBossHp = Math.max(0, boss.hp - agentDamage);
+    const newPhase: 1 | 2 = newBossHp <= boss.maxHp * config.boss.boss_phase2_threshold ? 2 : 1;
+
+    // Boss damage to agent
+    const bossDamage = newPhase === 2
+      ? Math.floor(config.boss.boss_hp * 0.08)
+      : Math.floor(config.boss.boss_hp * 0.05);
+    const armor = agent.inventory.equipped.armor;
+    const armorReduction = armor?.stats?.armorReduction ?? 0;
+    const damageToAgent = Math.floor(bossDamage * (1 - armorReduction));
+    const newAgentHp = Math.max(0, agent.combat.hp - damageToAgent);
+
+    bossInstances[ownerId] = {
+      ...boss,
+      hp: newBossHp,
+      phase: newPhase,
+      isAlive: newBossHp > 0,
+    };
+
+    agents[ownerId] = {
+      ...agent,
+      combat: { ...agent.combat, hp: newAgentHp },
+      status: newAgentHp <= 0 ? "eliminated" as const : agent.status,
+    };
+
+    if (newBossHp <= 0) {
+      agents[ownerId] = {
+        ...agents[ownerId],
+        bossKilled: true,
+        dungeonScore: agent.dungeonScore + 5,
+        combat: {
+          ...agents[ownerId].combat,
+          arenaDamageBonus: 0.10,
+        },
+      };
+      logEvent({
+        type: "BOSS_DEFEATED",
+        timestamp: new Date().toISOString(),
+        round: state.roundNumber,
+        phase: state.phase,
+        data: { agentId: ownerId },
+      });
+    }
+
+    changed = true;
+  }
+
+  if (!changed) return state;
+  return { ...state, bossInstances, agents };
+}
+
+/**
  * Resolve conflicts when multiple agents choose the same target.
  */
 export function resolveConflicts(
@@ -320,6 +428,9 @@ export async function runDungeonPhase(initialState: GameState, config: GameConfi
           state = applyAgentAction(state, agentId as AgentId, action, liveConfig);
         }
 
+        // Boss spawns: check if any agent reached boss entrance
+        state = processBossSpawns(state, liveConfig);
+
         // Agent stamina regen
         for (const id of AGENT_IDS) {
           const agent = state.agents[id];
@@ -358,6 +469,9 @@ export async function runDungeonPhase(initialState: GameState, config: GameConfi
         });
 
         state = { ...state, enemies: enemiesAfterAttacks, roundNumber };
+
+        // Boss combat: boss and agent trade damage each round
+        state = processBossCombat(state, liveConfig);
 
         // Decrement timer
         timer -= (roundInterval / 1000);
