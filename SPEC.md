@@ -51,6 +51,18 @@ cd game-server && npm run build && node dist/server.js &
 curl http://localhost:3000/api/game-state  # returns JSON with mode field
 ```
 
+## Visual Acceptance Criteria
+
+Evaluated by the Evaluator using Claude vision on a screenshot taken while the game is running. All must pass for grade A.
+
+1. **Tile grid visible** — a grid of floor and wall tiles covers the canvas. The map is not a blank canvas or solid colour fill.
+2. **Sprite artwork rendered** — agents and enemies appear as PNG sprite images, not as coloured circles, rectangles, or other geometric primitives drawn with canvas APIs.
+3. **Active game content showing** — the page displays the game map view (not a blank screen, loading spinner, or the build-phase harness/task-list view).
+4. **Map fits the viewport** — the dungeon map is fully visible without being cropped or scrolled off-screen. Tiles are 64×64px; MAP_WIDTH=30, MAP_HEIGHT=22 should fit a 1920px-wide display.
+5. **At least one agent visible** — at least one agent sprite appears on the map. An empty map with no agents means agents never spawned or WebSocket updates are not reaching the renderer.
+
+---
+
 ## Behavioral Acceptance Tests
 
 These tests are run by the Evaluator in Phase 3 after the live game completes. All must pass for grade A.

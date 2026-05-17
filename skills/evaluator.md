@@ -85,6 +85,12 @@ echo "game mode: $GAME_MODE"  # must be "play"
 # Verify sprites still load while game is running
 curl -s -o /dev/null -w "sprites during game: %{http_code}\n" http://localhost:3000/assets/agents/aggressive.png
 
+# Visual snapshot — screenshot the running game for vision evaluation below
+npx --yes playwright screenshot --wait-for-timeout=5000 \
+  http://localhost:3000 /tmp/forge-arena-visual.png 2>/dev/null \
+  && echo "visual_snapshot: saved to /tmp/forge-arena-visual.png" \
+  || echo "visual_snapshot: skipped (playwright unavailable)"
+
 # Wait for game to finish (timeout 120s)
 wait $GAME_PID
 GAME_EXIT=$?
@@ -110,6 +116,12 @@ wait $GAME_PID 2>/dev/null
 **Behavioral acceptance tests** (run after the game exits):
 
 Read the `## Behavioral Acceptance Tests` section of `SPEC.md`. Run each command listed there. Record pass/fail per test. Any behavioral test that fails prevents grade A — record in `findings` and downgrade from A to B.
+
+**Visual rendering check** (run after behavioral tests):
+
+If `/tmp/forge-arena-visual.png` was saved during the game run, read it now using your vision capability. Read the `## Visual Acceptance Criteria` section of `SPEC.md` and evaluate the screenshot against each criterion listed there.
+
+If all criteria pass: `VISUAL_CHECK: PASS`. If any fail: `VISUAL_CHECK: FAIL` — record the specific failing criterion in findings and downgrade from A to B. If the file does not exist (playwright unavailable): record as `VISUAL_CHECK: SKIPPED`, grade unaffected.
 
 ---
 

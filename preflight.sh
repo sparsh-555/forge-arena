@@ -97,6 +97,29 @@ curl -sf -o /dev/null http://localhost:3000/assets/tiles/floor.png && ok "tile s
 curl -sf -o /dev/null http://localhost:3000/api/game-state && ok "game-state API 200" || fail "game-state API failed"
 kill $SERVER_PID 2>/dev/null; wait $SERVER_PID 2>/dev/null
 
+# 7. Visual check — screenshot the running game, open for manual inspection
+echo "--- visual check ---"
+(cd game-server && NO_API=true FAST_MODE=true node dist/server.js &)
+VSRV_PID=$!
+sleep 2
+(cd game-server && NO_API=true node run-full-game.js --headless 2>/dev/null &)
+VGAME_PID=$!
+sleep 6  # allow a few rounds to render
+
+npx --yes playwright screenshot --wait-for-timeout=3000 \
+  http://localhost:3000 /tmp/forge-arena-visual.png 2>/dev/null \
+  && ok "screenshot saved → /tmp/forge-arena-visual.png" \
+  || fail "playwright screenshot failed (playwright not installed?)"
+
+kill $VGAME_PID $VSRV_PID 2>/dev/null; wait $VGAME_PID $VSRV_PID 2>/dev/null
+
+if [ -f /tmp/forge-arena-visual.png ]; then
+  echo ""
+  echo "  → Opening screenshot for manual visual inspection..."
+  echo "  → Check: tile grid visible? sprites not circles? agents on map?"
+  open /tmp/forge-arena-visual.png 2>/dev/null || xdg-open /tmp/forge-arena-visual.png 2>/dev/null || true
+fi
+
 # Summary
 echo ""
 echo "=== preflight: $PASS passed, $FAIL failed ==="
