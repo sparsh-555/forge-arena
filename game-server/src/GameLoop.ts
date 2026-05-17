@@ -257,6 +257,20 @@ export function applyAgentAction(
         }
       }
     }
+    // Fallback: if target entity not found, find nearest matching type (replay resilience)
+    if (targetPos.x === agent.position.x && targetPos.y === agent.position.y) {
+      if (goal === "move_to_enemy") {
+        const nearest = state.enemies.filter(e => e.isAlive).sort((a, b) =>
+          (Math.abs(a.position.x - agent.position.x) + Math.abs(a.position.y - agent.position.y)) -
+          (Math.abs(b.position.x - agent.position.x) + Math.abs(b.position.y - agent.position.y)))[0];
+        if (nearest) targetPos = nearest.position;
+      } else if (goal === "move_to_item") {
+        const nearest = state.groundItems.sort((a, b) =>
+          (Math.abs(a.position.x - agent.position.x) + Math.abs(a.position.y - agent.position.y)) -
+          (Math.abs(b.position.x - agent.position.x) + Math.abs(b.position.y - agent.position.y)))[0];
+        if (nearest) targetPos = nearest.position;
+      }
+    }
     // For move_to_boss, target the boss entrance
     if (goal === "move_to_boss") {
       targetPos = state.map.bossEntrancePosition;
@@ -300,6 +314,15 @@ export function applyAgentAction(
   if (goal === "attack_heavy" || goal === "attack_medium" || goal === "attack_light") {
     if (action.targetId) {
       const targetEnemyIdx = state.enemies.findIndex(e => e.id === action.targetId && e.isAlive);
+      // If target exists but not adjacent: move toward it instead (replay resilience)
+      if (targetEnemyIdx >= 0 && !isAdjacent(agent.position, state.enemies[targetEnemyIdx].position)) {
+        const next = pathfindStep(agent.position, state.enemies[targetEnemyIdx].position, state);
+        if (next.x >= 0 && next.x < state.map.width && next.y >= 0 && next.y < state.map.height) {
+          const tile = state.map.tiles[next.y][next.x];
+          if (tile.type !== "wall") { agent.position = { ...next }; }
+        }
+        return { ...state, agents: { ...state.agents, [agentId]: agent } };
+      }
       if (targetEnemyIdx >= 0 && isAdjacent(agent.position, state.enemies[targetEnemyIdx].position)) {
         const targetEnemy = state.enemies[targetEnemyIdx];
         const result = resolveCombat(

@@ -242,6 +242,7 @@ async function main() {
 
     // Run arena matches
     const matchups = state.arenaMatchups;
+    console.error(`[run-full-game] arena debug: matchups=${matchups.length}, phase=${state.phase}, survivors:`, Object.fromEntries(AGENT_IDS.map(id => [id, state.agents[id]?.status])));
     let finalScores = {};
     let winner = null;
     let arenaBonuses = {};
