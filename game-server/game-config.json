@@ -2,22 +2,22 @@
   "_comment": "READ ONLY. Never patched. PatchApplier validates all patches against these values. Max ±30% deviation allowed.",
   "stamina": {
     "heavy_attack_cost": 30,
-    "medium_attack_cost": 20,
+    "medium_attack_cost": 22,
     "light_attack_cost": 10,
     "block_cost": 15,
     "base_regen_per_turn": 20
   },
   "enemies": {
     "grunt_hp": 30,
-    "grunt_damage": 8,
+    "grunt_damage": 5,
     "brute_hp": 70,
-    "brute_damage": 18,
+    "brute_damage": 13,
     "sentinel_hp": 120,
-    "sentinel_damage": 12,
+    "sentinel_damage": 9,
     "hex_caster_hp": 50,
-    "hex_caster_damage": 14,
+    "hex_caster_damage": 10,
     "shade_hp": 25,
-    "shade_damage": 10
+    "shade_damage": 7
   },
   "boss": {
     "boss_hp": 300,

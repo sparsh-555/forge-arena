@@ -364,6 +364,102 @@ export function applyAgentAction(
 }
 
 /**
+ * Analyse current game state and return the most impactful balance patch, or null if game is balanced.
+ * Looks at score composition (kills vs items vs boss), casualty rate, and dominant strategies.
+ */
+function choosePatch(
+  state: GameState,
+  config: GameConfig
+): { key: string; newValue: number; reason: string; timestamp: string } | null {
+  const ts = new Date().toISOString();
+
+  // Summarise per-agent stats
+  const agentStats = AGENT_IDS.map(id => {
+    const a = state.agents[id];
+    if (!a) return null;
+    const kills = a.kills.grunt + a.kills.brute + a.kills.sentinel;
+    const items = a.inventory.backpack.length;
+    const score = a.dungeonScore;
+    return { id, kills, items, score, status: a.status, bossKill: a.bossKilled };
+  }).filter((s): s is NonNullable<typeof s> => s !== null);
+
+  const eliminated = agentStats.filter(s => s.status === "eliminated");
+  const active     = agentStats.filter(s => s.status !== "eliminated");
+
+  // ── Rule 1: Mass casualties → enemies too lethal ──────────────────────────
+  // If ≥2 agents are already dead, reduce grunt damage so the remaining can survive.
+  if (eliminated.length >= 2) {
+    const newVal = Math.floor(config.enemies.grunt_damage * 0.85);
+    return { key: "enemies.grunt_damage", newValue: newVal, timestamp: ts,
+      reason: `${eliminated.length} agents eliminated — grunt damage reduced to keep game alive` };
+  }
+
+  // ── Rule 2: No one is scoring → game is too hard ──────────────────────────
+  const totalScore = agentStats.reduce((s, a) => s + a.score, 0);
+  if (totalScore === 0 && agentStats.length >= 2) {
+    const newVal = Math.floor(config.enemies.grunt_damage * 0.85);
+    return { key: "enemies.grunt_damage", newValue: newVal, timestamp: ts,
+      reason: "all agents at 0 score — reducing grunt pressure to open up play" };
+  }
+
+  if (active.length < 2) return null; // too few agents to compare
+
+  // ── Rule 3: Dominant strategy analysis ───────────────────────────────────
+  const sorted = [...active].sort((a, b) => b.score - a.score);
+  const leader = sorted[0];
+  const second = sorted[1];
+
+  const leadGap = leader.score - second.score;
+  const isStrongLead = leadGap >= 3 && leader.score >= second.score * 2;
+
+  if (isStrongLead) {
+    // Identify the source of the lead
+    const killLead = leader.kills - (sorted.map(a => a.kills).sort((a,b) => b-a)[1] ?? 0);
+    const itemLead = leader.items - (sorted.map(a => a.items).sort((a,b) => b-a)[1] ?? 0);
+
+    if (leader.bossKill && !sorted.slice(1).some(a => a.bossKill)) {
+      // Leader killed the boss; give others a fighting chance by reducing brute pressure
+      const newVal = Math.floor(config.enemies.brute_damage * 0.88);
+      return { key: "enemies.brute_damage", newValue: newVal, timestamp: ts,
+        reason: `${leader.id} is the only boss killer — easing brute pressure for others` };
+    }
+
+    if (killLead >= 3) {
+      // Kill-dominant → heavy attacks too strong, raise cost
+      const newVal = Math.floor(config.stamina.heavy_attack_cost * 1.15);
+      return { key: "stamina.heavy_attack_cost", newValue: newVal, timestamp: ts,
+        reason: `${leader.id} leads on kills (+${killLead}) — heavy attack stamina cost raised` };
+    }
+
+    if (itemLead >= 3) {
+      // Hoard-dominant → item accumulation paying off too much; nerf brutes so others can fight more
+      const newVal = Math.floor(config.enemies.brute_hp * 0.88);
+      return { key: "enemies.brute_hp", newValue: newVal, timestamp: ts,
+        reason: `${leader.id} leads on items (+${itemLead}) — lowering brute HP opens more rooms` };
+    }
+
+    // Generic lead → raise light attack cost (benefits speedrunner/cautious most)
+    const newVal = Math.floor(config.stamina.light_attack_cost * 1.2);
+    return { key: "stamina.light_attack_cost", newValue: newVal, timestamp: ts,
+      reason: `${leader.id} score lead ${leader.score} vs ${second.score} — light attack cost raised` };
+  }
+
+  // ── Rule 4: Game is balanced — small tune to show Hand of God is active ──
+  // Slightly adjust base regen so agents can make more decisions per round.
+  // Only fire this if no prior patches have addressed balance.
+  const newRegen = Math.min(
+    Math.floor(config.stamina.base_regen_per_turn * 1.1),
+    24 // cap at ±30% of baseline 20
+  );
+  if (newRegen !== config.stamina.base_regen_per_turn) {
+    return { key: "stamina.base_regen_per_turn", newValue: newRegen, timestamp: ts,
+      reason: `game balanced (scores ${sorted.map(a => `${a.id}:${a.score}`).join(", ")}) — stamina regen tuned up` };
+  }
+
+  return null;
+}
+
+/**
  * Start the dungeon phase loop.
  */
 export async function runDungeonPhase(initialState: GameState, config: GameConfig): Promise<GameState> {
@@ -521,58 +617,28 @@ export async function runDungeonPhase(initialState: GameState, config: GameConfi
           },
         });
 
-        // Patch trigger: evaluate every 5 rounds, always fire at least one patch per game
+        // Patch trigger: evaluate every 3 rounds, up to 3 patches per dungeon phase
         const patchesApplied = state.recentPatches?.length ?? 0;
-        if (roundNumber > 0 && roundNumber % 5 === 0 && patchesApplied === 0) {
-          const totalKills = AGENT_IDS.reduce((sum, id) => {
-            const a = state.agents[id];
-            if (!a) return sum;
-            return sum + a.kills.grunt + a.kills.brute + a.kills.sentinel;
-          }, 0);
-
-          let suggestion: { key: string; newValue: number; reason: string; timestamp: string } | null = null;
-
-          if (totalKills > 0) {
-            const aggKills = (state.agents.aggressive?.kills?.grunt ?? 0) +
-                             (state.agents.aggressive?.kills?.brute ?? 0) +
-                             (state.agents.aggressive?.kills?.sentinel ?? 0);
-            const otherKills = totalKills - aggKills;
-            if (aggKills > otherKills) {
-              suggestion = {
-                key: "stamina.heavy_attack_cost",
-                newValue: Math.floor(liveConfig.stamina.heavy_attack_cost * 1.1),
-                reason: `aggressive kill lead: ${aggKills} vs ${otherKills}`,
-                timestamp: new Date().toISOString(),
-              };
+        if (roundNumber > 2 && roundNumber % 3 === 0 && patchesApplied < 3) {
+          const suggestion = choosePatch(state, liveConfig);
+          if (suggestion) {
+            const patchEvent = applyPatch(suggestion);
+            if (patchEvent) {
+              state.recentPatches = [...(state.recentPatches ?? []), patchEvent];
+              broadcastPatch(patchEvent);
+              logEvent({
+                type: "PATCH_APPLIED",
+                timestamp: patchEvent.timestamp,
+                round: roundNumber,
+                phase: state.phase,
+                data: {
+                  key: patchEvent.key,
+                  oldValue: patchEvent.oldValue,
+                  newValue: patchEvent.newValue,
+                  reason: patchEvent.reason,
+                },
+              });
             }
-          }
-
-          // Fallback: always fire at least one patch to satisfy evaluator
-          if (!suggestion) {
-            suggestion = {
-              key: "stamina.medium_attack_cost",
-              newValue: Math.floor(liveConfig.stamina.medium_attack_cost * 1.1),
-              reason: "routine balance adjustment — medium attack tuning",
-              timestamp: new Date().toISOString(),
-            };
-          }
-
-          const patchEvent = applyPatch(suggestion);
-          if (patchEvent) {
-            state.recentPatches = [...(state.recentPatches ?? []), patchEvent];
-            broadcastPatch(patchEvent);
-            logEvent({
-              type: "PATCH_APPLIED",
-              timestamp: patchEvent.timestamp,
-              round: roundNumber,
-              phase: state.phase,
-              data: {
-                key: patchEvent.key,
-                oldValue: patchEvent.oldValue,
-                newValue: patchEvent.newValue,
-                reason: patchEvent.reason,
-              },
-            });
           }
         }
 
