@@ -1,0 +1,114 @@
+[
+  {
+    "id": "F01",
+    "title": "Personality CLAUDE.md files",
+    "priority": 1,
+    "status": "stub",
+    "files": ["personalities/aggressive/CLAUDE.md", "personalities/cautious/CLAUDE.md", "personalities/hoarder/CLAUDE.md", "personalities/speedrunner/CLAUDE.md"],
+    "acceptance": "All 4 files exist with all 7 required sections including Patch Awareness. personality-generate skill used."
+  },
+  {
+    "id": "F02",
+    "title": "Dungeon generation (rot.js BSP)",
+    "priority": 1,
+    "status": "stub",
+    "files": ["game-server/src/DungeonGen.ts"],
+    "acceptance": "generateDungeon(seed) returns DungeonMap with ~20 rooms, boss_entrance tile, chest tiles, all tiles initialized."
+  },
+  {
+    "id": "F03",
+    "title": "Combat system (pure functions)",
+    "priority": 1,
+    "status": "partial",
+    "files": ["game-server/src/CombatSystem.ts"],
+    "acceptance": "All 6 functions implemented. calcStaminaCost, calcDamage, calcEquipmentLoad, calcStaminaRegen are pure. resolveCombat handles stamina failure, block reduction, arena bonus."
+  },
+  {
+    "id": "F04",
+    "title": "Agent API (Claude calls with personality)",
+    "priority": 1,
+    "status": "stub",
+    "files": ["game-server/src/AgentAPI.ts"],
+    "acceptance": "callClaude makes real Anthropic API calls. loadPersonalityPrompt reads CLAUDE.md. Model routing: Haiku for dungeon, Sonnet for final. getFallbackAction returns personality-appropriate defaults."
+  },
+  {
+    "id": "F05",
+    "title": "Dungeon bridge (FOV filtering)",
+    "priority": 1,
+    "status": "partial",
+    "files": ["game-server/src/DungeonBridge.ts"],
+    "acceptance": "toAgentPayload applies FOV filter correctly. toDashboardPayload includes full map. formatPatchesForAgent implemented."
+  },
+  {
+    "id": "F06",
+    "title": "Enemy AI (rule-based, no Claude)",
+    "priority": 2,
+    "status": "stub",
+    "files": ["game-server/src/EnemyAI.ts"],
+    "acceptance": "resolveEnemyActions handles grunt/brute/sentinel behaviors. Brute telegraphs. Sentinel blocks + summons grunt at 30% HP. pathfindStep uses rot.js A*."
+  },
+  {
+    "id": "F07",
+    "title": "Game loop (round lock, parallel calls, phase machine)",
+    "priority": 2,
+    "status": "partial",
+    "files": ["game-server/src/GameLoop.ts"],
+    "acceptance": "runDungeonPhase: 4 parallel calls staggered 150ms, round lock, 2s intervals. teleportToArena: score finalization + seeding. runArenaMatch: alternating turns. resolveConflicts: priority ordering. transitionPhase: implemented."
+  },
+  {
+    "id": "F08",
+    "title": "Patch applier (atomic writes, ±30% validation)",
+    "priority": 2,
+    "status": "partial",
+    "files": ["game-server/src/PatchApplier.ts"],
+    "acceptance": "applyPatch validates ±30% of baseline, writes via tmp→rename. getNestedValue and setNestedValue implemented and immutable."
+  },
+  {
+    "id": "F09",
+    "title": "State emitter (WebSocket broadcast + event log)",
+    "priority": 2,
+    "status": "stub",
+    "files": ["game-server/src/StateEmitter.ts"],
+    "acceptance": "broadcast sends DashboardPayload to all ws clients. logEvent appends to game-events.jsonl. broadcastPatch sends patch event immediately."
+  },
+  {
+    "id": "F10",
+    "title": "HTTP server (SSE + WebSocket + static files)",
+    "priority": 2,
+    "status": "partial",
+    "files": ["game-server/src/server.ts"],
+    "acceptance": "/api/game-state returns { mode, state }. /api/harness-events SSE streams harness-events.jsonl. /api/build-health reads build-health.json. /ws/game WebSocket works. Dashboard static files served."
+  },
+  {
+    "id": "F11",
+    "title": "Headless game runner (acceptance test)",
+    "priority": 3,
+    "status": "stub",
+    "files": ["game-server/run-full-game.js"],
+    "acceptance": "Exits 0 and prints GAME_COMPLETE. All 4 agents make ≥1 decision. Dungeon timer fires. Teleport occurs. 2 semis + final resolve. Winner declared. FAST_MODE completes < 90s."
+  },
+  {
+    "id": "F12",
+    "title": "Dashboard game view (Phaser + thought panels + patch feed)",
+    "priority": 3,
+    "status": "stub",
+    "files": ["dashboard/src/GameView.tsx"],
+    "acceptance": "Phaser scene renders tile map, agent sprites, enemy sprites. Agent thought panels show last reasoning string. Patch feed shows PATCH_APPLIED events via SSE. Responsive to game-state WebSocket updates."
+  },
+  {
+    "id": "F13",
+    "title": "Dashboard harness view (task queue + build health)",
+    "priority": 3,
+    "status": "stub",
+    "files": ["dashboard/src/HarnessView.tsx"],
+    "acceptance": "Shows build health grade + history. Streams harness-events.jsonl via /api/harness-events SSE. Grade history sparkline updates in real time."
+  },
+  {
+    "id": "F14",
+    "title": "Item system (slots + backpack + equip action)",
+    "priority": 2,
+    "status": "not_started",
+    "files": ["game-server/src/GameLoop.ts", "game-server/src/types.ts"],
+    "acceptance": "pick_up_item moves ground item to agent backpack. equip_from_backpack swaps item into slot (costs full turn). Item stats apply to combat calculations. Boss kill grants rare item to backpack."
+  }
+]
