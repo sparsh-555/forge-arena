@@ -17,6 +17,25 @@ Two modes, one session:
 
 ---
 
+## Screenshots
+
+**Live dungeon — Hand of God fires mid-round**
+Aggressive is kill-dominant (+4). The harness patches `stamina.medium_attack_cost` and `stamina.heavy_attack_cost` in real time. Each agent's last Claude reasoning is visible in the right panel.
+
+![Dungeon phase with Hand of God patches firing](docs/screenshots/dungeon-hog.png)
+
+**Arena final — winner declared**
+Aggressive wins with 36 points (14 kills). Cautious survives at 142 HP. Per-agent scores and reasoning visible. Hand of God shows final leaderboard.
+
+![Arena winner screen](docs/screenshots/arena-winner.png)
+
+**Build logs — harness convergence**
+Sprint-by-sprint task completion, ASSET_DISCOVERY events (found SpelunkyClassicHD + Tuxemon on GitHub), grade history F → C → C → B → B, and CONVERGED status. 2h 47m, 664k tokens, 2 GitHub repos found autonomously.
+
+![Build logs and harness activity](docs/screenshots/build-logs.png)
+
+---
+
 ## The Game
 
 Four AI agents — each powered by Claude with a distinct CLAUDE.md personality — compete through a dungeon and into an arena:
