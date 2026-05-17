@@ -1,0 +1,29 @@
+{
+  "_comment": "READ ONLY. Never patched. PatchApplier validates all patches against these values. Max ±30% deviation allowed.",
+  "stamina": {
+    "heavy_attack_cost": 30,
+    "medium_attack_cost": 20,
+    "light_attack_cost": 10,
+    "block_cost": 15,
+    "base_regen_per_turn": 20
+  },
+  "enemies": {
+    "grunt_hp": 30,
+    "grunt_damage": 8,
+    "brute_hp": 70,
+    "brute_damage": 18,
+    "sentinel_hp": 120,
+    "sentinel_damage": 12
+  },
+  "boss": {
+    "boss_hp": 300,
+    "boss_phase2_threshold": 0.5
+  },
+  "dungeon_timer_seconds": 300,
+  "boss_grace_seconds": 60,
+  "arena_turn_cap": 0,
+  "fov_radius": 6,
+  "round_interval_ms": 2000,
+  "agent_api_timeout_ms": 3000,
+  "agent_call_stagger_ms": 150
+}
