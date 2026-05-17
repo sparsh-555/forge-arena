@@ -1,0 +1,4317 @@
+{
+  "seed": 42,
+  "actions": {
+    "1_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_4",
+      "reasoning": "engaging enemy_4 with sword \u2014 stamina is sufficient, kill is guaranteed"
+    },
+    "1_cautious": {
+      "goal": "block",
+      "reasoning": "shield up \u2014 assessing enemy positions before committing to engagement"
+    },
+    "1_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "1_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "2_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_3",
+      "reasoning": "enemy_3 within weapon range \u2014 striking before it can counter-attack"
+    },
+    "2_cautious": {
+      "goal": "block",
+      "reasoning": "defensive stance \u2014 waiting for optimal window to push forward"
+    },
+    "2_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "2_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "3_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "3_cautious": {
+      "goal": "move_to_safe",
+      "reasoning": "retreating from danger zone \u2014 strategic withdrawal to regroup"
+    },
+    "3_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "3_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "4_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "4_cautious": {
+      "goal": "move_to_safe",
+      "reasoning": "repositioning away from threat cluster \u2014 cautious play preserves HP"
+    },
+    "4_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "4_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "5_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "5_cautious": {
+      "goal": "move_to_safe",
+      "reasoning": "retreating from danger zone \u2014 strategic withdrawal to regroup"
+    },
+    "5_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "5_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "6_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "6_cautious": {
+      "goal": "move_to_safe",
+      "reasoning": "retreating from danger zone \u2014 strategic withdrawal to regroup"
+    },
+    "6_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "6_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "7_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "7_cautious": {
+      "goal": "move_to_safe",
+      "reasoning": "backing off to heal up \u2014 living to fight later wins more than dying now"
+    },
+    "7_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "7_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "8_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "8_cautious": {
+      "goal": "move_to_safe",
+      "reasoning": "repositioning away from threat cluster \u2014 cautious play preserves HP"
+    },
+    "8_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "8_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "9_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "9_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "9_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "9_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "10_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "10_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "10_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "10_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "11_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "11_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "11_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "11_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "12_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "12_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "12_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "12_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "13_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "13_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "13_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "13_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "14_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "14_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "14_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "14_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "15_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "15_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "15_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "15_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "16_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "16_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "16_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "16_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "17_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "17_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "17_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "17_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "18_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "18_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "18_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "18_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "19_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "19_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "19_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "19_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "20_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "20_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "20_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "20_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "21_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "21_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "21_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "21_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "22_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "22_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "22_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "22_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "23_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "23_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "23_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "23_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "24_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "24_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "24_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "24_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "25_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "25_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "25_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "25_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "26_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "26_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "26_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "26_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "27_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "27_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "27_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "27_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "28_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "28_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "28_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "28_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "29_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "29_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "29_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "29_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "30_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "30_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "30_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "30_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "31_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "31_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "31_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "31_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "32_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "32_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "32_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "32_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "33_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "33_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "33_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "33_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "34_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "34_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "34_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "34_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "35_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "35_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "35_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "35_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "36_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "36_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "36_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "36_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "37_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "37_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "37_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "37_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "38_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "38_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "38_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "38_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "39_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "39_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "39_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "39_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "40_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "40_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "40_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "40_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "41_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "41_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "41_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "41_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "42_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "42_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "42_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "42_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "43_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "43_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "43_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "43_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "44_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "44_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "44_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "44_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "45_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "45_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "45_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "45_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "46_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "46_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "46_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "46_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "47_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "47_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "47_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "47_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "48_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "48_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "48_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "48_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "49_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "49_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "49_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "49_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "50_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "50_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "50_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "50_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "51_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "51_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "51_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "51_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "52_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "52_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "52_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "52_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "53_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "53_cautious": {
+      "goal": "move_to_safe",
+      "reasoning": "repositioning away from threat cluster \u2014 cautious play preserves HP"
+    },
+    "53_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "53_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "54_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "54_cautious": {
+      "goal": "move_to_safe",
+      "reasoning": "retreating from danger zone \u2014 strategic withdrawal to regroup"
+    },
+    "54_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "54_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "55_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_0",
+      "reasoning": "enemy_0 isolated \u2014 taking the kill to maintain momentum"
+    },
+    "55_cautious": {
+      "goal": "move_to_safe",
+      "reasoning": "backing off to heal up \u2014 living to fight later wins more than dying now"
+    },
+    "55_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "55_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "56_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_1",
+      "reasoning": "attacking enemy_1 preemptively \u2014 best defense is eliminating the threat"
+    },
+    "56_cautious": {
+      "goal": "move_to_safe",
+      "reasoning": "repositioning away from threat cluster \u2014 cautious play preserves HP"
+    },
+    "56_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "56_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "57_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_2",
+      "reasoning": "attacking enemy_2 preemptively \u2014 best defense is eliminating the threat"
+    },
+    "57_cautious": {
+      "goal": "block",
+      "reasoning": "guarding position while stamina regenerates \u2014 patience is survival"
+    },
+    "57_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "57_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "58_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_5",
+      "reasoning": "attacking enemy_5 preemptively \u2014 best defense is eliminating the threat"
+    },
+    "58_cautious": {
+      "goal": "block",
+      "reasoning": "shield up \u2014 assessing enemy positions before committing to engagement"
+    },
+    "58_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "58_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "59_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_5",
+      "reasoning": "attacking enemy_5 preemptively \u2014 best defense is eliminating the threat"
+    },
+    "59_cautious": {
+      "goal": "block",
+      "reasoning": "guarding position while stamina regenerates \u2014 patience is survival"
+    },
+    "59_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "59_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "60_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_6",
+      "reasoning": "enemy_6 within weapon range \u2014 striking before it can counter-attack"
+    },
+    "60_cautious": {
+      "goal": "block",
+      "reasoning": "defensive stance \u2014 waiting for optimal window to push forward"
+    },
+    "60_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "60_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "61_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_6",
+      "reasoning": "enemy_6 within weapon range \u2014 striking before it can counter-attack"
+    },
+    "61_cautious": {
+      "goal": "block",
+      "reasoning": "taking cover \u2014 multiple threats in FOV, waiting for one to separate"
+    },
+    "61_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "61_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "62_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_7",
+      "reasoning": "attacking enemy_7 preemptively \u2014 best defense is eliminating the threat"
+    },
+    "62_cautious": {
+      "goal": "block",
+      "reasoning": "defensive stance \u2014 waiting for optimal window to push forward"
+    },
+    "62_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "62_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "63_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_7",
+      "reasoning": "enemy_7 isolated \u2014 taking the kill to maintain momentum"
+    },
+    "63_cautious": {
+      "goal": "block",
+      "reasoning": "shield up \u2014 assessing enemy positions before committing to engagement"
+    },
+    "63_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "63_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "64_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_8",
+      "reasoning": "engaging enemy_8 with sword \u2014 stamina is sufficient, kill is guaranteed"
+    },
+    "64_cautious": {
+      "goal": "block",
+      "reasoning": "shield up \u2014 assessing enemy positions before committing to engagement"
+    },
+    "64_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "64_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "65_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_8",
+      "reasoning": "attacking enemy_8 preemptively \u2014 best defense is eliminating the threat"
+    },
+    "65_cautious": {
+      "goal": "block",
+      "reasoning": "taking cover \u2014 multiple threats in FOV, waiting for one to separate"
+    },
+    "65_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "65_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "66_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_9",
+      "reasoning": "attacking enemy_9 preemptively \u2014 best defense is eliminating the threat"
+    },
+    "66_cautious": {
+      "goal": "block",
+      "reasoning": "shield up \u2014 assessing enemy positions before committing to engagement"
+    },
+    "66_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "66_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "67_aggressive": {
+      "goal": "attack_medium",
+      "targetId": "enemy_9",
+      "reasoning": "engaging enemy_9 with sword \u2014 stamina is sufficient, kill is guaranteed"
+    },
+    "67_cautious": {
+      "goal": "block",
+      "reasoning": "taking cover \u2014 multiple threats in FOV, waiting for one to separate"
+    },
+    "67_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "67_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "68_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "68_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "68_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "68_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "69_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "69_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "69_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "69_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "70_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "70_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "70_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "70_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "71_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "71_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "71_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "71_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "72_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "72_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "72_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "72_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "73_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "73_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "73_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "73_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "74_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "74_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "74_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "74_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "75_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "75_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "75_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "75_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "76_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "76_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "76_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "76_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "77_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "77_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "77_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "77_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "78_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "78_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "78_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "78_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "79_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "79_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "79_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "79_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "80_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "80_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "80_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "80_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "81_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "81_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "81_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "81_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "82_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "82_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "82_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "82_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "83_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "83_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "83_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "83_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "84_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "84_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "84_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "84_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "85_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "85_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "85_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "85_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "86_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "86_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "86_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "86_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "87_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "87_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "87_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "87_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "88_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "88_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "88_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "88_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "89_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "89_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "89_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "89_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "90_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "90_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "90_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "90_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "91_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "91_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "91_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "91_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "92_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "92_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "92_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "92_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "93_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "93_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "93_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "93_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "94_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "94_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "94_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "94_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "95_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "95_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "95_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "95_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "96_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "96_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "96_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "96_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "97_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "97_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "97_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "97_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "98_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "98_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "98_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "98_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "99_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "99_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "99_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "99_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "100_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "100_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "100_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "100_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "101_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "101_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "101_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "101_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "102_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "102_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "102_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "102_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "103_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "103_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "103_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "103_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "104_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "104_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "104_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "104_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "105_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "105_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "105_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "105_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "106_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "106_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "106_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "106_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "107_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "107_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "107_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "107_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "108_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "108_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "108_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "108_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "109_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "109_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "109_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "109_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "110_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "110_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "110_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "110_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "111_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "111_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "111_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "111_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "112_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "112_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "112_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "112_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "113_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "113_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "113_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "113_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "114_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "114_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "114_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "114_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "115_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "115_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "115_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "115_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "116_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "116_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "116_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "116_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "117_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "117_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "117_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "117_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "118_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "118_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "118_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "118_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "119_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "119_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "119_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "119_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "120_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "120_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "120_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "120_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "121_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "121_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "121_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "121_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "122_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "122_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "122_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "122_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "123_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "123_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "123_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "123_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "124_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "124_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "124_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "124_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "125_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "125_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "125_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "125_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "126_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "126_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "126_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "126_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "127_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "127_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "127_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "127_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "128_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "128_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "128_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "128_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "129_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "129_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "129_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "129_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "130_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "130_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "130_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "130_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "131_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "131_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "131_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "131_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "132_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "132_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "132_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "132_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "133_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "133_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "133_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "133_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "134_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "134_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "134_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "134_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "135_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "135_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "135_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "135_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "136_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "136_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "136_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "136_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "137_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "137_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "137_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "137_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "138_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "138_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "138_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "138_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "139_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "139_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "139_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "139_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "140_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "140_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "140_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "140_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "141_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "141_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "141_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "141_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "142_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "142_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "142_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "142_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "143_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "143_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "143_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "143_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "144_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "144_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "144_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "144_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "145_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "145_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "145_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "145_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "146_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "146_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "146_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "146_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "147_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "147_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "147_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "147_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "148_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "148_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "148_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "148_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "149_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "149_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "149_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "149_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "150_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "150_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "150_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "150_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "151_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "151_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "151_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "151_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "152_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "152_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "152_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "152_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "153_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "153_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "153_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "153_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "154_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "154_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "154_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "154_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "155_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "155_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "155_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "155_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "156_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "156_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "156_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "156_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "157_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "157_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "157_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "157_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "158_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "158_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "158_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "158_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "159_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "159_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "159_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "159_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "160_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "160_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "160_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "160_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "161_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "161_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "161_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "161_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "162_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "162_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "162_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "162_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "163_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "163_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "163_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "163_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "164_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "164_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "164_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "164_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "165_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "165_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "165_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "165_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "166_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "166_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "166_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "166_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "167_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "167_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "167_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "167_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "168_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "168_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "168_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "168_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "169_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "169_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "169_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "169_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "170_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "170_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "170_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "170_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "171_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "171_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "171_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "171_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "172_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "172_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "172_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "172_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "173_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "173_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "173_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "173_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "174_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "174_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "174_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "174_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "175_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "175_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "175_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "175_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "176_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "176_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "176_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "176_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "177_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "177_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "177_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "177_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "178_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "178_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "178_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "178_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "179_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "179_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "179_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "179_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "180_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "180_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "180_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "180_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "181_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "181_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "181_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "181_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "182_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "182_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "182_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "182_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "183_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "183_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "183_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "183_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "184_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "184_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "184_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "184_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "185_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "185_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "185_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "185_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "186_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "186_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "186_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "186_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "187_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "187_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "187_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "187_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "188_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "188_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "188_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "188_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "189_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "189_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "189_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "189_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "190_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "190_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "190_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "190_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "191_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "191_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "191_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "191_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "192_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "192_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "192_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "192_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "193_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "193_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "193_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "193_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "194_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "194_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "194_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "194_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "195_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "195_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "195_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "195_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "196_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "196_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "196_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "196_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "197_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "197_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "197_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "197_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "198_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "198_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "198_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "198_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "199_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "199_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "199_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "199_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "200_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "200_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "200_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "200_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "201_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "201_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "201_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "201_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "202_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "202_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "202_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "202_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "203_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "203_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "203_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "203_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "204_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "204_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "204_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "204_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "205_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "205_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "205_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "205_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "206_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "206_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "206_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "206_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "207_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "207_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "207_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "207_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "208_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "208_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "208_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "208_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "209_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "209_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "209_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "209_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "210_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "210_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "210_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "210_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "211_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "211_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "211_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "211_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "212_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "212_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "212_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "212_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "213_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "213_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "213_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "213_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "214_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "214_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "214_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "214_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "215_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "215_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "215_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "215_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "216_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "216_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "216_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "216_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "217_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "217_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "217_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "217_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "218_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "218_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "218_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "218_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "219_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "219_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "219_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "219_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "220_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "220_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "220_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "220_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "221_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "221_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "221_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "221_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "222_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "222_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "222_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "222_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "223_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "223_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "223_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "223_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "224_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "224_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "224_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "224_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "225_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "225_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "225_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "225_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "226_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "226_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "226_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "226_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "227_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "227_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "227_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "227_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "228_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "228_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "228_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "228_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "229_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "229_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "229_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "229_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "230_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "230_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "230_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "230_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "231_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "231_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "231_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "231_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "232_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "232_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "232_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "232_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "233_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "233_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "233_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "233_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "234_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "234_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "234_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "234_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "first agent to boss gets the best arena seed \u2014 full sprint, no detours"
+    },
+    "235_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "235_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "235_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "235_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    },
+    "236_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "closing distance \u2014 building kill chain for dungeon score lead"
+    },
+    "236_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "236_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "236_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "237_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "enemy spotted in FOV \u2014 engaging before they can group up"
+    },
+    "237_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "237_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "237_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "racing toward boss entrance \u2014 every round saved is a seeding advantage"
+    },
+    "238_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "next target acquired \u2014 sword ready, stamina high, HP stable"
+    },
+    "238_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "238_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "collecting estus_5 before another agent notices it"
+    },
+    "238_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "pathfinding to boss entrance \u2014 minimal movement, maximum velocity"
+    },
+    "239_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "hunting the next kill \u2014 dungeon score is arena seeding advantage"
+    },
+    "239_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "securing estus_5 \u2014 better equipped agents win arena matches"
+    },
+    "239_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "grabbing estus_5 \u2014 every piece of equipment matters in the arena"
+    },
+    "239_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "boss entrance detected \u2014 sprinting to trigger the encounter first"
+    },
+    "240_aggressive": {
+      "goal": "move_to_enemy",
+      "reasoning": "pushing toward enemy cluster \u2014 aggressive play wins dungeon phase"
+    },
+    "240_cautious": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "picking up estus_5 \u2014 inventory has room, no reason to leave it behind"
+    },
+    "240_hoarder": {
+      "goal": "move_to_item",
+      "targetId": "estus_5",
+      "reasoning": "estus_5 spotted nearby \u2014 short detour for arena phase advantage"
+    },
+    "240_speedrunner": {
+      "goal": "move_to_boss",
+      "reasoning": "closing distance to boss room at maximum speed \u2014 ignoring all distractions"
+    }
+  }
+}

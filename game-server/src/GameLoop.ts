@@ -346,8 +346,37 @@ export function applyAgentAction(
 
   // Pick up item: move from ground to backpack
   if (goal === "pick_up_item" && action.targetId) {
-    const itemIdx = state.groundItems.findIndex(gi => gi.item.id === action.targetId);
-    if (itemIdx >= 0) {
+    if (action.targetId.startsWith("chest_")) {
+      // Chest target: open chest, collect all items at that position
+      const parts = action.targetId.split("_");
+      const chestX = parseInt(parts[1], 10);
+      const chestY = parseInt(parts[2], 10);
+      const chestItems = state.groundItems.filter(
+        gi => gi.position.x === chestX && gi.position.y === chestY
+      );
+      if (chestItems.length > 0) {
+        agent.inventory = {
+          ...agent.inventory,
+          backpack: [...agent.inventory.backpack, ...chestItems.map(gi => gi.item)],
+        };
+        const itemIds = new Set(chestItems.map(gi => gi.item.id));
+        const newGroundItems = state.groundItems.filter(gi => !itemIds.has(gi.item.id));
+        // Mark chest tile as opened
+        const updatedTiles = state.map.tiles.map((row, y) =>
+          y === chestY
+            ? row.map((tile, x) => (x === chestX && tile.type === "chest" ? { ...tile, type: "chest_open" as const } : tile))
+            : row
+        );
+        return {
+          ...state,
+          agents: { ...state.agents, [agentId]: agent },
+          groundItems: newGroundItems,
+          map: { ...state.map, tiles: updatedTiles },
+        };
+      }
+    } else {
+      const itemIdx = state.groundItems.findIndex(gi => gi.item.id === action.targetId);
+      if (itemIdx >= 0) {
       const groundItem = state.groundItems[itemIdx];
       agent.inventory = {
         ...agent.inventory,
@@ -355,6 +384,7 @@ export function applyAgentAction(
       };
       const newGroundItems = state.groundItems.filter((_, i) => i !== itemIdx);
       return { ...state, agents: { ...state.agents, [agentId]: agent }, groundItems: newGroundItems };
+    }
     }
   }
 

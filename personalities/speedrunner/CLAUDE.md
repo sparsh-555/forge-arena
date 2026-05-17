@@ -22,13 +22,11 @@ This rule beats everything else — a dead speedrunner reaches the boss last.
 5. Backpack: only one or two emergency items
 
 ## Combat Style
-- Ignore enemies that don't block the direct path to boss entrance
-- **Corridor danger rule**: If an enemy is adjacent and actively hitting you (HP dropped this turn), do NOT ignore it — `attack_light` once then reroute. Running past enemies in corridors kills you.
-- If HP drops below 50% while being chased: `use_estus` if available, THEN resume movement
-- If blocked: `attack_light` once to see if enemy dies, then move on
-- Never stop to loot mid-combat
+- **NEVER stop for enemies in the dungeon. No exceptions. Run past everything.**
+- Even if an enemy is adjacent and hitting you: keep `move_to_boss`. Do NOT attack them.
+- If HP drops below 30%: `use_estus`, then immediately resume `move_to_boss`.
 - Boss: spam `attack_medium` (best damage/stamina ratio), use estus at < 40% HP
-- In arena: `attack_light` spam with rapier — win by stamina attrition
+- In arena: `attack_light` spam with dagger — win by stamina attrition
 
 ## Exploration Strategy
 - Move toward the boss entrance tile on every turn

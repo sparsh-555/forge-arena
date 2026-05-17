@@ -63,6 +63,7 @@ interface DashboardPayload {
   mapWidth: number;
   mapHeight: number;
   recentPatches: Array<{ key: string; oldValue?: number; newValue: number; reason: string; timestamp?: string }>;
+  arenaMatchups?: Array<{ agentA: string; agentB: string; turnCount?: number; winner?: string }>;
   finalScores?: Partial<Record<AgentId, number>>;
 }
 
@@ -572,6 +573,104 @@ function ScoreBar({ id, score, maxScore, status }: { id: AgentId; score: number;
 
 // ── GameView ──────────────────────────────────────────────────────────────────
 
+// ── Arena Battle View ──────────────────────────────────────────────────────────
+
+function ArenaView({ payload, agents }: { payload: DashboardPayload; agents: Record<AgentId, AgentState> | undefined }) {
+  const matchups = payload.arenaMatchups ?? [];
+  const isEnded = payload.phase === "ENDED";
+  const phaseLabel = payload.phase === "ARENA_SEMI1" ? "Semi-Final 1"
+    : payload.phase === "ARENA_SEMI2" ? "Semi-Final 2"
+    : payload.phase === "ARENA_FINAL" ? "Final"
+    : payload.phase;
+
+  // Find the two agents currently matched
+  const currentMatchup = matchups[0];
+  const agentA = currentMatchup ? agents?.[currentMatchup.agentA as AgentId] : undefined;
+  const agentB = currentMatchup ? agents?.[currentMatchup.agentB as AgentId] : undefined;
+
+  function AgentBattleCard({ id, agent, flip }: { id: AgentId; agent: AgentState | undefined; flip: boolean }) {
+    const hpRatio = agent ? agent.combat.hp / agent.combat.maxHp : 0;
+    const stamRatio = agent ? agent.combat.stamina / agent.combat.maxStamina : 0;
+    const hpColor = hpRatio > 0.5 ? "bg-green-500" : hpRatio > 0.25 ? "bg-yellow-400" : "bg-red-500";
+    const stamColor = "bg-blue-400";
+    const eliminated = agent?.status === "eliminated" || (agent?.combat?.hp ?? 0) <= 0;
+
+    return (
+      <div className={`flex flex-col items-center gap-2 ${eliminated ? "opacity-40" : ""}`}>
+        <div className={`flex ${flip ? "flex-row-reverse" : ""} items-end gap-3`}>
+          <img
+            src={`/assets/ui/portraits/${id}_portrait.png`}
+            alt={id}
+            className={`w-20 h-20 rounded border-2 object-cover shrink-0 ${eliminated ? "border-red-500/30" : "border-yellow-400/50"}`}
+            style={{ imageRendering: "pixelated", transform: flip ? "scaleX(-1)" : "" }}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          />
+          <div className="flex flex-col gap-2 min-w-[120px]">
+            {/* HP */}
+            <div>
+              <div className="flex justify-between text-[9px] mb-0.5">
+                <span className="text-forge-dim">HP</span>
+                <span className="text-forge-text">{agent?.combat?.hp ?? 0} / {agent?.combat?.maxHp ?? "?"}</span>
+              </div>
+              <div className="h-2 bg-forge-border rounded overflow-hidden">
+                <div className={`h-full ${hpColor} transition-all duration-300`} style={{ width: `${(hpRatio * 100).toFixed(0)}%` }} />
+              </div>
+            </div>
+            {/* Stamina */}
+            <div>
+              <div className="flex justify-between text-[9px] mb-0.5">
+                <span className="text-forge-dim">ST</span>
+                <span className="text-forge-text">{agent?.combat?.stamina ?? 0} / {agent?.combat?.maxStamina ?? "?"}</span>
+              </div>
+              <div className="h-1.5 bg-forge-border rounded overflow-hidden">
+                <div className={`h-full ${stamColor} transition-all duration-300`} style={{ width: `${(stamRatio * 100).toFixed(0)}%` }} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className={`text-xs font-bold uppercase ${AGENT_TEXT_COLORS[id]}`}>{id}</div>
+        {agent?.lastReasoning && (
+          <div className="text-[9px] text-forge-dim italic text-center max-w-[180px] leading-tight line-clamp-2">
+            {agent.lastReasoning.replace(/^\[fallback\]\s*/i, "").slice(0, 100)}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-4 p-4">
+      <div className="text-sm text-forge-accent font-bold uppercase tracking-widest">{phaseLabel}</div>
+
+      <div className="flex items-center gap-8">
+        <AgentBattleCard id={currentMatchup?.agentA as AgentId ?? "aggressive"} agent={agentA} flip={false} />
+        <div className="text-2xl text-forge-dim font-bold">VS</div>
+        <AgentBattleCard id={currentMatchup?.agentB as AgentId ?? "cautious"} agent={agentB} flip={true} />
+      </div>
+
+      {/* Score indicators */}
+      <div className="flex gap-8 mt-2">
+        <div className="text-[10px] text-forge-dim text-center">
+          <div>Score: {agentA?.dungeonScore ?? 0}</div>
+          <div className="text-[9px]">Kills: {agentA?.kills ? agentA.kills.grunt + agentA.kills.brute + agentA.kills.sentinel : 0}</div>
+        </div>
+        <div className="text-[10px] text-forge-dim text-center">
+          <div>Score: {agentB?.dungeonScore ?? 0}</div>
+          <div className="text-[9px]">Kills: {agentB?.kills ? agentB.kills.grunt + agentB.kills.brute + agentB.kills.sentinel : 0}</div>
+        </div>
+      </div>
+
+      {isEnded && (
+        <div className="text-sm text-yellow-400 font-bold mt-2">
+          {payload.finalScores ? (
+            <>Winner: {Object.entries(payload.finalScores).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "?"}</>
+          ) : "Match Complete"}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function GameView() {
   const canvasRef  = useRef<HTMLDivElement>(null);
   const gameRef    = useRef<Phaser.Game | null>(null);
@@ -673,6 +772,7 @@ export default function GameView() {
   const agents   = gamePayload?.agents;
   const phase    = gamePayload?.phase ?? "DUNGEON";
   const isEnded  = phase === "ENDED";
+  const isArena  = phase.startsWith("ARENA") || (isEnded && gamePayload?.arenaMatchups?.length);
   const scores   = AGENT_IDS.map(id =>
     isEnded ? gamePayload?.finalScores?.[id] ?? 0 : agents?.[id]?.dungeonScore ?? 0
   );
@@ -680,13 +780,16 @@ export default function GameView() {
 
   return (
     <div className="flex h-[calc(100vh-41px)] gap-2 p-2">
-      {/* LEFT: Phaser map */}
+      {/* LEFT: Phaser map or Arena view */}
       <div className="flex-1 min-w-0 flex flex-col">
         <div className="flex items-center justify-between mb-1 px-1">
           <span className="text-xs text-forge-accent font-bold uppercase">{phase}</span>
           <span className="text-xs text-forge-dim">{timerDisplay}</span>
         </div>
-        <div ref={canvasRef} className="flex-1 bg-forge-panel border border-forge-border rounded overflow-hidden" />
+        {isArena
+          ? <ArenaView payload={gamePayload!} agents={agents} />
+          : <div ref={canvasRef} className="flex-1 bg-forge-panel border border-forge-border rounded overflow-hidden" />
+        }
       </div>
 
       {/* CENTER: Agent panels */}

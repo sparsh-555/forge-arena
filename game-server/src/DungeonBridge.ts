@@ -50,6 +50,7 @@ export function getVisibleEntities(state: GameState, agentId: AgentId): VisibleE
 
   const visible = computeVisiblePositions(state, agentId);
   const entities: VisibleEntity[] = [];
+  const inArena = state.phase.startsWith("ARENA");
 
   // Enemies
   for (const enemy of state.enemies) {
@@ -97,17 +98,19 @@ export function getVisibleEntities(state: GameState, agentId: AgentId): VisibleE
     }
   }
 
-  // Other agents
-  for (const [id, other] of Object.entries(state.agents)) {
-    if (id === agentId || other.status === "eliminated") continue;
-    const key = `${other.position.x},${other.position.y}`;
-    if (visible.has(key)) {
-      entities.push({
-        type: "agent",
-        id: other.id,
-        position: other.position,
-        distance: manhattan(agent.position, other.position),
-      });
+  // Other agents — only visible in arena phases (dungeon PvP is disabled)
+  if (inArena) {
+    for (const [id, other] of Object.entries(state.agents)) {
+      if (id === agentId || other.status === "eliminated") continue;
+      const key = `${other.position.x},${other.position.y}`;
+      if (visible.has(key)) {
+        entities.push({
+          type: "agent",
+          id: other.id,
+          position: other.position,
+          distance: manhattan(agent.position, other.position),
+        });
+      }
     }
   }
 

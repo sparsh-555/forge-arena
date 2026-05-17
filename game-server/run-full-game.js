@@ -222,7 +222,7 @@ async function main() {
     const scores = {};
     for (const id of AGENT_IDS) {
       const agent = state.agents[id];
-      if (!agent || agent.status === "eliminated") {
+      if (!agent) {
         scores[id] = 0;
         continue;
       }
