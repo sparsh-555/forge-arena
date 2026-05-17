@@ -47,7 +47,7 @@ FAST_MODE=true node run-full-game.js --headless  # exit 0, completes in < 90 sec
 # patch-queue.jsonl contains at least 1 entry after run
 
 # 5. Dashboard serves
-node src/server.ts &
+cd game-server && npm run build && node dist/server.js &
 curl http://localhost:3000/api/game-state  # returns JSON with mode field
 ```
 
@@ -135,7 +135,9 @@ game-server/src/
   PatchApplier.ts   applyPatch(suggestion): void — validates, atomic write, emits event
   StateEmitter.ts   broadcast(payload): void — WebSocket to dashboard
                     logEvent(event): void — appends to game-events.jsonl
-                    toDashboardPayload / toAgentPayload — lives here, called by GameLoop
+                    broadcastPatch(patch): void — emits PATCH_APPLIED to clients
+  DungeonBridge.ts  toAgentPayload(state, agentId): AgentStatePayload — FOV-filtered
+                    toDashboardPayload(state): DashboardPayload — full map for spectators
   server.ts         GET /api/game-state, SSE /api/harness-events, WS /ws/game
 ```
 

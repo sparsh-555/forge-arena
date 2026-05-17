@@ -1,20 +1,23 @@
 # Agent Sprites
 
-Place PNG sprites here (64×64 px recommended). One per agent personality.
+Place PNG sprites here (64×64 px recommended).
+Filenames must match exactly — referenced via `ASSETS.agents.*` in `types.ts`.
 
-| Filename | Agent | Personality |
+| Filename | ASSETS key | Description |
 |---|---|---|
-| `aggressive.png` | Aggressive | Berserker — red/dark armor, aggressive stance |
-| `cautious.png` | Cautious | Scout — light armor, hood, careful pose |
-| `hoarder.png` | Hoarder | Collector — heavy pack, bulky silhouette |
-| `speedrunner.png` | Speedrunner | Dash — minimal gear, lean and fast |
+| `aggressive.png` | `agents.aggressive` | Berserker — red/dark armor, aggressive stance |
+| `cautious.png` | `agents.cautious` | Scout — light armor, hood, careful pose |
+| `hoarder.png` | `agents.hoarder` | Collector — heavy pack, bulky silhouette |
+| `speedrunner.png` | `agents.speedrunner` | Dash — minimal gear, lean and fast |
 
-Also generate portrait variants (256×256 px) for the thought panel headers:
-| Filename | Usage |
+## Portraits (for dashboard thought panels)
+
+Place in `assets/ui/portraits/` (not here). 256×256 px recommended.
+Referenced via `ASSETS.ui.portraits.*` in `types.ts`.
+
+| Filename (in ui/portraits/) | ASSETS key |
 |---|---|
-| `aggressive_portrait.png` | Agent thought panel header |
-| `cautious_portrait.png` | Agent thought panel header |
-| `hoarder_portrait.png` | Agent thought panel header |
-| `speedrunner_portrait.png` | Agent thought panel header |
-
-Referenced via `ASSETS.agents.*` and `ASSETS.ui.*` in `types.ts`.
+| `aggressive_portrait.png` | `ui.portraits.aggressive` |
+| `cautious_portrait.png` | `ui.portraits.cautious` |
+| `hoarder_portrait.png` | `ui.portraits.hoarder` |
+| `speedrunner_portrait.png` | `ui.portraits.speedrunner` |
