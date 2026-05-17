@@ -96,8 +96,11 @@ If all tasks pass:
 ```
 
 2. Read `state/build-health.json` to check the current grade:
-   - If `grade` is `null`, `"F"`, or `"D"`: read `skills/reconciler.md` and proceed as Reconciler.
    - If `grade` is `"C"` or better: read `skills/evaluator.md` and proceed as Evaluator.
+   - If `grade` is `null`, `"F"`, or `"D"`:
+     a. Read `skills/reconciler.md` and act as Reconciler — run the build and test checks.
+     b. If the reconciler finds errors (non-empty fix task array): write the fix tasks to `state/tasks.json` and stop. The harness will dispatch workers on the next tick.
+     c. If the reconciler output is empty (build is green, no errors): **do not stop**. Read `skills/evaluator.md` and proceed as Evaluator immediately — continuing in the same turn.
 
 ---
 

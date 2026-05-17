@@ -110,5 +110,13 @@
     "status": "not_started",
     "files": ["game-server/src/GameLoop.ts", "game-server/src/types.ts"],
     "acceptance": "pick_up_item moves ground item to agent backpack. equip_from_backpack swaps item into slot (costs full turn). Item stats apply to combat calculations. Boss kill grants rare item to backpack."
+  },
+  {
+    "id": "F15",
+    "title": "demo-start.sh (live demo launcher)",
+    "priority": 4,
+    "status": "not_started",
+    "files": ["demo-start.sh"],
+    "acceptance": "Executable shell script at repo root. Reads ANTHROPIC_API_KEY from env (exits with error if unset). Builds and starts game-server/dist/server.js in background. Opens browser to localhost:3000. Runs game-server/run-full-game.js (no --headless) in foreground. Exits cleanly when game ends and kills background server."
   }
 ]

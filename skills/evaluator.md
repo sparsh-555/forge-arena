@@ -71,7 +71,7 @@ Checks that the full live demo works: real Claude API decisions, dashboard in pl
 cd game-server
 
 # Clear previous game events so analysis is clean
-> ../../state/game-events.jsonl
+> ../state/game-events.jsonl
 
 # Start full live game (no --headless → starts server + game in same process)
 timeout 120 node run-full-game.js &
@@ -97,9 +97,9 @@ GAME_EXIT=$?
 echo "game exit: $GAME_EXIT"
 
 # Analyse decisions — count fallback vs real
-FALLBACK=$(grep -c '"\[fallback\]"' ../../state/game-events.jsonl 2>/dev/null || echo 0)
-DECISIONS=$(grep -c '"reasoning"' ../../state/game-events.jsonl 2>/dev/null || echo 0)
-PATCHES=$(grep -c '"type":"PATCH_APPLIED"' ../../state/game-events.jsonl 2>/dev/null || echo 0)
+FALLBACK=$(grep -c '"\[fallback\]"' ../state/game-events.jsonl 2>/dev/null || echo 0)
+DECISIONS=$(grep -c '"reasoning"' ../state/game-events.jsonl 2>/dev/null || echo 0)
+PATCHES=$(grep -c '"type":"PATCH_APPLIED"' ../state/game-events.jsonl 2>/dev/null || echo 0)
 echo "decisions: $DECISIONS, fallback: $FALLBACK, patches: $PATCHES"
 
 kill $GAME_PID 2>/dev/null
@@ -114,6 +114,8 @@ wait $GAME_PID 2>/dev/null
 - At least 1 patch applied: `PATCHES >= 1`
 
 **Behavioral acceptance tests** (run after the game exits):
+
+First, `cd` back to the project root if still in `game-server/`. The SPEC.md behavioral tests use paths relative to the project root (e.g. `state/game-events.jsonl`, `dashboard/src/`, `personalities/`).
 
 Read the `## Behavioral Acceptance Tests` section of `SPEC.md`. Run each command listed there. Record pass/fail per test. Any behavioral test that fails prevents grade A — record in `findings` and downgrade from A to B.
 

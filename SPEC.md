@@ -111,7 +111,7 @@ if (!lines.length) { console.log('DUNGEON_SCORES: SKIP'); process.exit(0); }
 " 2>/dev/null
 # Dungeon scores are validated by the existing GAME_COMPLETE stdout (scores printed per agent).
 # At least 2 agents must have dungeonScore > 0 in the final results line.
-grep 'dungeon=' ../../state/game-events.jsonl 2>/dev/null || echo "check GAME_COMPLETE stdout for dungeonScore values"
+grep 'dungeon=' state/game-events.jsonl 2>/dev/null || echo "check GAME_COMPLETE stdout for dungeonScore values"
 ```
 
 ```bash
@@ -138,7 +138,7 @@ done
 
 # 11. State persistence — game state survives after run completes
 # Start server, verify /api/game-state returns a non-empty game state (not mode: build)
-node dist/server.js &
+cd game-server && node dist/server.js &
 SERVER_PID=$!
 sleep 2
 MODE=$(curl -sf http://localhost:3000/api/game-state | grep -o '"mode":"[^"]*"' | cut -d'"' -f4)
