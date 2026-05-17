@@ -27,10 +27,11 @@ Invoke these by reading the corresponding skill file:
 
 1. Read `SPEC.md` (once per session, do not re-read unless directed)
 2. Read `RUNTIME.md` — apply current priorities and constraints
-3. Read `state/tasks.json` — understand what is done and what is next
-4. Read `state/build-health.json` — if red, invoke Reconciler first
-5. If no tasks exist yet, invoke Planner
-6. Otherwise, pick the next pending task and invoke Worker or Subplanner
+3. Read `PITFALLS.md` — never modify this file; these are hard constraints from Dry Run 1
+4. Read `state/tasks.json` — understand what is done and what is next
+5. Read `state/build-health.json` — if red, invoke Reconciler first
+6. If no tasks exist yet, invoke Planner
+7. Otherwise, pick the next pending task and invoke Worker or Subplanner
 
 ## Rules
 

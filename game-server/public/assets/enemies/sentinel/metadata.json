@@ -1,0 +1,32 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "b0c7c341-c3ab-4d9e-b756-8caf0bde095a",
+        "name": "Armored knight, silver and dark metal, upright disciplined stance. Dark fantasy RPG pixel art. Silver-grey palette.",
+        "prompt": "Armored knight, silver and dark metal, upright disciplined stance. Dark fantasy RPG pixel art. Silver-grey palette.",
+        "size": {
+          "width": 100,
+          "height": 100
+        },
+        "template_id": "mannequin",
+        "directions": 4,
+        "view": "low top-down",
+        "created_at": "2026-05-15T10:33:41.927613+00:00"
+      },
+      "folder": "states/Armored_knight_silver_and_dark_metal_upright_disci",
+      "frames": {
+        "rotations": {
+          "south": "states/Armored_knight_silver_and_dark_metal_upright_disci/rotations/south.png",
+          "west": "states/Armored_knight_silver_and_dark_metal_upright_disci/rotations/west.png",
+          "east": "states/Armored_knight_silver_and_dark_metal_upright_disci/rotations/east.png",
+          "north": "states/Armored_knight_silver_and_dark_metal_upright_disci/rotations/north.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-05-15T10:35:45.360549"
+}

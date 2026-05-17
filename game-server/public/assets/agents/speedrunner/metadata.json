@@ -1,0 +1,32 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "e96297da-0ea5-4464-9966-e7ae4b5bab74",
+        "name": "Lean fast character in green tones, mid-sprint forward lean, low center of gravity. Green color palette. Dark fantasy RPG pixel art.",
+        "prompt": "Lean fast character in green tones, mid-sprint forward lean, low center of gravity. Green color palette. Dark fantasy RPG pixel art.",
+        "size": {
+          "width": 84,
+          "height": 84
+        },
+        "template_id": "mannequin",
+        "directions": 4,
+        "view": "low top-down",
+        "created_at": "2026-05-15T10:28:13.977764+00:00"
+      },
+      "folder": "states/Lean_fast_character_in_green_tones_mid-sprint_forw",
+      "frames": {
+        "rotations": {
+          "south": "states/Lean_fast_character_in_green_tones_mid-sprint_forw/rotations/south.png",
+          "west": "states/Lean_fast_character_in_green_tones_mid-sprint_forw/rotations/west.png",
+          "east": "states/Lean_fast_character_in_green_tones_mid-sprint_forw/rotations/east.png",
+          "north": "states/Lean_fast_character_in_green_tones_mid-sprint_forw/rotations/north.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-05-15T10:30:20.154018"
+}

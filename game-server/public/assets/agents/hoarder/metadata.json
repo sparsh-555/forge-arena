@@ -1,0 +1,32 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "dae305f8-c7d8-411a-8d13-09026634d8a7",
+        "name": "Short stocky character in yellow-brown tones, wide stance with arms slightly outstretched. Yellow and brown color palette. Dark fantasy RPG pixel art.",
+        "prompt": "Short stocky character in yellow-brown tones, wide stance with arms slightly outstretched. Yellow and brown color palette. Dark fantasy RPG pixel art.",
+        "size": {
+          "width": 68,
+          "height": 68
+        },
+        "template_id": "mannequin",
+        "directions": 4,
+        "view": "low top-down",
+        "created_at": "2026-05-15T10:25:25.606475+00:00"
+      },
+      "folder": "states/Short_stocky_character_in_yellow-brown_tones_wide",
+      "frames": {
+        "rotations": {
+          "south": "states/Short_stocky_character_in_yellow-brown_tones_wide/rotations/south.png",
+          "west": "states/Short_stocky_character_in_yellow-brown_tones_wide/rotations/west.png",
+          "east": "states/Short_stocky_character_in_yellow-brown_tones_wide/rotations/east.png",
+          "north": "states/Short_stocky_character_in_yellow-brown_tones_wide/rotations/north.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-05-15T10:27:04.873667"
+}

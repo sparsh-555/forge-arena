@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Read(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "TodoWrite",
+      "TodoRead"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /Users/sparshjain/Documents/GitHub/forge-arena/.claude/hooks/harness-loop.cjs"
+          }
+        ]
+      }
+    ]
+  }
+}

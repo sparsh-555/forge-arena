@@ -1,0 +1,32 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "ee2fef0d-24aa-465b-9e1d-f2e636209f86",
+        "name": "Large hulking stone golem, grey-brown, slow heavy stance. Dark fantasy RPG pixel art. Brown-grey palette, imposing.",
+        "prompt": "Large hulking stone golem, grey-brown, slow heavy stance. Dark fantasy RPG pixel art. Brown-grey palette, imposing.",
+        "size": {
+          "width": 100,
+          "height": 100
+        },
+        "template_id": "mannequin",
+        "directions": 4,
+        "view": "low top-down",
+        "created_at": "2026-05-15T10:32:54.214748+00:00"
+      },
+      "folder": "states/Large_hulking_stone_golem_grey-brown_slow_heavy_st",
+      "frames": {
+        "rotations": {
+          "south": "states/Large_hulking_stone_golem_grey-brown_slow_heavy_st/rotations/south.png",
+          "west": "states/Large_hulking_stone_golem_grey-brown_slow_heavy_st/rotations/west.png",
+          "east": "states/Large_hulking_stone_golem_grey-brown_slow_heavy_st/rotations/east.png",
+          "north": "states/Large_hulking_stone_golem_grey-brown_slow_heavy_st/rotations/north.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-05-15T10:34:23.446322"
+}

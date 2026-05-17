@@ -4,3 +4,7 @@ dist/
 *.tmp.json
 *.log
 .DS_Store
+state/game-events.jsonl
+state/patch-queue.jsonl
+state/harness-events.jsonl
+game-server/public/assets/**/*_orig.png
