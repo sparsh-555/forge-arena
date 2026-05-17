@@ -107,6 +107,11 @@ async function main() {
   // Reset enemy AI state (PITFALL 2)
   resetEnemyAIState();
 
+  // Reset game-config.json from baseline so patches don't compound across runs
+  const baselinePath = resolve(__dirname, "game-config.baseline.json");
+  const configPath = resolve(__dirname, "game-config.json");
+  writeFileSync(configPath, readFileSync(baselinePath, "utf8"), "utf8");
+
   // Load config
   const config = readConfig();
   if (fastMode) {
@@ -118,7 +123,7 @@ async function main() {
 
   // Demo mode: tuned for live API speed — short dungeon, fast rounds, reasonable timeouts
   if (demoMode) {
-    config.dungeon_timer_seconds = 90;
+    config.dungeon_timer_seconds = 45;
     config.arena_turn_cap = 15;
     config.round_interval_ms = 300;
     config.agent_api_timeout_ms = 8000;
