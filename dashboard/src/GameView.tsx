@@ -774,7 +774,7 @@ export default function GameView() {
     if (!showCanvas || !canvasRef.current || gameRef.current) return;
     const scene = new DungeonScene();
     sceneRef.current = scene;
-    scene.onPayload = setGamePayload;
+    // setGamePayload is now called directly in the WS handler; scene.onPayload not needed
     gameRef.current = new Phaser.Game({
       type: Phaser.AUTO,
       parent: canvasRef.current,
@@ -808,6 +808,8 @@ export default function GameView() {
             return;
           }
           const payload = msg as DashboardPayload;
+          // Always update React state directly — sceneRef may be null during arena phase
+          setGamePayload(payload);
           sceneRef.current?.applyPayload(payload);
           if (payload.recentPatches?.length) {
             setPatches(prev => {
@@ -850,21 +852,25 @@ export default function GameView() {
     return () => es.close();
   }, []);
 
-  // Phase transition detection — show loading screen between phases
+  // Phase transition detection — only fire on real WS phase changes, never on fallback defaults.
+  // On page reload mid-arena the first WS message has phase "ARENA_*" with no prior real phase,
+  // so prevPhaseRef stays null and no spurious loading screen appears.
   useEffect(() => {
-    const currentPhase = gamePayload?.phase ?? bootstrapPhase ?? "DUNGEON";
-    const prev = prevPhaseRef.current;
-    prevPhaseRef.current = currentPhase;
-    let timer: number | undefined;
+    const realPhase = gamePayload?.phase;
+    if (!realPhase) return;   // no real WS data yet — skip
 
-    if (prev && prev !== currentPhase) {
-      if (!prev.startsWith("ARENA") && currentPhase.startsWith("ARENA")) {
-        setTransitionMsg("Entering the Arena...");
-        timer = window.setTimeout(() => setTransitionMsg(null), 1500);
-      } else if (currentPhase === "ENDED" && prev.startsWith("ARENA")) {
-        setTransitionMsg("Match Complete!");
-        timer = window.setTimeout(() => setTransitionMsg(null), 1500);
-      }
+    const prev = prevPhaseRef.current;
+    prevPhaseRef.current = realPhase;
+
+    if (!prev || prev === realPhase) return;  // first real phase or unchanged
+
+    let timer: number | undefined;
+    if (!prev.startsWith("ARENA") && realPhase.startsWith("ARENA")) {
+      setTransitionMsg("Entering the Arena...");
+      timer = window.setTimeout(() => setTransitionMsg(null), 1500);
+    } else if (realPhase === "ENDED" && prev.startsWith("ARENA")) {
+      setTransitionMsg("Match Complete!");
+      timer = window.setTimeout(() => setTransitionMsg(null), 1500);
     }
 
     return () => { if (timer) clearTimeout(timer); };
