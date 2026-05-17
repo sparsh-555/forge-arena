@@ -9,12 +9,16 @@
 //  └──────────────────────────┴──────────────────┴──────────────────────┘
 //
 // LEFT — Phaser canvas (flex-1, min-w-0):
-//   - Renders dungeon map tiles using coloured rectangles (no sprites needed)
-//   - Agents drawn as coloured circles (red/blue/yellow/green per personality)
-//   - Enemies drawn as smaller rectangles
+//   *** TILE_SIZE = 64. USE PRE-GENERATED PNG SPRITES — NO graphics primitives, NO coloured circles ***
+//   - Load ALL sprites in scene.preload(): agents (aggressive/cautious/hoarder/speedrunner + 4 dirs each),
+//     enemies (grunt/brute/sentinel/hex_caster/shade + 4 dirs each), tiles (floor/wall/etc.)
+//     Paths: /assets/agents/aggressive.png, /assets/agents/aggressive_north.png, etc.
+//   - After first DashboardPayload: calc dungeon bounds (min/max x,y of non-wall tiles),
+//     call camera.setBounds() + camera.centerOn() — do NOT leave top-right 60% black
+//   - Swap agent texture on move: sprite.setTexture(`${agentId}_${direction}`)
 //   - Phase label + dungeon timer displayed above canvas
 //   - Updates every WebSocket message (DashboardPayload on /ws/game)
-//   - When phase === "ARENA": tint arena_floor tiles purple, hide dungeon enemies
+//   - When phase === "ARENA": switch to arena_floor tiles, hide dungeon enemies
 //
 // CENTER — Agent thought panels (w-72, 4 panels stacked, each flex-1):
 //   Each panel shows one agent (aggressive / cautious / hoarder / speedrunner):

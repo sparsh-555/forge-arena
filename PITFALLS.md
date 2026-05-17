@@ -163,6 +163,103 @@ Max 3 patches per phase (`config.balance.max_patches_per_phase`).
 
 ---
 
+## PITFALL 10: Four Dashboard Rendering Bugs (confirmed in dry run 2)
+
+### 10a — FATAL: Game Renders Graphics Primitives Instead of Sprites
+
+**What broke:** Agent wrote `// No asset preloading needed — we render with graphics primitives` and drew coloured circles/rectangles. All pre-generated PNG sprites were ignored.
+
+**Fix — Phaser MUST load and use the sprite PNGs. TILE_SIZE = 64:**
+```ts
+// In Phaser scene.preload():
+['aggressive','cautious','hoarder','speedrunner'].forEach(id => {
+  this.load.image(id, `/assets/agents/${id}.png`);
+  ['north','south','east','west'].forEach(dir =>
+    this.load.image(`${id}_${dir}`, `/assets/agents/${id}_${dir}.png`)
+  );
+});
+['grunt','brute','sentinel','hex_caster','shade'].forEach(id => {
+  this.load.image(id, `/assets/enemies/${id}.png`);
+  ['north','south','east','west'].forEach(dir =>
+    this.load.image(`${id}_${dir}`, `/assets/enemies/${id}_${dir}.png`)
+  );
+});
+['floor','wall','wall_top','wall_side','wall_corner','door',
+ 'boss_entrance','arena_floor','chest','chest_open',
+ 'floor_cracked','floor_mossy','wall_torch'].forEach(t =>
+  this.load.image(t, `/assets/tiles/${t}.png`)
+);
+
+// Render agents as sprites, not circles:
+const sprite = scene.add.image(
+  agent.position.x * TILE_SIZE + TILE_SIZE/2,
+  agent.position.y * TILE_SIZE + TILE_SIZE/2,
+  `${agentId}_${direction}`
+);
+```
+
+### 10b — Map Renders in Bottom-Left Corner, Rest Is Black
+
+**What broke:** Dungeon rooms occupy low coordinate values. Canvas sized for full 60×40 grid but dungeon only uses ~30×25 tiles. Top-right 60% of canvas is black.
+
+**Fix:** Calculate actual dungeon bounds after first DashboardPayload, then center camera:
+```ts
+let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
+for (const row of tiles) {
+  for (const tile of row) {
+    if (tile.type !== 'wall') {
+      minX = Math.min(minX, tile.x); maxX = Math.max(maxX, tile.x);
+      minY = Math.min(minY, tile.y); maxY = Math.max(maxY, tile.y);
+    }
+  }
+}
+this.cameras.main.setBounds(
+  minX * TILE_SIZE, minY * TILE_SIZE,
+  (maxX - minX + 2) * TILE_SIZE, (maxY - minY + 2) * TILE_SIZE
+);
+this.cameras.main.centerOn(
+  ((minX + maxX) / 2) * TILE_SIZE,
+  ((minY + maxY) / 2) * TILE_SIZE
+);
+```
+
+### 10c — Balance Worker Emits Dummy Patches (same value, stub reason)
+
+**What broke:** Patch feed showed `stamina.light_attack_cost: 10 → 10` (same value!) with reason "evaluator test patch". Repeated every cycle. Not reading real game state.
+
+**Fix:**
+1. Read actual kill counts from `state/game-events.jsonl` before patching
+2. Only fire when `kills[leader] / totalKills > config.balance.patch_trigger_kill_ratio`
+3. Minimum 10% delta — never emit `oldValue === newValue`
+4. Real reason citing actual kill ratio observed
+
+```js
+// WRONG:
+{ key: 'stamina.light_attack_cost', oldValue: 10, newValue: 10, reason: 'evaluator test patch' }
+
+// CORRECT:
+{ key: 'enemies.grunt_hp', oldValue: 30, newValue: 22,
+  reason: 'aggressive has 71% kill share (threshold 50%) — reducing grunt_hp to slow snowball' }
+```
+
+### 10d — Agent Thoughts Panel Always Shows "waiting..."
+
+**What broke:** Server `/api/game-state` response does not include `lastReasoning` per agent.
+
+**Fix — GameLoop must store reasoning after each API call:**
+```ts
+agent.lastReasoning = action.reasoning;  // after AgentAPI.decide()
+agent.currentGoal   = action.goal;
+```
+**And server `/api/game-state` must expose it:**
+```ts
+agents: {
+  [id]: { status, hp, kills, lastReasoning: agent.lastReasoning ?? '', goal: agent.currentGoal ?? '', inventoryCount }
+}
+```
+
+---
+
 ## PITFALL 8: hex_caster and shade Never Spawn
 
 Types include them, sprites exist, but `computeEnemySpawns` never spawns them. Add:
