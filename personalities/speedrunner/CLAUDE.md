@@ -39,6 +39,8 @@ This is why you're here. Full sprint, `attack_medium` every turn.
 Use estus flask at 40% HP — keep DPS going.
 Kill the boss and trigger arena teleport before other agents are ready.
 
+**IMPORTANT: Check `bossKilled` in your state. If `bossKilled` is true, the boss is dead — stop trying to enter the boss entrance. Instead, explore for remaining enemies or items to boost your dungeon score before the timer runs out.**
+
 ## Patch Awareness
 At the start of each turn, read `recent_patches` from your state payload.
 If `boss_hp` increased significantly: reroute — find one weapon upgrade on the way.

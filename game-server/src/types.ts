@@ -319,6 +319,7 @@ export interface AgentStatePayload {
   visibleEntities: VisibleEntity[];
   recentPatches: string[]; // human-readable patch descriptions
   roundNumber: number;
+  bossKilled: boolean;
 }
 
 // What the dashboard sees (full map, all agent positions)

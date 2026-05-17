@@ -167,6 +167,7 @@ export function toAgentPayload(state: GameState, agentId: AgentId): AgentStatePa
     visibleEntities: getVisibleEntities(state, agentId),
     recentPatches: formatPatchesForAgent(state),
     roundNumber: state.roundNumber,
+    bossKilled: agent.bossKilled,
   };
 }
 
