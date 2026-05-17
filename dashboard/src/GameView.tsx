@@ -739,10 +739,21 @@ export default function GameView() {
   const sceneRef   = useRef<DungeonScene | null>(null);
 
   const [gamePayload, setGamePayload] = useState<DashboardPayload | null>(null);
+  const [bootstrapPhase, setBootstrapPhase] = useState<string | null>(null);
   const [patches, setPatches] = useState<PatchEvent[]>([]);
   const [newPatchId, setNewPatchId] = useState<string | null>(null);
   const [transitionMsg, setTransitionMsg] = useState<string | null>(null);
   const prevPhaseRef = useRef<string | null>(null);
+
+  // Bootstrap phase from REST on mount so we know arena vs dungeon before WS arrives
+  useEffect(() => {
+    fetch("/api/game-state")
+      .then(r => r.json())
+      .then((data: { state?: { phase?: string } }) => {
+        setBootstrapPhase(data.state?.phase ?? "DUNGEON");
+      })
+      .catch(() => setBootstrapPhase("DUNGEON"));
+  }, []);
 
   const timerDisplay = (() => {
     const t = gamePayload?.dungeonTimer;
@@ -752,9 +763,14 @@ export default function GameView() {
     return `${m}:${s.toString().padStart(2, "0")}`;
   })();
 
-  // Phaser init
+  const phase    = gamePayload?.phase ?? bootstrapPhase;
+  const isArena  = phase ? (phase.startsWith("ARENA") || (phase === "ENDED" && !!gamePayload?.arenaMatchups?.length)) : null;
+  // Only show the Phaser canvas when we know we're in dungeon phase
+  const showCanvas = isArena === false;
+
+  // Phaser init — fires when canvas div enters DOM (i.e. showCanvas becomes true)
   useEffect(() => {
-    if (!canvasRef.current || gameRef.current) return;
+    if (!showCanvas || !canvasRef.current || gameRef.current) return;
     const scene = new DungeonScene();
     sceneRef.current = scene;
     scene.onPayload = setGamePayload;
@@ -765,12 +781,12 @@ export default function GameView() {
       height: canvasRef.current.clientHeight || 600,
       scene,
       backgroundColor: "#0a0a0f",
-      pixelArt: true,          // nearest-neighbour scaling — keeps Spelunky sprites crisp
+      pixelArt: true,
       antialias: false,
       scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
     });
     return () => { gameRef.current?.destroy(true); gameRef.current = null; };
-  }, []);
+  }, [showCanvas]);
 
   // WebSocket — game state
   useEffect(() => {
@@ -835,7 +851,7 @@ export default function GameView() {
 
   // Phase transition detection — show loading screen between phases
   useEffect(() => {
-    const currentPhase = gamePayload?.phase ?? "DUNGEON";
+    const currentPhase = gamePayload?.phase ?? bootstrapPhase ?? "DUNGEON";
     const prev = prevPhaseRef.current;
     prevPhaseRef.current = currentPhase;
     let timer: number | undefined;
@@ -854,9 +870,7 @@ export default function GameView() {
   }, [gamePayload?.phase]);
 
   const agents   = gamePayload?.agents;
-  const phase    = gamePayload?.phase ?? "DUNGEON";
   const isEnded  = phase === "ENDED";
-  const isArena  = phase.startsWith("ARENA") || (isEnded && gamePayload?.arenaMatchups?.length);
   const scores   = AGENT_IDS.map(id =>
     isEnded ? gamePayload?.finalScores?.[id] ?? 0 : agents?.[id]?.dungeonScore ?? 0
   );
@@ -898,12 +912,14 @@ export default function GameView() {
       {/* LEFT: Phaser map or Arena view */}
       <div className="flex-1 min-w-0 flex flex-col">
         <div className="flex items-center justify-between mb-1 px-1">
-          <span className="text-xs text-forge-accent font-bold uppercase">{phase}</span>
+          <span className="text-xs text-forge-accent font-bold uppercase">{phase ?? "…"}</span>
           <span className="text-xs text-forge-dim">{timerDisplay}</span>
         </div>
-        {isArena
-          ? <ArenaView payload={gamePayload!} agents={agents} />
-          : <div ref={canvasRef} className="flex-1 bg-forge-panel border border-forge-border rounded overflow-hidden" />
+        {isArena === null
+          ? <div className="flex-1 bg-forge-panel border border-forge-border rounded" />
+          : isArena
+            ? <ArenaView payload={gamePayload!} agents={agents} />
+            : <div ref={canvasRef} className="flex-1 bg-forge-panel border border-forge-border rounded overflow-hidden" />
         }
       </div>
 
