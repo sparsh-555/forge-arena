@@ -1,14 +1,14 @@
 {
   "grade": "B",
-  "consecutive_passing": 1,
-  "last_run": "2026-05-16T22:43:00Z",
+  "consecutive_passing": 2,
+  "last_run": "2026-05-16T22:55:00Z",
   "last_error": null,
-  "converged": false,
+  "converged": true,
   "mode": "build",
   "findings": [
     "Phase 1: PASS — headless exits 0, GAME_COMPLETE",
     "Phase 2: PASS — all 5 endpoints return 200",
-    "Phase 3: 8 real Claude decisions (DECISIONS 240 > FALLBACK 232). Speedrunner moved (6,20→6,3). 1 PATCH_APPLIED. Only aggressive survived to end (HP 106). Arena skipped (1 seed). Dungeon scores all 0."
+    "Phase 3: 18 real Claude decisions (DECISIONS 240 > FALLBACK 222). 3 agents survived (hoarder, speedrunner, aggressive). 1 PATCH_APPLIED. Arena skipped (3 seeds, need 4). Dungeon scores 0."
   ],
   "acceptance_results": {
     "build_passes": true,
@@ -24,6 +24,7 @@
     { "grade": "F", "timestamp": "2026-05-16T21:30:00Z" },
     { "grade": "C", "timestamp": "2026-05-16T22:02:00Z" },
     { "grade": "C", "timestamp": "2026-05-16T22:19:00Z" },
-    { "grade": "B", "timestamp": "2026-05-16T22:43:00Z" }
+    { "grade": "B", "timestamp": "2026-05-16T22:43:00Z" },
+    { "grade": "B", "timestamp": "2026-05-16T22:55:00Z" }
   ]
 }
