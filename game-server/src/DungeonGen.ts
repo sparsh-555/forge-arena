@@ -69,10 +69,20 @@ export function generateDungeon(seed: number): DungeonMap {
     if (d > maxDist) { maxDist = d; bossRoomIdx = i; }
   });
 
-  // Place boss entrance at center of boss room
+  // Place boss entrance at center of boss room — carve a 5×5 floor area so the
+  // boss sprite (2×2 tiles) never overlaps a wall regardless of room size.
   const bossRoom = rooms[bossRoomIdx];
   const bossX = Math.round(bossRoom.x + bossRoom.width / 2);
   const bossY = Math.round(bossRoom.y + bossRoom.height / 2);
+  // Carve 5×5 cleared zone around boss entrance
+  for (let dy = -2; dy <= 2; dy++) {
+    for (let dx = -2; dx <= 2; dx++) {
+      const tx = bossX + dx, ty = bossY + dy;
+      if (tx >= 1 && tx < MAP_WIDTH - 1 && ty >= 1 && ty < MAP_HEIGHT - 1) {
+        tiles[ty][tx].type = "floor";
+      }
+    }
+  }
   if (bossX >= 0 && bossX < MAP_WIDTH && bossY >= 0 && bossY < MAP_HEIGHT) {
     tiles[bossY][bossX].type = "boss_entrance";
   }

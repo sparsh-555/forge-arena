@@ -102,8 +102,8 @@ async function main() {
   if (fastMode) {
     config.dungeon_timer_seconds = 120;
     config.arena_turn_cap = 20;
-    config.round_interval_ms = 800;
-    config.agent_api_timeout_ms = 5000;
+    config.round_interval_ms = 500;    // fire timer faster; actual round speed = max(500ms, api_time)
+    config.agent_api_timeout_ms = 3500; // below 5s threshold → no retry, immediate fallback if slow
   }
 
   // If NO_API, unset the API key so AgentAPI falls back naturally

@@ -87,6 +87,7 @@ class DungeonScene extends Phaser.Scene {
   private enemyHpBars: Map<string, { bg: Phaser.GameObjects.Rectangle; fill: Phaser.GameObjects.Rectangle }> = new Map();
   private bossSprites: Map<string, Phaser.GameObjects.Image> = new Map();
   private bossHpBars: Map<string, { bg: Phaser.GameObjects.Rectangle; fill: Phaser.GameObjects.Rectangle }> = new Map();
+  private enemyFallback: Map<string, Phaser.GameObjects.Graphics> = new Map();
   private initialized = false;
   // Queue payloads that arrive before preload() finishes to avoid missing-texture frames
   private sceneReady = false;
@@ -215,25 +216,54 @@ class DungeonScene extends Phaser.Scene {
   }
 
   private updateEnemies(enemies: EnemyState[]) {
+    const ENEMY_COLORS: Record<string, number> = {
+      grunt: 0x888899, brute: 0xcc4400, sentinel: 0x4488cc,
+      hex_caster: 0x9933cc, shade: 0x44aa55,
+    };
+
     const seen = new Set<string>();
     for (const e of enemies) {
       if (!e.isAlive) {
+        // Hide sprite, fallback graphic, AND hp bars for dead enemies
         this.enemySprites.get(e.id)?.setVisible(false);
+        this.enemyFallback.get(e.id)?.setVisible(false);
+        const deadBar = this.enemyHpBars.get(e.id);
+        if (deadBar) { deadBar.bg.setVisible(false); deadBar.fill.setVisible(false); }
         continue;
       }
       seen.add(e.id);
       const px = e.position.x * TILE_SIZE + TILE_SIZE / 2;
       const py = e.position.y * TILE_SIZE + TILE_SIZE / 2;
-      const enemyTexKey = this.textures.exists(e.tier) ? e.tier : "wall";
-      if (!this.enemySprites.has(e.id)) {
-        const sprite = this.add.image(px, py, enemyTexKey).setDisplaySize(TILE_SIZE - 8, TILE_SIZE - 8).setDepth(8);
-        this.enemySprites.set(e.id, sprite);
-      }
-      const sprite = this.enemySprites.get(e.id)!;
-      if (sprite.texture.key !== enemyTexKey) sprite.setTexture(enemyTexKey);
-      sprite.setPosition(px, py).setVisible(true);
 
-      // Enemy HP bar
+      const texLoaded = this.textures.exists(e.tier) && this.textures.get(e.tier).key !== "__MISSING";
+      if (texLoaded) {
+        // Texture loaded — use sprite image
+        this.enemyFallback.get(e.id)?.setVisible(false);
+        if (!this.enemySprites.has(e.id)) {
+          const sprite = this.add.image(px, py, e.tier).setDisplaySize(TILE_SIZE - 8, TILE_SIZE - 8).setDepth(8);
+          this.enemySprites.set(e.id, sprite);
+        }
+        const sprite = this.enemySprites.get(e.id)!;
+        if (sprite.texture.key !== e.tier) sprite.setTexture(e.tier);
+        sprite.setPosition(px, py).setVisible(true);
+      } else {
+        // Texture missing — colored rectangle fallback (always visible)
+        this.enemySprites.get(e.id)?.setVisible(false);
+        if (!this.enemyFallback.has(e.id)) {
+          const g = this.add.graphics();
+          const col = ENEMY_COLORS[e.tier] ?? 0xff0000;
+          const sz = TILE_SIZE - 8;
+          g.fillStyle(col, 0.9);
+          g.fillRect(-sz / 2, -sz / 2, sz, sz);
+          g.lineStyle(1, 0xffffff, 0.4);
+          g.strokeRect(-sz / 2, -sz / 2, sz, sz);
+          g.setDepth(8);
+          this.enemyFallback.set(e.id, g);
+        }
+        this.enemyFallback.get(e.id)!.setPosition(px, py).setVisible(true);
+      }
+
+      // HP bar above sprite
       const barW = TILE_SIZE - 8;
       const barX = px - barW / 2;
       const barY = py - TILE_SIZE / 2 - 4;
@@ -242,14 +272,23 @@ class DungeonScene extends Phaser.Scene {
         const fill = this.add.rectangle(barX + barW / 2, barY, barW, 2, 0xef4444).setDepth(9);
         this.enemyHpBars.set(e.id, { bg, fill });
       }
-      const { fill } = this.enemyHpBars.get(e.id)!;
+      const bar = this.enemyHpBars.get(e.id)!;
+      bar.bg.setVisible(true);
+      bar.fill.setVisible(true);
       const ratio = e.maxHp > 0 ? e.hp / e.maxHp : 0;
-      fill.setPosition(barX + (ratio * barW) / 2, barY);
-      fill.setSize(ratio * barW, 2);
+      bar.fill.setPosition(barX + (ratio * barW) / 2, barY);
+      bar.fill.setSize(ratio * barW, 2);
     }
-    // Hide sprites for removed enemies
+    // Hide everything for enemies no longer in the list
     for (const [id, sprite] of this.enemySprites) {
-      if (!seen.has(id)) sprite.setVisible(false);
+      if (!seen.has(id)) {
+        sprite.setVisible(false);
+        const bar = this.enemyHpBars.get(id);
+        if (bar) { bar.bg.setVisible(false); bar.fill.setVisible(false); }
+      }
+    }
+    for (const [id, g] of this.enemyFallback) {
+      if (!seen.has(id)) g.setVisible(false);
     }
   }
 

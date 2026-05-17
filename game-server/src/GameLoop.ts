@@ -135,10 +135,10 @@ function processBossCombat(state: GameState, config: GameConfig): GameState {
     const newBossHp = Math.max(0, boss.hp - agentDamage);
     const newPhase: 1 | 2 = newBossHp <= boss.maxHp * config.boss.boss_phase2_threshold ? 2 : 1;
 
-    // Boss damage to agent
+    // Boss damage to agent — balanced so a skilled agent can survive ~20 rounds
     const bossDamage = newPhase === 2
-      ? Math.floor(config.boss.boss_hp * 0.08)
-      : Math.floor(config.boss.boss_hp * 0.05);
+      ? Math.floor(config.boss.boss_hp * 0.04)
+      : Math.floor(config.boss.boss_hp * 0.025);
     const armor = agent.inventory.equipped.armor;
     const armorReduction = armor?.stats?.armorReduction ?? 0;
     const damageToAgent = Math.floor(bossDamage * (1 - armorReduction));
@@ -296,8 +296,8 @@ export function applyAgentAction(
           i === targetEnemyIdx ? { ...e, hp: result.defenderHpAfter, isAlive: result.defenderHpAfter > 0 } : e
         );
         return { ...state, agents: { ...state.agents, [agentId]: agent }, enemies: updatedEnemies };
-      } else {
-        // Agent vs agent (arena)
+      } else if (state.phase !== "DUNGEON") {
+        // Agent vs agent — ARENA only (PvP disabled in dungeon)
         const targetAgent = state.agents[action.targetId as AgentId];
         if (targetAgent && targetAgent.status !== "eliminated") {
           const armorItem = targetAgent.inventory.equipped.armor;

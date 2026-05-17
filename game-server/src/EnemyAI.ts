@@ -39,19 +39,21 @@ export function findNearestAgent(position: Position, state: GameState): AgentId 
 }
 
 /**
- * Check if position a is adjacent (including diagonals) to position b.
+ * Check if position a is cardinal-adjacent (4 directions only) to position b.
  */
 export function isAdjacent(a: Position, b: Position): boolean {
-  return Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1;
+  const dx = Math.abs(a.x - b.x);
+  const dy = Math.abs(a.y - b.y);
+  return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
 }
 
 /**
- * Compute next move step toward target using rot.js A* pathfinding.
+ * Compute next move step toward target using rot.js A* pathfinding (4-directional only).
  * Returns the next position to move to (one step only).
  */
 export function pathfindStep(from: Position, to: Position, state: GameState): Position {
   const passable = passableCallback(state);
-  const pathFinder = new ROT.Path.AStar(to.x, to.y, passable, { topology: 8 });
+  const pathFinder = new ROT.Path.AStar(to.x, to.y, passable, { topology: 4 });
 
   const steps: Position[] = [];
   pathFinder.compute(from.x, from.y, (x, y) => {
@@ -63,10 +65,9 @@ export function pathfindStep(from: Position, to: Position, state: GameState): Po
 }
 
 function pathfindAway(from: Position, awayFrom: Position, state: GameState): Position {
-  // Move one step away from the target. Try all 8 adjacent tiles, pick the furthest.
+  // Move one step away from the target. 4-directional only.
   const dirs = [
     { dx: 1, dy: 0 }, { dx: -1, dy: 0 }, { dx: 0, dy: 1 }, { dx: 0, dy: -1 },
-    { dx: 1, dy: 1 }, { dx: -1, dy: 1 }, { dx: 1, dy: -1 }, { dx: -1, dy: -1 },
   ];
   let best: Position = { ...from };
   let bestDist = -Infinity;

@@ -46,12 +46,14 @@ export async function callClaude(
   payload: AgentStatePayload,
   timeoutMs: number
 ): Promise<AgentAction> {
-  // Try primary call, retry once with double timeout on failure
+  // Short timeouts (FAST_MODE ≤5s): no retry — fall back immediately to keep rounds fast.
+  // Long timeouts (≥8s, normal mode): retry once with 2× timeout on transient failures.
   try {
     return await callClaudeOnce(agentId, payload, timeoutMs);
   } catch (firstErr: unknown) {
     const msg = firstErr instanceof Error ? firstErr.message : String(firstErr);
-    if (msg.includes("abort") || msg.includes("timeout") || msg.includes("fetch")) {
+    const isTransient = msg.includes("abort") || msg.includes("timeout") || msg.includes("fetch");
+    if (isTransient && timeoutMs > 5000) {
       console.error(`[AgentAPI] ${agentId} primary call failed, retrying: ${msg}`);
       return await callClaudeOnce(agentId, payload, Math.min(timeoutMs * 2, 15000));
     }
