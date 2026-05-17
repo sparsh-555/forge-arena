@@ -30,9 +30,8 @@ const AGENT_BG: Record<AgentId, string> = {
 
 interface AgentState {
   position: { x: number; y: number };
-  hp: number;
-  maxHp: number;
   status: string;
+  combat: { hp: number; maxHp: number; stamina: number; maxStamina: number };
   lastReasoning?: string;
   kills?: { grunt: number; brute: number; sentinel: number };
   dungeonScore?: number;
@@ -99,6 +98,10 @@ class DungeonScene extends Phaser.Scene {
   }
 
   preload() {
+    this.load.on("loaderror", (file: { key: string; src: string }) => {
+      console.warn(`[Phaser] texture load failed: ${file.key} (${file.src})`);
+    });
+
     const agentIds = ["aggressive", "cautious", "hoarder", "speedrunner"];
     const dirs = ["north", "south", "east", "west"];
     agentIds.forEach(id => {
@@ -203,7 +206,7 @@ class DungeonScene extends Phaser.Scene {
         this.agentHpBars.set(id, { bg, fill });
       }
       const { fill } = this.agentHpBars.get(id)!;
-      const ratio = agent.maxHp > 0 ? agent.hp / agent.maxHp : 0;
+      const ratio = agent.combat.maxHp > 0 ? agent.combat.hp / agent.combat.maxHp : 0;
       const color = ratio > 0.5 ? 0x22c55e : ratio > 0.25 ? 0xfacc15 : 0xef4444;
       fill.setFillStyle(color);
       fill.setPosition(barX + (ratio * barW) / 2, barY);
@@ -221,7 +224,7 @@ class DungeonScene extends Phaser.Scene {
       seen.add(e.id);
       const px = e.position.x * TILE_SIZE + TILE_SIZE / 2;
       const py = e.position.y * TILE_SIZE + TILE_SIZE / 2;
-      const enemyTexKey = this.textures.exists(e.tier) ? e.tier : "floor";
+      const enemyTexKey = this.textures.exists(e.tier) ? e.tier : "wall";
       if (!this.enemySprites.has(e.id)) {
         const sprite = this.add.image(px, py, enemyTexKey).setDisplaySize(TILE_SIZE - 8, TILE_SIZE - 8).setDepth(8);
         this.enemySprites.set(e.id, sprite);
@@ -294,7 +297,7 @@ class DungeonScene extends Phaser.Scene {
 // ── Agent Panel ──────────────────────────────────────────────────────────────
 
 function AgentPanel({ id, agent }: { id: AgentId; agent: AgentState | undefined }) {
-  const hpRatio = agent ? agent.hp / agent.maxHp : 0;
+  const hpRatio = agent ? agent.combat.hp / agent.combat.maxHp : 0;
   const hpColor = hpRatio > 0.5 ? "bg-green-500" : hpRatio > 0.25 ? "bg-yellow-400" : "bg-red-500";
   const eliminated = agent?.status === "eliminated";
 
@@ -318,7 +321,7 @@ function AgentPanel({ id, agent }: { id: AgentId; agent: AgentState | undefined 
         <div className="flex-1 min-w-0">
           <div className={`text-xs font-bold uppercase ${AGENT_TEXT_COLORS[id]}`}>{id}</div>
           <div className="text-[10px] text-forge-dim">
-            {eliminated ? "ELIMINATED" : agent?.status === "active" ? `${agent.hp}/${agent.maxHp} HP` : "—"}
+            {eliminated ? "ELIMINATED" : agent?.status === "active" ? `${agent.combat.hp}/${agent.combat.maxHp} HP` : "—"}
           </div>
         </div>
         {kills && <div className="text-[10px] text-forge-dim shrink-0">{totalKills}⚔</div>}

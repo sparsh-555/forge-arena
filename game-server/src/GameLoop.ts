@@ -77,9 +77,21 @@ function processBossSpawns(state: GameState, config: GameConfig): GameState {
     const tile = state.map.tiles[agent.position.y]?.[agent.position.x];
     if (tile?.type === "boss_entrance") {
       const bossHp = config.boss.boss_hp;
+      // Find first non-wall adjacent tile for boss placement
+      const adjacent = [
+        { x: agent.position.x + 1, y: agent.position.y },
+        { x: agent.position.x - 1, y: agent.position.y },
+        { x: agent.position.x, y: agent.position.y - 1 },
+        { x: agent.position.x, y: agent.position.y + 1 },
+      ];
+      const bossPos = adjacent.find(p => {
+        const t = state.map.tiles[p.y]?.[p.x];
+        return t && t.type !== "wall";
+      }) ?? agent.position;
+
       newBossInstances[id] = {
         agentId: id,
-        position: { x: agent.position.x + 1, y: agent.position.y },
+        position: bossPos,
         hp: bossHp,
         maxHp: bossHp,
         phase: 1,
@@ -271,11 +283,13 @@ export function applyAgentAction(
           config
         );
         agent.combat = { ...agent.combat, stamina: result.attackerStaminaAfter };
-        // Track kill if enemy died
+        // Track kill and update live dungeon score
         if (result.defenderHpAfter <= 0) {
           const t = targetEnemy.tier;
           const key = t === "grunt" ? "grunt" : t === "brute" ? "brute" : "sentinel";
+          const killPoints: Record<string, number> = { grunt: 1, brute: 2, sentinel: 3 };
           agent.kills = { ...agent.kills, [key]: agent.kills[key] + 1 };
+          agent.dungeonScore = (agent.dungeonScore ?? 0) + (killPoints[key] ?? 1);
         }
         // Update enemy HP directly — return enemies array with updated enemy
         const updatedEnemies = state.enemies.map((e, i) =>
@@ -387,19 +401,19 @@ function choosePatch(
   const active     = agentStats.filter(s => s.status !== "eliminated");
 
   // ── Rule 1: Mass casualties → enemies too lethal ──────────────────────────
-  // If ≥2 agents are already dead, reduce grunt damage so the remaining can survive.
+  // If ≥2 agents are already dead, reduce grunt HP so the remaining can survive.
   if (eliminated.length >= 2) {
-    const newVal = Math.floor(config.enemies.grunt_damage * 0.85);
-    return { key: "enemies.grunt_damage", newValue: newVal, timestamp: ts,
-      reason: `${eliminated.length} agents eliminated — grunt damage reduced to keep game alive` };
+    const newVal = Math.floor(config.enemies.grunt_hp * 0.85);
+    return { key: "enemies.grunt_hp", newValue: newVal, timestamp: ts,
+      reason: `${eliminated.length} agents eliminated — grunt HP reduced to keep game alive` };
   }
 
   // ── Rule 2: No one is scoring → game is too hard ──────────────────────────
   const totalScore = agentStats.reduce((s, a) => s + a.score, 0);
-  if (totalScore === 0 && agentStats.length >= 2) {
-    const newVal = Math.floor(config.enemies.grunt_damage * 0.85);
-    return { key: "enemies.grunt_damage", newValue: newVal, timestamp: ts,
-      reason: "all agents at 0 score — reducing grunt pressure to open up play" };
+  if (totalScore === 0 && state.roundNumber > 6) {
+    const newVal = Math.floor(config.enemies.grunt_hp * 0.85);
+    return { key: "enemies.grunt_hp", newValue: newVal, timestamp: ts,
+      reason: "all agents at 0 score — reducing grunt HP to open up play" };
   }
 
   if (active.length < 2) return null; // too few agents to compare
@@ -708,6 +722,7 @@ export async function runArenaMatch(
   matchup: ArenaMatchup
 ): Promise<AgentId> {
   const turnCap = config.arena_turn_cap > 0 ? config.arena_turn_cap : 30;
+  const arenaTimeout = config.agent_api_timeout_ms ?? AGENT_TIMEOUT_MS;
   let turnCount = 0;
   let currentState = deepClone(state);
 
@@ -721,7 +736,7 @@ export async function runArenaMatch(
     const aAgent = currentState.agents[aId];
     if (aAgent && aAgent.status !== "eliminated" && aAgent.combat.hp > 0) {
       const payload = toAgentPayload(currentState, aId);
-      const action = await handleDecideRoute(aId, payload, AGENT_TIMEOUT_MS);
+      const action = await handleDecideRoute(aId, payload, arenaTimeout);
       currentState = applyAgentAction(currentState, aId, action, config);
     }
 
@@ -735,7 +750,7 @@ export async function runArenaMatch(
     const bAgent = currentState.agents[bId];
     if (bAgent && bAgent.status !== "eliminated" && bAgent.combat.hp > 0) {
       const payload = toAgentPayload(currentState, bId);
-      const action = await handleDecideRoute(bId, payload, AGENT_TIMEOUT_MS);
+      const action = await handleDecideRoute(bId, payload, arenaTimeout);
       currentState = applyAgentAction(currentState, bId, action, config);
     }
 

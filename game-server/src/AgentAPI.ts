@@ -161,9 +161,16 @@ export async function handleDecideRoute(
  */
 export function getFallbackAction(agentId: AgentId, _payload?: AgentStatePayload): AgentAction {
   const entities = _payload?.visibleEntities ?? [];
+  const phase = _payload?.phase ?? "DUNGEON";
+  const inArena = phase.startsWith("ARENA");
 
   const nearestEnemy = entities
     .filter(e => e.type === "enemy")
+    .sort((a, b) => a.distance - b.distance)[0];
+
+  // In arena, treat other agents as targets
+  const nearestFoe = entities
+    .filter(e => e.type === "enemy" || e.type === "agent")
     .sort((a, b) => a.distance - b.distance)[0];
 
   const nearestItem = entities
@@ -172,12 +179,17 @@ export function getFallbackAction(agentId: AgentId, _payload?: AgentStatePayload
 
   switch (agentId) {
     case "aggressive":
-      if (nearestEnemy) {
-        return { goal: "attack_medium", targetId: nearestEnemy.id, reasoning: "[fallback] attacking nearest enemy" };
+      if (nearestFoe) {
+        return { goal: "attack_medium", targetId: nearestFoe.id, reasoning: "[fallback] attacking nearest foe" };
       }
       return { goal: "move_to_enemy", reasoning: "[fallback] seeking enemies" };
 
     case "cautious":
+      if (inArena && nearestFoe) {
+        return nearestFoe.distance <= 1
+          ? { goal: "attack_light", targetId: nearestFoe.id, reasoning: "[fallback] arena light attack" }
+          : { goal: "move_to_enemy", targetId: nearestFoe.id, reasoning: "[fallback] closing to arena target" };
+      }
       if (nearestEnemy && nearestEnemy.distance <= 2) {
         return { goal: "block", reasoning: "[fallback] blocking nearby threat" };
       }
@@ -190,6 +202,11 @@ export function getFallbackAction(agentId: AgentId, _payload?: AgentStatePayload
       return { goal: "block", reasoning: "[fallback] holding position" };
 
     case "hoarder":
+      if (inArena && nearestFoe) {
+        return nearestFoe.distance <= 1
+          ? { goal: "attack_light", targetId: nearestFoe.id, reasoning: "[fallback] arena light attack" }
+          : { goal: "move_to_enemy", targetId: nearestFoe.id, reasoning: "[fallback] closing to arena target" };
+      }
       if (nearestItem) {
         return { goal: "move_to_item", targetId: nearestItem.id, reasoning: "[fallback] collecting item" };
       }
@@ -199,6 +216,11 @@ export function getFallbackAction(agentId: AgentId, _payload?: AgentStatePayload
       return { goal: "pass", reasoning: "[fallback] searching for loot" };
 
     case "speedrunner":
+      if (inArena && nearestFoe) {
+        return nearestFoe.distance <= 1
+          ? { goal: "attack_light", targetId: nearestFoe.id, reasoning: "[fallback] arena light spam" }
+          : { goal: "move_to_enemy", targetId: nearestFoe.id, reasoning: "[fallback] closing for arena fight" };
+      }
       return { goal: "move_to_boss", reasoning: "[fallback] rushing boss" };
 
     default:

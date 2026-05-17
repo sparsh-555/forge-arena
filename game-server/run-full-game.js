@@ -102,6 +102,8 @@ async function main() {
   if (fastMode) {
     config.dungeon_timer_seconds = 120;
     config.arena_turn_cap = 20;
+    config.round_interval_ms = 800;
+    config.agent_api_timeout_ms = 5000;
   }
 
   // If NO_API, unset the API key so AgentAPI falls back naturally
