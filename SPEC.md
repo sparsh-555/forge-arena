@@ -56,8 +56,11 @@ Evaluated by the Evaluator using Claude vision on a screenshot taken while the g
 1. **Tile grid visible** — a grid of floor and wall tiles covers the canvas. The map is not a blank canvas or solid colour fill.
 2. **Sprite artwork rendered** — agents and enemies appear as PNG sprite images, not as coloured circles, rectangles, or other geometric primitives drawn with canvas APIs.
 3. **Active game content showing** — the page displays the game map view (not a blank screen, loading spinner, or the build-phase harness/task-list view).
-4. **Map fits the viewport** — the dungeon map is fully visible without being cropped or scrolled off-screen. Tiles are 64×64px; MAP_WIDTH=30, MAP_HEIGHT=22 should fit a 1920px-wide display.
+4. **Map fits the viewport** — the dungeon map is fully visible without being cropped or scrolled off-screen. Tiles are 32×32px (TILE_SIZE=32); MAP_WIDTH=30, MAP_HEIGHT=22; the canvas scales to fit the left column of the three-panel layout.
 5. **At least one agent visible** — at least one agent sprite appears on the map. An empty map with no agents means agents never spawned or WebSocket updates are not reaching the renderer.
+6. **Agent panels show portraits and HP bars** — the center column shows four agent panels, each with a portrait image (`/assets/ui/portraits/{id}_portrait.png`), a coloured HP bar, and a loadout row listing equipped items by name. Panels with no agent data show "waiting for decision...".
+7. **Reasoning text visible** — at least one agent panel shows non-empty reasoning text (not the fallback placeholder). Text must not contain the raw `[fallback]` prefix.
+8. **Hand of God panel present** — the right column shows a "Hand of God" panel with kill balance bars and a "Patches Applied" section. If no patches have fired yet, the section reads "watching game state...".
 
 ---
 
@@ -133,6 +136,16 @@ grep -c 'this.load.image\|this\.load\.image' dashboard/src/GameView.tsx
 grep -rn 'new WebSocket\|WebSocket(' dashboard/src/
 # Must match. No WebSocket = dashboard never receives game state updates.
 
+grep -c 'PATCH_EVENT' dashboard/src/GameView.tsx
+# Must be >= 1. broadcastPatch() sends this type; dashboard must handle it to show
+# live patch flashes in the Hand of God panel.
+
+grep -c 'lastReasoning' dashboard/src/GameView.tsx
+# Must be >= 1. Agent reasoning text panel requires this field from AgentState.
+
+grep -c 'AgentPanel\|portrait' dashboard/src/GameView.tsx
+# Must be >= 1. Portrait panel component must exist.
+
 # 10. Personality file completeness
 for id in aggressive cautious hoarder speedrunner; do
   for section in "## Identity" "## Core Drive" "## Item Priority" "## Combat Style" \
@@ -171,6 +184,9 @@ kill $SERVER_PID 2>/dev/null; wait $SERVER_PID 2>/dev/null
 - **AgentAPI timeout must be ≥ 8000ms.** Anthropic API round-trip for Haiku is 3–6s under normal load. A 3s timeout guarantees primary call failure on every round.
 - **JSON action block must appear FIRST in the agent response, before any analysis.** Putting JSON last causes truncation when the analysis fills the token budget. Personality CLAUDE.md files must instruct: emit the JSON line first, then optionally add reasoning prose.
 - **DungeonGen must validate all 4 spawn positions for pathfinding connectivity to the boss entrance** before returning a map. Reject and regenerate if any spawn is unreachable. An agent stuck at its spawn for the entire dungeon phase means pathfinding is broken at generation time.
+- **`DashboardPayload` sends tiles as flat top-level fields** — `tiles: Tile[][]`, `mapWidth: number`, `mapHeight: number` — NOT nested under a `map` object. `toDashboardPayload()` must keep this shape; dashboard `GameView.tsx` reads `payload.tiles`, `payload.mapWidth`, `payload.mapHeight` directly.
+- **WebSocket emits two distinct message types.** `broadcast(state)` sends a full `DashboardPayload` snapshot every round. `broadcastPatch(patch)` sends `{ type: "PATCH_EVENT", patch: PatchEvent }` immediately when a patch is applied. Dashboard checks `msg.type === "PATCH_EVENT"` first, then parses as DashboardPayload. Never merge these into one message type.
+- **`GameLoop` must stamp `lastReasoning` on each `AgentState` before calling `broadcast`.** Set `agent.lastReasoning = action.reasoning` immediately after all agent decisions are collected, before `applyAgentAction`. Omitting this means the dashboard reasoning panels always show "waiting for decision..." regardless of real API activity.
 
 ## Architecture Constraints
 
@@ -206,9 +222,13 @@ The `GamePhase` enum in types.ts must encode all six states. Server rejects inva
 | Interface | Field | Type | Purpose |
 |---|---|---|---|
 | `EnemyAction` | `newPosition?: Position` | optional | Set by EnemyAI for move actions; GameLoop reads this to update `enemy.position` |
-| `AgentState` | `lastReasoning?: string` | optional | Most recent reasoning string from Claude; DashboardPayload sends this to the renderer |
+| `AgentState` | `lastReasoning?: string` | optional | Most recent reasoning string from Claude; GameLoop sets this before `broadcast()`; dashboard reads it for the reasoning panel |
 | `DungeonMap` | `width: number` | required | Must equal MAP_WIDTH (30) |
 | `DungeonMap` | `height: number` | required | Must equal MAP_HEIGHT (22) |
+| `DungeonMap` | `dungeonEntrancePosition: Position` | required | Bottom-left entrance room centre; all 4 agents spawn clustered within 5 tiles of this point |
+| `DashboardPayload` | `tiles: Tile[][]` | required | Full tile grid as a flat top-level field (NOT nested under `map`) |
+| `DashboardPayload` | `mapWidth: number` | required | Must equal `state.map.width`; used by renderer to size the Phaser canvas |
+| `DashboardPayload` | `mapHeight: number` | required | Must equal `state.map.height` |
 
 **ROUND_STATE event** (required every round in DUNGEON and ARENA phases):
 
@@ -533,10 +553,15 @@ Both scripts live at the repo root and must be executable (`chmod +x`).
 ## Definition of Done
 
 All acceptance tests pass:
-- `npm run build` exits 0
+- `npm run build` exits 0 (both game-server and dashboard)
 - `FAST_MODE=true node run-full-game.js` exits 0 and prints `GAME_COMPLETE`
 - All 4 agents leave their spawn positions during the run (no stuck agents)
 - Fallback rate < 40% of total agent decisions
 - All 4 personality CLAUDE.md files exist with all required sections
-- Dashboard serves and shows all three panels (map, reasoning, patch feed)
-- At least 1 patch event written to state/patch-queue.jsonl during the run
+- Dashboard serves and shows all three panels simultaneously:
+  - **Left**: Phaser map with tile grid, agent sprites, enemy sprites, HP bars
+  - **Center**: Four agent panels — portrait, HP bar, equipped loadout, reasoning text
+  - **Right**: Hand of God panel — kill balance bars, live patch feed
+- Agent reasoning text in dashboard updates every round with real Claude output (no "[fallback]" prefix on >60% of panels)
+- At least 1 patch event fires and appears in the Hand of God panel during the run
+- Boss spawns when an agent steps on `boss_entrance` tile; boss sprite visible on map

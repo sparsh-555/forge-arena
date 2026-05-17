@@ -6,7 +6,7 @@
 - Rewrite sections as priorities change. Do not append contradictions.
 
 ## Current Phase
-BUILD — Sprint 1. Clean slate. Previous dry run (dry-run-5) reached Grade B but the game was non-functional: 100% fallback decisions, agents frozen at spawn, no boss, no meaningful gameplay. Root causes have been fixed in the harness (evaluator now runs full live game, not headless). Start fresh.
+BUILD — Sprint 5. All core systems complete and passing. Dry-run-5 root causes fixed; dashboard fully wired (Phaser map, agent panels, Hand of God); boss spawning live; lastReasoning propagated each round; PATCH_EVENT WS message type handled. Game is playable end-to-end. Evaluator configured to run full live game only (no headless). Next step: full live run with ANTHROPIC_API_KEY to get Grade A.
 
 ## Critical Constraints (Learned From Dry-Run-5 — Do Not Repeat These Failures)
 
@@ -56,6 +56,26 @@ sprite.setTexture(`aggressive_${direction}`);
 ### Boss (128×128): boss.png, boss_phase2.png, boss_death.png
 ### Items (48×48): sword, axe, dagger, greatsword, leather_armor, chain_armor, plate_armor, shield, estus, poison, strength_potion, estus_flask_icon
 ### UI: portraits 256×256, icons 32×32, spawn_effect 64×64, phase badges 120×32
+
+## Dashboard Rendering Contracts (Discovered Sprint 5 — Workers Must Not Break These)
+
+- **`DashboardPayload` sends flat tile fields:** `tiles`, `mapWidth`, `mapHeight` are top-level fields on the payload — NOT nested under `map`. `GameView.tsx` reads `payload.tiles`, `payload.mapWidth`, `payload.mapHeight`. Any worker refactoring `toDashboardPayload` must maintain this flat shape.
+- **WebSocket sends two distinct message types:**
+  1. Full `DashboardPayload` snapshot — sent by `broadcast(state)` every round
+  2. `{ type: "PATCH_EVENT", patch: PatchEvent }` — sent by `broadcastPatch(patch)` immediately when a patch lands
+  The dashboard checks `msg.type === "PATCH_EVENT"` first, then falls through to parse as DashboardPayload. Do not merge these into one message type.
+- **`lastReasoning` must be stamped before broadcast:** GameLoop sets `agent.lastReasoning = action.reasoning` immediately after collecting all agent decisions, before calling `applyAgentAction`. This ensures every `broadcast()` snapshot includes the latest thinking.
+- **`AgentState.lastReasoning` flows through to dashboard:** It is a field on `AgentState`, included in `DashboardPayload.agents[id].lastReasoning`. Workers must not strip it in `toDashboardPayload`.
+
+## Completed Systems (Sprint 5)
+
+- Phaser `DungeonScene`: tiles, agent sprites, enemy sprites, boss sprites, HP bars on all entities
+- `AgentPanel` React component: portrait image, HP bar, loadout row (equipped items + backpack count + estus), reasoning text (220 char, strips `[fallback]` prefix)
+- `PatchCard` + `KillBar`: Hand of God panel with live patch feed and kill balance bars
+- Boss: spawns on `boss_entrance` tile entry, auto-combat each round until dead or agent eliminated
+- Chest re-rendering: tile updates from `chest` to `chest_open` when agent picks up contents
+- Server endpoints: `/api/harness-log`, `/api/harness-events` (SSE), `/api/task-state`, `/api/build-health` all implemented
+- `HarnessView`: task queue, live event log, build health grade panel — three-column layout
 
 ## Blocked Items
 (None)
