@@ -3,24 +3,6 @@
   "sprint": 1,
   "tasks": [
     {
-      "id": "S1-003",
-      "description": "Implement CombatSystem.ts — all 6 stubbed functions. calcStaminaCost(action, config): return config.stamina[action + '_cost'] or 0 for pass/use_estus/equip_from_backpack. calcDamage(inventory, attackType, armorReduction): get equipped weapon's baseDamage (default 5 if no weapon), multiply by attackMultiplier (heavy=1.5, medium=1.0, light=0.6), then multiply by (1 - armorReduction). Return integer damage (min 1). calcEquipmentLoad(inventory): sum loadContribution from all 4 equipped slots, return 0-100. calcStaminaRegen(combat, config): base regen from config, apply load tier modifier from LOAD_REGEN_MODIFIER. resolveCombat: compute attacker damage via calcDamage, subtract from defender HP (with block reduction if blocking), return CombatResult with damage dealt, remaining HP, stamina after cost. resolveEnemyAttack: simplified version using enemy tier base damage from EnemyBaseStats. Import all needed types and constants from types.ts. Never hardcode config values — always read from the config parameter.",
-      "scope": [
-        "game-server/src/CombatSystem.ts"
-      ],
-      "acceptance": "npm run build exits 0. calcStaminaCost for heavy_attack returns config value. calcDamage with baseDamage=15, heavy attack, 0 armorReduction returns 22 (15*1.5). calcDamage with baseDamage=15, heavy attack, 0.3 armorReduction returns 15 (floor(15*1.5*0.7)). calcDamage never returns below 1. calcEquipmentLoad with empty inventory returns 0. calcStaminaRegen at light load returns full base regen; at heavy load returns base * 0.8. resolveCombat with block reduces damage by blockReduction fraction. resolveEnemyAttack for grunt returns damage close to config.enemies.grunt_damage. All functions are pure — no side effects, no module-level state.",
-      "acceptance_criteria": [
-        "calcDamage uses weapon baseDamage × attackMultiplier × (1 - armorReduction) — grep CombatSystem.ts for 'baseDamage' and 'attackMultiplier' and 'armorReduction'",
-        "calcStaminaCost reads from config.stamina — grep CombatSystem.ts for 'config.stamina'",
-        "calcEquipmentLoad sums loadContribution from equipped slots — grep CombatSystem.ts for 'loadContribution'",
-        "resolveCombat returns CombatResult with damage dealt — grep CombatSystem.ts for 'CombatResult'",
-        "LOAD_REGEN_MODIFIER imported from types.ts — grep CombatSystem.ts for 'LOAD_REGEN_MODIFIER'"
-      ],
-      "branch": "worker/S1-003-implement-combat-system",
-      "priority": 1,
-      "status": "pending"
-    },
-    {
       "id": "S1-004",
       "description": "Implement DungeonBridge.ts — all 4 stubbed functions. This module is the boundary between GameState and external consumers. getVisibleEntities(state, agentId): use rot.js FOV (ROT.FOV.PreciseShadowcasting) with radius from game-config (import fov_radius=6). Compute visible tiles for the agent, then collect VisibleEntity objects for all enemies, items, other agents, boss entrances, bosses, and chests within visible tiles. Each VisibleEntity includes distance (Manhattan). toAgentPayload(state, agentId): build AgentStatePayload with the agent's own state + visibleEntities from getVisibleEntities + formatted recentPatches. toDashboardPayload(state): build DashboardPayload with full tiles array, all agents, enemies, bossInstances, groundItems, recentPatches, arenaMatchups, finalScores, dungeonTimer. formatPatchesForAgent(state): map state.recentPatches to human-readable strings like 'stamina.heavy_attack_cost changed from 30 to 25: reduce aggression dominance'. Import ROT from 'rot-js'. This is a pure data transformation module — no side effects, no I/O.",
       "scope": [
@@ -111,6 +93,24 @@
         "computeEnemySpawns produces hex_caster entries (not just grunt/brute/sentinel) — grep DungeonGen.ts for 'hex_caster'"
       ],
       "branch": "worker/S1-002-implement-dungeon-gen",
+      "priority": 1,
+      "status": "completed"
+    },
+    {
+      "id": "S1-003",
+      "description": "Implement CombatSystem.ts — all 6 stubbed functions. calcStaminaCost(action, config): return config.stamina[action + '_cost'] or 0 for pass/use_estus/equip_from_backpack. calcDamage(inventory, attackType, armorReduction): get equipped weapon's baseDamage (default 5 if no weapon), multiply by attackMultiplier (heavy=1.5, medium=1.0, light=0.6), then multiply by (1 - armorReduction). Return integer damage (min 1). calcEquipmentLoad(inventory): sum loadContribution from all 4 equipped slots, return 0-100. calcStaminaRegen(combat, config): base regen from config, apply load tier modifier from LOAD_REGEN_MODIFIER. resolveCombat: compute attacker damage via calcDamage, subtract from defender HP (with block reduction if blocking), return CombatResult with damage dealt, remaining HP, stamina after cost. resolveEnemyAttack: simplified version using enemy tier base damage from EnemyBaseStats. Import all needed types and constants from types.ts. Never hardcode config values — always read from the config parameter.",
+      "scope": [
+        "game-server/src/CombatSystem.ts"
+      ],
+      "acceptance": "npm run build exits 0. calcStaminaCost for heavy_attack returns config value. calcDamage with baseDamage=15, heavy attack, 0 armorReduction returns 22 (15*1.5). calcDamage with baseDamage=15, heavy attack, 0.3 armorReduction returns 15 (floor(15*1.5*0.7)). calcDamage never returns below 1. calcEquipmentLoad with empty inventory returns 0. calcStaminaRegen at light load returns full base regen; at heavy load returns base * 0.8. resolveCombat with block reduces damage by blockReduction fraction. resolveEnemyAttack for grunt returns damage close to config.enemies.grunt_damage. All functions are pure — no side effects, no module-level state.",
+      "acceptance_criteria": [
+        "calcDamage uses weapon baseDamage × attackMultiplier × (1 - armorReduction) — grep CombatSystem.ts for 'baseDamage' and 'attackMultiplier' and 'armorReduction'",
+        "calcStaminaCost reads from config.stamina — grep CombatSystem.ts for 'config.stamina'",
+        "calcEquipmentLoad sums loadContribution from equipped slots — grep CombatSystem.ts for 'loadContribution'",
+        "resolveCombat returns CombatResult with damage dealt — grep CombatSystem.ts for 'CombatResult'",
+        "LOAD_REGEN_MODIFIER imported from types.ts — grep CombatSystem.ts for 'LOAD_REGEN_MODIFIER'"
+      ],
+      "branch": "worker/S1-003-implement-combat-system",
       "priority": 1,
       "status": "completed"
     }
