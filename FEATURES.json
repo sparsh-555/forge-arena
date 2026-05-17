@@ -74,10 +74,12 @@
   {
     "id": "F10",
     "title": "HTTP server (SSE + WebSocket + static files)",
-    "priority": 2,
+    "priority": 3,
     "status": "partial",
     "files": ["game-server/src/server.ts"],
-    "acceptance": "/api/game-state returns { mode, state }. /api/harness-events SSE streams harness-events.jsonl. /api/build-health reads build-health.json. /ws/game WebSocket works. Dashboard static files served."
+    "depends_on": ["F09"],
+    "acceptance": "/api/game-state returns { mode, state }. /api/harness-events SSE streams harness-events.jsonl. /api/build-health reads build-health.json. /ws/game WebSocket works. Dashboard static files served.",
+    "_note": "Priority 3 (not 2) — server.ts imports StateEmitter.ts (F09). Must not run in parallel with F09 or TypeScript will fail on the missing import."
   },
   {
     "id": "F11",

@@ -39,7 +39,41 @@ If you've drifted, stop and course-correct before writing more code. Scope creep
 
 **After completing any task, check `state/deliverables.json` for verification requirements that apply to your task type.** Read the `conditional_checks` entries and run any whose `when` condition matches your task's file scope. Every listed curl must return 200. The Evaluator runs the same checks and will downgrade the build if any fail.
 
-### 4. Commit and Handoff
+### 4. Mark Task Complete (race-safe)
+
+When marking your task complete in `state/tasks.json`, use this atomic pattern — do NOT do a plain read-modify-write, which corrupts the file when parallel workers run simultaneously:
+
+```bash
+node -e "
+const fs = require('fs');
+const TASKS = 'state/tasks.json';
+const LOCK  = 'state/tasks.lock';
+const TASK_ID = 'YOUR_TASK_ID_HERE';
+
+// Busy-wait on lock (max 10s)
+let waited = 0;
+while (fs.existsSync(LOCK) && waited < 10000) {
+  const s = Date.now(); while (Date.now() - s < 100) {}; waited += 100;
+}
+fs.writeFileSync(LOCK, String(process.pid));
+try {
+  const data = JSON.parse(fs.readFileSync(TASKS, 'utf8'));
+  const task = data.tasks.find(t => t.id === TASK_ID);
+  if (task && !data.completed.find(t => t.id === TASK_ID)) {
+    data.tasks = data.tasks.filter(t => t.id !== TASK_ID);
+    data.completed = [...(data.completed || []), { ...task, status: 'completed' }];
+    fs.writeFileSync(TASKS + '.tmp', JSON.stringify(data, null, 2));
+    fs.renameSync(TASKS + '.tmp', TASKS);
+  }
+} finally {
+  try { fs.unlinkSync(LOCK); } catch (_) {}
+}
+"
+```
+
+Replace `YOUR_TASK_ID_HERE` with the actual task id string. Then append the `TASK_COMPLETED` event to `state/harness-events.jsonl`.
+
+### 5. Commit and Handoff
 - Commit all work to your branch.
 - Write a thorough handoff.
 
