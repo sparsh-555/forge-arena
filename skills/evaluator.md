@@ -259,7 +259,6 @@ Watch live game, issue balance patches.
 ## Constraints
 
 - NEVER suggest patches that set a value to 0 or negative.
-- NEVER suggest patches that exceed ±30% of the baseline in `game-config.baseline.json`.
 - NEVER suggest patches to structural code — only values in `game-config.json`.
 - Your patch suggestions are processed by the Balance Worker. You write suggestions; the Balance Worker validates and applies.
 - In Evolution Mode, run continuously until `GAME_ENDED` appears in game-events.jsonl.

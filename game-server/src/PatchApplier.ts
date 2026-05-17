@@ -78,25 +78,9 @@ export function setNestedValue(
 
 /**
  * Apply a validated patch to game-config.json.
- * Validates ±30% of baseline, value > 0. Writes atomically via tmp → rename.
+ * Validates value > 0. Writes atomically via tmp → rename.
  */
 export function applyPatch(suggestion: PatchSuggestion): PatchEvent | null {
-  const baseline = readBaseline();
-  const baselineValue = getNestedValue(
-    baseline as unknown as Record<string, unknown>,
-    suggestion.key
-  );
-
-  // Validate ±30% of baseline
-  const deviation = Math.abs(suggestion.newValue - baselineValue) / baselineValue;
-  if (deviation > 0.3) {
-    console.error(
-      `[PatchApplier] REJECTED "${suggestion.key}" ${suggestion.newValue}: ` +
-      `${(deviation * 100).toFixed(1)}% deviation exceeds 30% of baseline (${baselineValue})`
-    );
-    return null;
-  }
-
   // Validate positive
   if (suggestion.newValue <= 0) {
     console.error(

@@ -8,7 +8,7 @@
     "base_regen_per_turn": 24
   },
   "enemies": {
-    "grunt_hp": 21,
+    "grunt_hp": 11,
     "grunt_damage": 5,
     "brute_hp": 70,
     "brute_damage": 13,

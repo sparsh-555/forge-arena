@@ -12,20 +12,29 @@
 //   1 — game crashed or did not complete
 
 import "dotenv/config";
+import { readFileSync, writeFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
 import { generateDungeon, computeAgentSpawns, computeEnemySpawns, computeChestContents, validateSpawnConnectivity } from "./dist/DungeonGen.js";
 import { runDungeonPhase, teleportToArena, runArenaMatch } from "./dist/GameLoop.js";
 import { resetEnemyAIState } from "./dist/EnemyAI.js";
 import { getFallbackAction } from "./dist/AgentAPI.js";
+import { initReplay, getReplaySeed } from "./dist/ReplayStore.js";
 import { readConfig } from "./dist/PatchApplier.js";
-import { logEvent, broadcast } from "./dist/StateEmitter.js";
+import { logEvent, broadcast, EVENTS_LOG_PATH } from "./dist/StateEmitter.js";
 import { startServer, setGameState } from "./dist/server.js";
 import { AGENT_IDS } from "./dist/types.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const STATE_DIR = resolve(__dirname, "..", "state");
 
 // Parse CLI args
 const args = process.argv.slice(2);
 const headless = args.includes("--headless");
+const record = args.includes("--record");
+const replayMode = args.includes("--replay");
 const seedArg = args.find(a => a.startsWith("--seed="));
-const seed = seedArg ? parseInt(seedArg.split("=")[1], 10) : Math.floor(Math.random() * 1000000);
+let seed = seedArg ? parseInt(seedArg.split("=")[1], 10) : Math.floor(Math.random() * 1000000);
 const fastMode = process.env.FAST_MODE === "true";
 const noApi = process.env.NO_API === "true";
 
@@ -102,8 +111,20 @@ async function main() {
   if (fastMode) {
     config.dungeon_timer_seconds = 120;
     config.arena_turn_cap = 20;
-    config.round_interval_ms = 500;    // fire timer faster; actual round speed = max(500ms, api_time)
-    config.agent_api_timeout_ms = 3500; // below 5s threshold → no retry, immediate fallback if slow
+    config.round_interval_ms = 500;
+    config.agent_api_timeout_ms = 3500;
+  }
+
+  // Replay mode: load pre-recorded actions, use recording's seed, fast rounds
+  if (replayMode) {
+    const replayPath = resolve(STATE_DIR, "replay.json");
+    initReplay(replayPath);
+    const replaySeed = getReplaySeed();
+    if (replaySeed !== null) seed = replaySeed;
+    config.round_interval_ms = 600;
+    config.dungeon_timer_seconds = 120;
+    config.arena_turn_cap = 20;
+    console.error(`[run-full-game] REPLAY MODE — seed=${seed}, 600ms rounds`);
   }
 
   // If NO_API, unset the API key so AgentAPI falls back naturally
@@ -286,6 +307,33 @@ async function main() {
     console.log("Final scores:");
     for (const id of AGENT_IDS) {
       console.log(`  ${id}: dungeon=${scores[id] || 0}, arena=${arenaBonuses[id] || 0}, final=${finalScores[id]}`);
+    }
+
+    // Record mode: extract AGENT_ACTION events from game-events.jsonl → state/replay.json
+    if (record) {
+      try {
+        const lines = readFileSync(EVENTS_LOG_PATH, "utf8").trim().split("\n");
+        const actions = {};
+        for (const line of lines) {
+          try {
+            const ev = JSON.parse(line);
+            if (ev.type === "AGENT_ACTION" && ev.data?.agentId && ev.round != null) {
+              const key = `${ev.round}_${ev.data.agentId}`;
+              actions[key] = {
+                goal: ev.data.goal,
+                ...(ev.data.targetId != null ? { targetId: ev.data.targetId } : {}),
+                reasoning: ev.data.reasoning,
+              };
+            }
+          } catch { /* skip malformed lines */ }
+        }
+        const replayData = { seed, actions };
+        const replayPath = resolve(STATE_DIR, "replay.json");
+        writeFileSync(replayPath, JSON.stringify(replayData, null, 2) + "\n");
+        console.log(`[record] Saved ${Object.keys(actions).length} actions → state/replay.json (seed=${seed})`);
+      } catch (err) {
+        console.error("[record] Failed to write replay.json:", err.message);
+      }
     }
 
     if (headless) {

@@ -5,6 +5,7 @@ import { readFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import type { AgentAction, AgentId, AgentStatePayload } from "./types.js";
+import { isReplayMode, getReplayAction } from "./ReplayStore.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PERSONALITIES_DIR = path.resolve(__dirname, "../../personalities");
@@ -148,6 +149,12 @@ export async function handleDecideRoute(
   payload: AgentStatePayload,
   timeoutMs: number
 ): Promise<AgentAction> {
+  // Replay mode: serve pre-recorded action instantly (zero API latency)
+  if (isReplayMode()) {
+    const recorded = getReplayAction(payload.roundNumber, agentId);
+    if (recorded) return recorded;
+  }
+
   try {
     return await callClaude(agentId, payload, timeoutMs);
   } catch (err: unknown) {

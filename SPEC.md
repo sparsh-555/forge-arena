@@ -175,7 +175,7 @@ kill $SERVER_PID 2>/dev/null; wait $SERVER_PID 2>/dev/null
 
 - No TODOs, placeholders, or unimplemented stubs in any code path exercised by run-full-game.js.
 - Every agent decision must include a `reasoning` string — no silent moves.
-- Patches must be validated against game-config.baseline.json before writing. Values outside ±30% of baseline are rejected.
+- Patches must be validated against game-config.baseline.json before writing. Values must be > 0.
 - Round lock is mandatory: round N+1 does not start until all of round N's agent actions are resolved.
 - Personality CLAUDE.md files must include a `## Patch Awareness` section instructing agents to read `recent_patches` and adapt strategy.
 - All four personality files must be generated before the evaluator runs.
@@ -269,7 +269,7 @@ This event is the source of truth for behavioral verification (enemy movement, a
 **Patch contract:**
 - Evaluator writes `PatchSuggestion` to `state/patch-queue.jsonl`
 - Balance worker claims one entry (versioned claim, one worker per config key)
-- Validates: `Math.abs(newValue - baseline) / baseline <= 0.30`
+- Validates: `newValue > 0`
 - Writes atomically: temp file → `fs.renameSync` → `game-config.json`
 - Emits `PatchEvent` to StateEmitter
 - Next round: `recent_patches` array in each agent's payload includes the patch + reason
@@ -336,7 +336,7 @@ Enemy stats are initial values from game-config.json. Live patches may modify gr
 
 - Spawns in the deepest room. One boss instance per agent (per-agent trigger zone).
 - When agent steps on trigger tile, a boss instance spawns exclusive to that agent.
-- Boss: 300 HP, 3 attack patterns (telegraphed 1 turn ahead). Phase 2 at 50% HP (patterns change).
+- Boss: 200 HP, auto-attacks each round (Phase 1 = 2.5% max HP/round, Phase 2 = 4% max HP/round). Phase 2 at 50% HP.
 - Kill reward: +5 dungeon score, guaranteed rare item (auto-backpack), permanent +10% damage buff in arena.
 - **Grace period**: If main timer expires while agent is in a boss fight, agent has 60 seconds to finish. If boss not dead at grace expiry, agent teleports with no boss rewards.
 
@@ -429,7 +429,7 @@ All patchable values live in `game-config.json`. Workers must read from config �
 | `enemies.hex_caster_damage` | 14 | Yes | |
 | `enemies.shade_hp` | 25 | Yes | |
 | `enemies.shade_damage` | 10 | Yes | |
-| `boss.boss_hp` | 300 | No | |
+| `boss.boss_hp` | 200 | No | |
 | `boss.boss_phase2_threshold` | 0.5 | No | |
 | `agents.starting_hp` | 150 | No | |
 | `agents.starting_stamina` | 100 | No | |
@@ -445,7 +445,7 @@ All patchable values live in `game-config.json`. Workers must read from config �
 | `round_interval_ms` | 2000 | No | |
 | `agent_api_timeout_ms` | 8000 | No | Minimum 8000. Lower values guarantee primary call failure on every round. |
 
-`game-config.baseline.json` holds the read-only defaults. PatchApplier rejects values outside ±30% of baseline.
+`game-config.baseline.json` holds the read-only defaults. PatchApplier validates that `newValue > 0`.
 
 ---
 

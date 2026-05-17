@@ -515,7 +515,7 @@ export async function runDungeonPhase(initialState: GameState, config: GameConfi
               return;
             }
             await new Promise(r => setTimeout(r, i * AGENT_STAGGER_MS));
-            const timeout = liveConfig.agent_api_timeout_ms ?? AGENT_TIMEOUT_MS;
+            const timeout = config.agent_api_timeout_ms ?? liveConfig.agent_api_timeout_ms ?? AGENT_TIMEOUT_MS;
             const action = await handleDecideRoute(p.agentId, p.payload, timeout);
             resolveAction({ agentId: p.agentId, action });
           })
