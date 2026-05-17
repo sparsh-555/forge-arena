@@ -12,5 +12,11 @@
     "command": "npm run build 2>&1"
   },
   "state_dir": "state",
-  "skills_dir": "skills"
+  "skills_dir": "skills",
+  "context_guard": {
+    "_comment": "Thresholds expressed as % of context USED (not free). 20% used = 80% free.",
+    "context_limit": 1000000,
+    "warn_at_pct_used": 15,
+    "compact_at_pct_used": 20
+  }
 }
