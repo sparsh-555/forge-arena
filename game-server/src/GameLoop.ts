@@ -1,13 +1,5 @@
 // GameLoop: orchestrates the full game state machine.
 // Owns the round timer, round lock, conflict resolution, phase transitions.
-// Calls AgentAPI, EnemyAI, CombatSystem, PatchApplier. Never calls Claude directly.
-//
-// Required imports when implementing:
-//   import { AGENT_IDS, CONFLICT_PRIORITY } from "./types.js";
-//   import { callClaude, getFallbackAction } from "./AgentAPI.js";
-//   import { resolveEnemyActions } from "./EnemyAI.js";
-//   import { applyPatch, readConfig } from "./PatchApplier.js";
-//   import { broadcast, logEvent } from "./StateEmitter.js";
 
 import type {
   AgentAction,
@@ -17,82 +9,51 @@ import type {
   GamePhase,
   GameState,
 } from "./types.js";
-import { PHASE_TRANSITIONS } from "./types.js";
+import { AGENT_IDS, CONFLICT_PRIORITY, PHASE_TRANSITIONS } from "./types.js";
+import { handleDecideRoute, getFallbackAction } from "./AgentAPI.js";
+import { resolveEnemyActions, pathfindStep, resetEnemyAIState } from "./EnemyAI.js";
+import { resolveCombat, resolveEnemyAttack, calcStaminaCost, calcStaminaRegen } from "./CombatSystem.js";
+import { broadcast, logEvent } from "./StateEmitter.js";
+import { readConfig } from "./PatchApplier.js";
+import { toAgentPayload } from "./DungeonBridge.js";
+import ROT from "rot-js";
 
-/**
- * Start the dungeon phase loop.
- * Fires every config.round_interval_ms (or waits if previous round is still resolving).
- * Stops when dungeon timer expires (plus any active grace periods).
- *
- * Implementation notes:
- * - Declare: let roundLock = false; at module scope
- * - On each interval tick: if roundLock, skip
- * - Set roundLock = true; fire 4 parallel Claude calls (staggered agent_call_stagger_ms)
- * - Collect responses (agent_api_timeout_ms timeout); timed-out → getFallbackAction()
- * - resolveConflicts(actions); apply actions; resolve enemy actions
- * - Update dungeonTimer; check grace periods; emit round via StateEmitter
- * - roundLock = false
- * - When timer expires + all grace periods done: call teleportToArena()
- */
-export async function runDungeonPhase(_state: GameState, _config: GameConfig): Promise<void> {
-  throw new Error("runDungeonPhase not implemented");
+const ROUND_INTERVAL_MS = 2000;
+const AGENT_STAGGER_MS = 150;
+const AGENT_TIMEOUT_MS = 3000;
+
+function deepClone<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
 }
 
-/**
- * Teleport all agents from dungeon to arena.
- * Finalizes dungeon scores, computes seeds, transitions GamePhase.
- *
- * Implementation notes:
- * - For agents in boss fight: if boss alive, grant no-kill teleport
- * - Auto-move any ground loot in boss room to agent backpack
- * - Sort agents by dungeonScore desc, tiebreaker: hp remaining desc → arena seeds
- * - Seed1 vs Seed4 (SEMI1), Seed2 vs Seed3 (SEMI2) → state.arenaMatchups
- * - Reposition all agents to arena starting positions
- * - Emit AGENT_TELEPORTED events; transition DUNGEON → ARENA_SEMI1
- */
-export async function teleportToArena(_state: GameState): Promise<void> {
-  throw new Error("teleportToArena not implemented");
-}
+function updateFOV(state: GameState): GameState {
+  const tiles = state.map.tiles.map(row => row.map(tile => ({
+    ...tile,
+    visibleTo: [] as AgentId[],
+  })));
 
-/**
- * Run a single 1v1 arena match.
- * Alternating turns: agentA acts, then agentB acts.
- * Continues until one agent reaches 0 HP or turn cap exceeded.
- *
- * Implementation notes:
- * - Alternate turns between matchup.agentA and matchup.agentB
- * - callClaude for current agent on each turn
- * - Resolve combat via CombatSystem.resolveCombat
- * - Win condition: hp <= 0. Turn cap: config.arena_turn_cap (0 = unlimited)
- * - If cap exceeded: winner = higher HP% agent
- * - Emit ARENA_MATCH_END; mark loser eliminated; return winner AgentId
- */
-export async function runArenaMatch(
-  _state: GameState,
-  _config: GameConfig,
-  _matchup: ArenaMatchup
-): Promise<AgentId> {
-  throw new Error("runArenaMatch not implemented");
-}
+  for (const agentId of AGENT_IDS) {
+    const agent = state.agents[agentId];
+    if (!agent || agent.status === "eliminated") continue;
 
-/**
- * Resolve conflicts when multiple agents choose the same target.
- * Uses CONFLICT_PRIORITY ordering: aggressive > cautious > hoarder > speedrunner.
- * Lower-priority conflicting action is replaced with { goal: "pass", reasoning: "conflict resolved" }.
- * Never mutates input — returns new Record.
- */
-export function resolveConflicts(
-  _actions: Record<AgentId, AgentAction>
-): Record<AgentId, AgentAction> {
-  // For each pair of actions targeting the same tile/entity:
-  //   Find higher priority agent (lower index in CONFLICT_PRIORITY)
-  //   Replace lower-priority agent's action with { goal: "pass", reasoning: "conflict resolved" }
-  throw new Error("resolveConflicts not implemented");
+    const lightPasses = (x: number, y: number): boolean => {
+      const tile = tiles[y]?.[x];
+      return tile != null && tile.type !== "wall";
+    };
+
+    const fov = new ROT.FOV.PreciseShadowcasting(lightPasses);
+    fov.compute(agent.position.x, agent.position.y, 6, (x, y, _r, _vis) => {
+      if (tiles[y]?.[x]) {
+        tiles[y][x] = { ...tiles[y][x], explored: true, visibleTo: [...tiles[y][x].visibleTo, agentId] };
+      }
+    });
+  }
+
+  return { ...state, map: { ...state.map, tiles } };
 }
 
 /**
  * Transition the game to the next phase.
- * Validates the transition is allowed — rejects invalid transitions.
  */
 export function transitionPhase(state: GameState, to: GamePhase): GameState {
   const allowed = PHASE_TRANSITIONS[state.phase];
@@ -103,24 +64,432 @@ export function transitionPhase(state: GameState, to: GamePhase): GameState {
 }
 
 /**
+ * Resolve conflicts when multiple agents choose the same target.
+ */
+export function resolveConflicts(
+  actions: Record<AgentId, AgentAction>
+): Record<AgentId, AgentAction> {
+  const result = { ...actions };
+  const agentList = Object.keys(result) as AgentId[];
+
+  for (let i = 0; i < agentList.length; i++) {
+    for (let j = i + 1; j < agentList.length; j++) {
+      const a = agentList[i];
+      const b = agentList[j];
+      const actA = result[a];
+      const actB = result[b];
+
+      if (!actA || !actB) continue;
+      if (actA.goal === "pass" || actB.goal === "pass") continue;
+
+      // Conflict: same targetId for move/attack goals
+      const aTarget = actA.targetId;
+      const bTarget = actB.targetId;
+      if (aTarget && bTarget && aTarget === bTarget) {
+        const priA = CONFLICT_PRIORITY.indexOf(a);
+        const priB = CONFLICT_PRIORITY.indexOf(b);
+        if (priA < priB) {
+          result[b] = { goal: "pass", reasoning: "conflict resolved" };
+        } else {
+          result[a] = { goal: "pass", reasoning: "conflict resolved" };
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
  * Apply a single resolved agent action to the game state.
  * Pure function — returns new state, never mutates.
- *
- * Implementation notes:
- * - move_to_*: update agent position (use pathfindStep from EnemyAI)
- * - attack_*: call CombatSystem.resolveCombat, update HP values
- * - block: set agent blocking flag for this round (cleared next round)
- * - use_estus: restore 60% max HP, decrement estusCount
- * - pick_up_item: move ground item to agent backpack
- * - equip_from_backpack: swap item from backpack to equipped slot (costs full turn)
- * - pass: no-op
- * Always return new immutable state object ({ ...state, agents: { ...state.agents, ... } })
  */
 export function applyAgentAction(
-  _state: GameState,
-  _agentId: AgentId,
-  _action: AgentAction,
-  _config: GameConfig
+  state: GameState,
+  agentId: AgentId,
+  action: AgentAction,
+  config: GameConfig
 ): GameState {
-  throw new Error("applyAgentAction not implemented");
+  const agents = { ...state.agents };
+  const agent = { ...agents[agentId] };
+  agents[agentId] = agent;
+
+  const goal = action.goal;
+
+  // Stamina regen at start of each agent's turn
+  const regen = calcStaminaRegen(agent.combat, config);
+  agent.combat = { ...agent.combat, stamina: Math.min(agent.combat.maxStamina, agent.combat.stamina + regen) };
+
+  // Movement goals: compute next step
+  if (goal.startsWith("move_")) {
+    let targetPos = agent.position;
+    if (action.targetId) {
+      // Try to find target entity position
+      const targetEnemy = state.enemies.find(e => e.id === action.targetId && e.isAlive);
+      if (targetEnemy) targetPos = targetEnemy.position;
+      else {
+        const targetAgent = state.agents[action.targetId as AgentId];
+        if (targetAgent && targetAgent.status !== "eliminated") targetPos = targetAgent.position;
+      }
+    }
+    // For move_to_boss, target the boss entrance
+    if (goal === "move_to_boss") {
+      targetPos = state.map.bossEntrancePosition;
+    }
+
+    const next = pathfindStep(agent.position, targetPos, state);
+    // Clamp and check walls
+    if (next.x >= 0 && next.x < state.map.width && next.y >= 0 && next.y < state.map.height) {
+      const tile = state.map.tiles[next.y][next.x];
+      if (tile.type !== "wall") {
+        agent.position = { ...next };
+      }
+    }
+  }
+
+  // Combat goals
+  if (goal === "attack_heavy" || goal === "attack_medium" || goal === "attack_light") {
+    if (action.targetId) {
+      const targetEnemyIdx = state.enemies.findIndex(e => e.id === action.targetId && e.isAlive);
+      if (targetEnemyIdx >= 0) {
+        const targetEnemy = state.enemies[targetEnemyIdx];
+        const result = resolveCombat(
+          agent.combat,
+          agent.inventory,
+          targetEnemy.hp,
+          0,
+          false,
+          goal,
+          config
+        );
+        agent.combat = { ...agent.combat, stamina: result.attackerStaminaAfter };
+        // Update enemy HP directly — return enemies array with updated enemy
+        const updatedEnemies = state.enemies.map((e, i) =>
+          i === targetEnemyIdx ? { ...e, hp: result.defenderHpAfter, isAlive: result.defenderHpAfter > 0 } : e
+        );
+        return { ...state, agents: { ...state.agents, [agentId]: agent }, enemies: updatedEnemies };
+      } else {
+        // Agent vs agent (arena)
+        const targetAgent = state.agents[action.targetId as AgentId];
+        if (targetAgent && targetAgent.status !== "eliminated") {
+          const armorItem = targetAgent.inventory.equipped.armor;
+          const armorReduction = armorItem?.stats?.armorReduction ?? 0;
+          const result = resolveCombat(
+            agent.combat,
+            agent.inventory,
+            targetAgent.combat.hp,
+            armorReduction,
+            false,
+            goal,
+            config
+          );
+          agent.combat = { ...agent.combat, stamina: result.attackerStaminaAfter };
+          const updatedTarget = {
+            ...targetAgent,
+            combat: { ...targetAgent.combat, hp: result.defenderHpAfter },
+            status: result.defenderHpAfter <= 0 ? "eliminated" as const : targetAgent.status,
+          };
+          return { ...state, agents: { ...state.agents, [agentId]: agent, [action.targetId as AgentId]: updatedTarget } };
+        }
+      }
+    }
+  }
+
+  // Block
+  if (goal === "block") {
+    const cost = calcStaminaCost(goal, config);
+    agent.combat = { ...agent.combat, stamina: Math.max(0, agent.combat.stamina - cost) };
+  }
+
+  // Use estus: heal 60% max HP
+  if (goal === "use_estus") {
+    if (agent.inventory.estusCount > 0) {
+      const healAmount = Math.floor(agent.combat.maxHp * 0.6);
+      agent.combat = {
+        ...agent.combat,
+        hp: Math.min(agent.combat.maxHp, agent.combat.hp + healAmount),
+      };
+      agent.inventory = {
+        ...agent.inventory,
+        estusCount: agent.inventory.estusCount - 1,
+      };
+    }
+  }
+
+  // Pick up item: move from ground to backpack
+  if (goal === "pick_up_item" && action.targetId) {
+    const itemIdx = state.groundItems.findIndex(gi => gi.item.id === action.targetId);
+    if (itemIdx >= 0) {
+      const groundItem = state.groundItems[itemIdx];
+      agent.inventory = {
+        ...agent.inventory,
+        backpack: [...agent.inventory.backpack, groundItem.item],
+      };
+      const newGroundItems = state.groundItems.filter((_, i) => i !== itemIdx);
+      return { ...state, agents: { ...state.agents, [agentId]: agent }, groundItems: newGroundItems };
+    }
+  }
+
+  // Equip from backpack
+  if (goal === "equip_from_backpack" && action.targetId) {
+    const bpIdx = agent.inventory.backpack.findIndex(item => item.id === action.targetId);
+    if (bpIdx >= 0) {
+      const item = agent.inventory.backpack[bpIdx];
+      const slot = item.slot;
+      const newBackpack = agent.inventory.backpack.filter((_, i) => i !== bpIdx);
+      const oldEquipped = agent.inventory.equipped[slot];
+      const newEquipped = { ...agent.inventory.equipped, [slot]: item };
+      const finalBackpack = oldEquipped ? [...newBackpack, oldEquipped] : newBackpack;
+      agent.inventory = { ...agent.inventory, equipped: newEquipped, backpack: finalBackpack };
+    }
+  }
+
+  // Pass: no-op
+
+  return { ...state, agents };
+}
+
+/**
+ * Start the dungeon phase loop.
+ */
+export async function runDungeonPhase(initialState: GameState, config: GameConfig): Promise<GameState> {
+  resetEnemyAIState();
+
+  let state = deepClone(initialState);
+  let timer = config.dungeon_timer_seconds;
+  const roundInterval = config.round_interval_ms ?? ROUND_INTERVAL_MS;
+
+  return new Promise((resolve) => {
+    let roundLock = false;
+    let roundNumber = 0;
+
+    const interval = setInterval(async () => {
+      if (roundLock) return;
+      roundLock = true;
+      roundNumber++;
+
+      try {
+        // Re-read config to pick up patches
+        let liveConfig: GameConfig;
+        try { liveConfig = readConfig(); } catch { liveConfig = config; }
+
+        // Update FOV
+        state = updateFOV(state);
+
+        // Build agent payloads
+        const payloads = AGENT_IDS.map(id => {
+          const agent = state.agents[id];
+          if (!agent || agent.status === "eliminated") return null;
+          return { agentId: id, payload: toAgentPayload(state, id) };
+        });
+
+        // Fire agent decisions staggered
+        const actionPromises = payloads.map((p, i) =>
+          new Promise<{ agentId: AgentId; action: AgentAction }>(async (resolveAction) => {
+            if (!p) {
+              resolveAction({ agentId: AGENT_IDS[i], action: getFallbackAction(AGENT_IDS[i]) });
+              return;
+            }
+            await new Promise(r => setTimeout(r, i * AGENT_STAGGER_MS));
+            const timeout = liveConfig.agent_api_timeout_ms ?? AGENT_TIMEOUT_MS;
+            const action = await handleDecideRoute(p.agentId, p.payload, timeout);
+            resolveAction({ agentId: p.agentId, action });
+          })
+        );
+
+        const results = await Promise.all(actionPromises);
+        const actions: Record<AgentId, AgentAction> = {} as Record<AgentId, AgentAction>;
+        for (const r of results) { actions[r.agentId] = r.action; }
+
+        // Resolve conflicts
+        const resolved = resolveConflicts(actions);
+
+        // Apply agent actions
+        for (const [agentId, action] of Object.entries(resolved)) {
+          state = applyAgentAction(state, agentId as AgentId, action, liveConfig);
+        }
+
+        // Agent stamina regen
+        for (const id of AGENT_IDS) {
+          const agent = state.agents[id];
+          if (!agent || agent.status === "eliminated") continue;
+          const regenAmount = calcStaminaRegen(agent.combat, liveConfig);
+          agent.combat = {
+            ...agent.combat,
+            stamina: Math.min(agent.combat.maxStamina, agent.combat.stamina + regenAmount),
+          };
+        }
+
+        // Resolve enemy actions
+        const enemyActions = resolveEnemyActions(state);
+
+        // Apply enemy moves
+        const enemies = state.enemies.map(e => {
+          const ea = enemyActions.find(a => a.enemyId === e.id);
+          if (!ea || !e.isAlive) return e;
+          if (ea.action === "move" && ea.newPosition) {
+            return { ...e, position: { ...ea.newPosition } };
+          }
+          return e;
+        });
+
+        // Apply enemy attacks
+        const enemiesAfterAttacks = enemies.map(e => {
+          const ea = enemyActions.find(a => a.enemyId === e.id);
+          if (!ea || ea.action !== "attack" || !ea.targetAgentId || !e.isAlive) return e;
+          const target = state.agents[ea.targetAgentId];
+          if (!target || target.status === "eliminated") return e;
+          const atkResult = resolveEnemyAttack(e.tier, target.combat, target.inventory, false, liveConfig);
+          target.combat = { ...target.combat, hp: atkResult.defenderHpAfter };
+          if (target.combat.hp <= 0) target.status = "eliminated";
+          return e;
+        });
+
+        state = { ...state, enemies: enemiesAfterAttacks, roundNumber };
+
+        // Decrement timer
+        timer -= (roundInterval / 1000);
+        state = { ...state, dungeonTimer: Math.max(0, Math.ceil(timer)) };
+
+        // Broadcast and log ROUND_STATE
+        broadcast(state);
+        logEvent({
+          type: "ROUND_STATE",
+          timestamp: new Date().toISOString(),
+          round: roundNumber,
+          phase: state.phase,
+          data: {
+            agents: Object.fromEntries(
+              AGENT_IDS.map(id => [id, {
+                position: state.agents[id]?.position,
+                hp: state.agents[id]?.combat?.hp,
+                status: state.agents[id]?.status,
+              }])
+            ),
+            enemies: enemiesAfterAttacks.filter(e => e.isAlive).map(e => ({
+              id: e.id,
+              position: e.position,
+              hp: e.hp,
+              isAlive: e.isAlive,
+            })),
+          },
+        });
+
+        // Check timer
+        if (timer <= 0) {
+          clearInterval(interval);
+          const arenaState = await teleportToArena(state);
+          resolve(arenaState);
+        }
+      } catch (err) {
+        console.error(`[GameLoop] round ${roundNumber} error:`, err);
+      } finally {
+        roundLock = false;
+      }
+    }, roundInterval);
+  });
+}
+
+/**
+ * Teleport all agents from dungeon to arena.
+ */
+export async function teleportToArena(state: GameState): Promise<GameState> {
+  // Sort agents by dungeon score desc, tiebreaker: HP remaining desc
+  const ranked = (AGENT_IDS as AgentId[])
+    .filter(id => state.agents[id]?.status !== "eliminated")
+    .sort((a, b) => {
+      const sa = state.agents[a]?.dungeonScore ?? 0;
+      const sb = state.agents[b]?.dungeonScore ?? 0;
+      if (sb !== sa) return sb - sa;
+      return (state.agents[b]?.combat?.hp ?? 0) - (state.agents[a]?.combat?.hp ?? 0);
+    });
+
+  // Create arena matchups: seed1 vs seed4, seed2 vs seed3
+  const matchups: ArenaMatchup[] = [];
+  if (ranked.length >= 4) {
+    matchups.push({ agentA: ranked[0], agentB: ranked[3], turnCount: 0 });
+    matchups.push({ agentA: ranked[1], agentB: ranked[2], turnCount: 0 });
+  }
+
+  // Transition to ARENA_SEMI1
+  let newState = transitionPhase(state, "ARENA_SEMI1");
+  newState = { ...newState, arenaMatchups: matchups };
+
+  // Log teleport event
+  logEvent({
+    type: "PHASE_TRANSITION",
+    timestamp: new Date().toISOString(),
+    round: newState.roundNumber,
+    phase: "ARENA_SEMI1",
+    data: { from: "DUNGEON", to: "ARENA_SEMI1", seeds: ranked },
+  });
+
+  broadcast(newState);
+  return newState;
+}
+
+/**
+ * Run a single 1v1 arena match. Alternating turns.
+ */
+export async function runArenaMatch(
+  state: GameState,
+  config: GameConfig,
+  matchup: ArenaMatchup
+): Promise<AgentId> {
+  const turnCap = config.arena_turn_cap > 0 ? config.arena_turn_cap : 30;
+  let turnCount = 0;
+  let currentState = deepClone(state);
+
+  const aId = matchup.agentA;
+  const bId = matchup.agentB;
+
+  while (turnCount < turnCap) {
+    turnCount++;
+
+    // Agent A's turn
+    const aAgent = currentState.agents[aId];
+    if (aAgent && aAgent.status !== "eliminated" && aAgent.combat.hp > 0) {
+      const payload = toAgentPayload(currentState, aId);
+      const action = await handleDecideRoute(aId, payload, AGENT_TIMEOUT_MS);
+      currentState = applyAgentAction(currentState, aId, action, config);
+    }
+
+    // Check if B is dead
+    const bAfter = currentState.agents[bId];
+    if (bAfter && (bAfter.status === "eliminated" || bAfter.combat.hp <= 0)) {
+      return aId;
+    }
+
+    // Agent B's turn
+    const bAgent = currentState.agents[bId];
+    if (bAgent && bAgent.status !== "eliminated" && bAgent.combat.hp > 0) {
+      const payload = toAgentPayload(currentState, bId);
+      const action = await handleDecideRoute(bId, payload, AGENT_TIMEOUT_MS);
+      currentState = applyAgentAction(currentState, bId, action, config);
+    }
+
+    // Check if A is dead
+    const aAfter = currentState.agents[aId];
+    if (aAfter && (aAfter.status === "eliminated" || aAfter.combat.hp <= 0)) {
+      return bId;
+    }
+
+    // Stamina regen after both turns
+    for (const id of [aId, bId]) {
+      const agent = currentState.agents[id];
+      if (!agent || agent.status === "eliminated") continue;
+      const regenAmount = calcStaminaRegen(agent.combat, config);
+      agent.combat = {
+        ...agent.combat,
+        stamina: Math.min(agent.combat.maxStamina, agent.combat.stamina + regenAmount),
+      };
+    }
+
+    broadcast(currentState);
+  }
+
+  // Turn cap reached: higher HP% wins
+  const aHpPct = (currentState.agents[aId]?.combat?.hp ?? 0) / (currentState.agents[aId]?.combat?.maxHp ?? 1);
+  const bHpPct = (currentState.agents[bId]?.combat?.hp ?? 0) / (currentState.agents[bId]?.combat?.maxHp ?? 1);
+  return aHpPct >= bHpPct ? aId : bId;
 }

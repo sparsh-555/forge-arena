@@ -3,26 +3,6 @@
   "sprint": 2,
   "tasks": [
     {
-      "id": "S2-002",
-      "description": "Implement GameLoop.ts — the main game orchestration module. This is the most critical file in the codebase. runDungeonPhase(state, config): main dungeon round loop. Each round (every round_interval_ms=2000): 1) Read game-config.json (picks up patches). 2) Compute FOV for each active agent using rot.js (update tiles[y][x].visibleTo). 3) Fire all 4 POST /decide/:agentId calls in parallel staggered by 150ms each (0, 150, 300, 450ms). 4) Collect responses with 3s timeout. Timed-out agents get fallback { goal: 'pass' }. 5) resolveConflicts(actions) using CONFLICT_PRIORITY from types.ts — lower-priority conflicting action converts to pass. 6) applyAgentAction(state, agentId, action, config): execute the agent's action — move updates position (clamped to map, blocked by walls), attack triggers resolveCombat, pick_up_item adds to backpack, use_estus heals, equip_from_backpack swaps items. 7) resolveEnemyActions(state) via EnemyAI. 8) Apply enemy moves (update enemy.position from newPosition). 9) Apply enemy attacks via resolveEnemyAttack. 10) StateEmitter.broadcast() and logEvent() for ROUND_STATE. 11) Check dungeon timer expiry + grace periods. teleportToArena(state): compute dungeon scores, seed arena bracket, transition phase to ARENA_SEMI1. runArenaMatch(state, config, matchup): alternating turn combat between two agents, turn cap from config.arena_turn_cap (default 30, FAST_MODE 20). resolveConflicts(actions): per CONFLICT_PRIORITY, conflicting actions (same target) convert lower-priority to pass. transitionPhase(state, to): already implemented — reuse it. CRITICAL: call resetEnemyAIState() from EnemyAI at the start of runDungeonPhase (PITFALL 2). CRITICAL: arena_turn_cap must never be 0 — default to 30 (PITFALL 3). Use setInterval for round timing with proper cleanup. All functions use immutable state patterns — create new state objects, never mutate.",
-      "scope": [
-        "game-server/src/GameLoop.ts"
-      ],
-      "acceptance": "npm run build exits 0. runDungeonPhase processes rounds with 2s intervals. Agent actions are resolved per conflict priority. Enemy actions follow agent actions each round. ROUND_STATE events are logged each round. Dungeon timer expiry triggers teleportToArena. teleportToArena seeds arena bracket correctly (seed 1 vs 4, 2 vs 3). runArenaMatch resolves alternating turns with stamina/damage system. Turn cap enforced (no infinite arena matches). resetEnemyAIState called at dungeon phase start. No module-level state leaks. All round-lock invariants respected.",
-      "acceptance_criteria": [
-        "runDungeonPhase calls resetEnemyAIState before loop — grep GameLoop.ts for 'resetEnemyAIState'",
-        "AgentAPI callStagger 150ms between parallel calls — grep GameLoop.ts for '150' or 'stagger'",
-        "CONFLICT_PRIORITY imported and used in resolveConflicts — grep GameLoop.ts for 'CONFLICT_PRIORITY'",
-        "StateEmitter.broadcast called each round — grep GameLoop.ts for 'broadcast'",
-        "ROUND_STATE event logged each round — grep GameLoop.ts for 'ROUND_STATE'",
-        "arena_turn_cap default 30 enforced — grep GameLoop.ts for 'arena_turn_cap' and '30'",
-        "teleportToArena transitions DUNGEON→ARENA_SEMI1 — grep GameLoop.ts for 'ARENA_SEMI1'"
-      ],
-      "branch": "worker/S2-002-implement-game-loop",
-      "priority": 2,
-      "status": "pending"
-    },
-    {
       "id": "S2-003",
       "description": "Implement run-full-game.js — the headless game orchestration script. This is the entry point for acceptance testing and evaluator runs. Steps: 1) Load dotenv (import 'dotenv/config' or dotenv.config()). 2) Import generateDungeon and computeAgentSpawns/computeEnemySpawns/computeChestContents from DungeonGen. 3) Import runDungeonPhase, teleportToArena, runArenaMatch from GameLoop. 4) Import startServer, setGameState from server.ts. 5) Read game-config.json. 6) Call resetEnemyAIState() from EnemyAI. 7) Generate dungeon with a random seed. 8) Create initial GameState with 4 agents at spawn positions, enemies at spawn positions, ground items from chest contents. 9) Set initial agent states: starting_hp=150, starting_stamina=100, starting equipment per SPEC (aggressive=sword, cautious=dagger+leather_armor, hoarder=dagger, speedrunner=dagger), estusCount=3. 10) If --headless flag: skip server start, just run phases directly and print results. 11) If no --headless (live mode): start server (same process — PITFALL 1), set game state to play mode, run dungeon and arena phases. 12) After game ends: print GAME_COMPLETE to stdout with final scores per agent. Exit 0 on success. Support NO_API=true env var (skip real API calls, use getFallbackAction for all agent decisions). Support FAST_MODE=true (dungeon_timer=120 instead of 300, arena_turn_cap=20 instead of 30). Support --seed=N flag for deterministic runs.",
       "scope": [
@@ -61,6 +41,26 @@
       ],
       "branch": "worker/S2-001-agent-api-patch-applier",
       "priority": 1,
+      "status": "completed"
+    },
+    {
+      "id": "S2-002",
+      "description": "Implement GameLoop.ts — the main game orchestration module. This is the most critical file in the codebase. runDungeonPhase(state, config): main dungeon round loop. Each round (every round_interval_ms=2000): 1) Read game-config.json (picks up patches). 2) Compute FOV for each active agent using rot.js (update tiles[y][x].visibleTo). 3) Fire all 4 POST /decide/:agentId calls in parallel staggered by 150ms each (0, 150, 300, 450ms). 4) Collect responses with 3s timeout. Timed-out agents get fallback { goal: 'pass' }. 5) resolveConflicts(actions) using CONFLICT_PRIORITY from types.ts — lower-priority conflicting action converts to pass. 6) applyAgentAction(state, agentId, action, config): execute the agent's action — move updates position (clamped to map, blocked by walls), attack triggers resolveCombat, pick_up_item adds to backpack, use_estus heals, equip_from_backpack swaps items. 7) resolveEnemyActions(state) via EnemyAI. 8) Apply enemy moves (update enemy.position from newPosition). 9) Apply enemy attacks via resolveEnemyAttack. 10) StateEmitter.broadcast() and logEvent() for ROUND_STATE. 11) Check dungeon timer expiry + grace periods. teleportToArena(state): compute dungeon scores, seed arena bracket, transition phase to ARENA_SEMI1. runArenaMatch(state, config, matchup): alternating turn combat between two agents, turn cap from config.arena_turn_cap (default 30, FAST_MODE 20). resolveConflicts(actions): per CONFLICT_PRIORITY, conflicting actions (same target) convert lower-priority to pass. transitionPhase(state, to): already implemented — reuse it. CRITICAL: call resetEnemyAIState() from EnemyAI at the start of runDungeonPhase (PITFALL 2). CRITICAL: arena_turn_cap must never be 0 — default to 30 (PITFALL 3). Use setInterval for round timing with proper cleanup. All functions use immutable state patterns — create new state objects, never mutate.",
+      "scope": [
+        "game-server/src/GameLoop.ts"
+      ],
+      "acceptance": "npm run build exits 0. runDungeonPhase processes rounds with 2s intervals. Agent actions are resolved per conflict priority. Enemy actions follow agent actions each round. ROUND_STATE events are logged each round. Dungeon timer expiry triggers teleportToArena. teleportToArena seeds arena bracket correctly (seed 1 vs 4, 2 vs 3). runArenaMatch resolves alternating turns with stamina/damage system. Turn cap enforced (no infinite arena matches). resetEnemyAIState called at dungeon phase start. No module-level state leaks. All round-lock invariants respected.",
+      "acceptance_criteria": [
+        "runDungeonPhase calls resetEnemyAIState before loop — grep GameLoop.ts for 'resetEnemyAIState'",
+        "AgentAPI callStagger 150ms between parallel calls — grep GameLoop.ts for '150' or 'stagger'",
+        "CONFLICT_PRIORITY imported and used in resolveConflicts — grep GameLoop.ts for 'CONFLICT_PRIORITY'",
+        "StateEmitter.broadcast called each round — grep GameLoop.ts for 'broadcast'",
+        "ROUND_STATE event logged each round — grep GameLoop.ts for 'ROUND_STATE'",
+        "arena_turn_cap default 30 enforced — grep GameLoop.ts for 'arena_turn_cap' and '30'",
+        "teleportToArena transitions DUNGEON→ARENA_SEMI1 — grep GameLoop.ts for 'ARENA_SEMI1'"
+      ],
+      "branch": "worker/S2-002-implement-game-loop",
+      "priority": 2,
       "status": "completed"
     }
   ]
