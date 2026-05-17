@@ -26,6 +26,12 @@
         "command": "cd game-server && npm run build 2>&1",
         "expect": "exit 0",
         "enforcement": "block"
+      },
+      {
+        "command": "grep -rn 'TODO\\|FIXME\\|not implemented\\|placeholder' <files_owned>",
+        "expect": "exit 1 (grep exits 1 when no matches found — any match means a stub was left in)",
+        "enforcement": "block",
+        "note": "Replace <files_owned> with the space-separated list of files from the task's scope field."
       }
     ],
     "conditional_checks": [
