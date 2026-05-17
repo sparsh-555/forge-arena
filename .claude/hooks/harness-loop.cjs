@@ -26,8 +26,16 @@ function readJSON(file) {
 const health = readJSON(BUILD_HEALTH);
 const tasks  = readJSON(TASKS_FILE);
 
-// Done — allow Claude to stop
+// Converged — transition to Evolution Mode (live game master), do not stop
 if (health && health.converged === true) {
+  const reason =
+    `HARNESS LOOP — build converged (grade A/B). Now entering Evolution Mode. ` +
+    `Read skills/evaluator.md. Watch state/game-events.jsonl for live game state. ` +
+    `When you detect imbalance (one agent dominating, patch_trigger_kill_ratio exceeded, arena damage skewed), ` +
+    `invoke Balance Worker (skills/balance-worker.md) to emit a patch suggestion to state/patch-queue.jsonl. ` +
+    `The game loop will apply it automatically. Continue watching and patching indefinitely — ` +
+    `you are now the live game master. Do NOT set converged back to false.`;
+  console.log(JSON.stringify({ decision: 'block', reason }));
   process.exit(0);
 }
 
