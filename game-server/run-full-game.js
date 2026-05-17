@@ -36,6 +36,7 @@ const replayMode = args.includes("--replay");
 const seedArg = args.find(a => a.startsWith("--seed="));
 let seed = seedArg ? parseInt(seedArg.split("=")[1], 10) : Math.floor(Math.random() * 1000000);
 const fastMode = process.env.FAST_MODE === "true";
+const demoMode = process.env.DEMO_MODE === "true";
 const noApi = process.env.NO_API === "true";
 
 // Item factory — create Item objects from item name strings
@@ -113,6 +114,14 @@ async function main() {
     config.arena_turn_cap = 20;
     config.round_interval_ms = 500;
     config.agent_api_timeout_ms = 3500;
+  }
+
+  // Demo mode: tuned for live API speed — short dungeon, fast rounds, reasonable timeouts
+  if (demoMode) {
+    config.dungeon_timer_seconds = 90;
+    config.arena_turn_cap = 15;
+    config.round_interval_ms = 300;
+    config.agent_api_timeout_ms = 8000;
   }
 
   // Replay mode: load pre-recorded actions, use recording's seed, fast rounds
@@ -209,7 +218,7 @@ async function main() {
     await startServer();
     setGameState(state);
     console.log(`[run-full-game] Live server started on http://localhost:3000`);
-    console.log(`[run-full-game] Seed: ${seed}, FAST_MODE: ${fastMode}, NO_API: ${noApi}`);
+    console.log(`[run-full-game] Seed: ${seed}, DEMO_MODE: ${demoMode}, FAST_MODE: ${fastMode}, NO_API: ${noApi}`);
   }
 
   try {
@@ -242,7 +251,6 @@ async function main() {
 
     // Run arena matches
     const matchups = state.arenaMatchups;
-    console.error(`[run-full-game] arena debug: matchups=${matchups.length}, phase=${state.phase}, survivors:`, Object.fromEntries(AGENT_IDS.map(id => [id, state.agents[id]?.status])));
     let finalScores = {};
     let winner = null;
     let arenaBonuses = {};
