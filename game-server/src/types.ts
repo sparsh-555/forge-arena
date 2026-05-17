@@ -294,6 +294,7 @@ export interface GameState {
   arenaMatchups: ArenaMatchup[];
   finalScores: Partial<Record<AgentId, number>>;
   seed: number; // dungeon generation seed for replay
+  arenaActiveTurn?: AgentId | null; // which agent is currently deciding in arena
 }
 
 // ─── Serialization Contracts ──────────────────────────────────────────────────
@@ -335,6 +336,7 @@ export interface DashboardPayload {
   recentPatches: PatchEvent[];
   arenaMatchups: ArenaMatchup[];
   finalScores: Partial<Record<AgentId, number>>;
+  arenaActiveTurn: AgentId | null;
   dungeonTimer: number;
   // Tiles: send full map for dashboard rendering
   tiles: Tile[][];

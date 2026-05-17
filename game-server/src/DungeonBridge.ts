@@ -185,6 +185,7 @@ export function toDashboardPayload(state: GameState): DashboardPayload {
     recentPatches: state.recentPatches,
     arenaMatchups: state.arenaMatchups,
     finalScores: state.finalScores,
+    arenaActiveTurn: state.arenaActiveTurn ?? null,
     dungeonTimer: state.dungeonTimer,
     tiles: state.map.tiles,
     mapWidth: state.map.width,

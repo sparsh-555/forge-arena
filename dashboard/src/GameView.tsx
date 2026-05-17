@@ -65,6 +65,7 @@ interface DashboardPayload {
   recentPatches: Array<{ key: string; oldValue?: number; newValue: number; reason: string; timestamp?: string }>;
   arenaMatchups?: Array<{ agentA: string; agentB: string; turnCount?: number; winner?: string }>;
   finalScores?: Partial<Record<AgentId, number>>;
+  arenaActiveTurn?: string | null;
 }
 
 interface PatchEvent {
@@ -593,10 +594,10 @@ function ArenaView({ payload, agents }: { payload: DashboardPayload; agents: Rec
   const agentA = currentMatchup ? agents?.[currentMatchup.agentA as AgentId] : undefined;
   const agentB = currentMatchup ? agents?.[currentMatchup.agentB as AgentId] : undefined;
 
-  // Determine whose turn it is (fresh reasoning = just acted)
-  const aReasoning = agentA?.lastReasoning?.replace(/^\[fallback\]\s*/i, "") ?? "";
-  const bReasoning = agentB?.lastReasoning?.replace(/^\[fallback\]\s*/i, "") ?? "";
-  const activeSide = isEnded ? null : aReasoning && (!bReasoning || aReasoning.length >= bReasoning.length) ? "a" : "b";
+  // Determine whose turn it is from server-authoritative arenaActiveTurn
+  const activeSide = isEnded || !payload.arenaActiveTurn
+    ? null
+    : payload.arenaActiveTurn === currentMatchup?.agentA ? "a" : "b";
 
   const AgBattleCard = ({ id, agent, isActive }: { id: AgentId; agent: AgentState | undefined; isActive: boolean }) => {
     const hpRatio = agent ? agent.combat.hp / agent.combat.maxHp : 0;

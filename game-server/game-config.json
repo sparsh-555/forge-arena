@@ -11,7 +11,7 @@
     "grunt_hp": 30,
     "grunt_damage": 8,
     "brute_hp": 70,
-    "brute_damage": 18,
+    "brute_damage": 10,
     "sentinel_hp": 120,
     "sentinel_damage": 12,
     "hex_caster_hp": 50,
@@ -30,7 +30,7 @@
     "estus_count": 3
   },
   "balance": {
-    "max_patches_per_phase": 3,
+    "max_patches_per_phase": 6,
     "patch_trigger_kill_ratio": 0.5,
     "arena_win_bonus": 15,
     "arena_runnerup_bonus": 5
