@@ -13,15 +13,31 @@
     "brute_hp": 70,
     "brute_damage": 18,
     "sentinel_hp": 120,
-    "sentinel_damage": 12
+    "sentinel_damage": 12,
+    "hex_caster_hp": 50,
+    "hex_caster_damage": 14,
+    "shade_hp": 25,
+    "shade_damage": 10
   },
   "boss": {
     "boss_hp": 300,
     "boss_phase2_threshold": 0.5
   },
+  "agents": {
+    "starting_hp": 150,
+    "starting_stamina": 100,
+    "estus_heal_fraction": 0.6,
+    "estus_count": 3
+  },
+  "balance": {
+    "max_patches_per_phase": 3,
+    "patch_trigger_kill_ratio": 0.5,
+    "arena_win_bonus": 15,
+    "arena_runnerup_bonus": 5
+  },
   "dungeon_timer_seconds": 300,
   "boss_grace_seconds": 60,
-  "arena_turn_cap": 0,
+  "arena_turn_cap": 30,
   "fov_radius": 6,
   "round_interval_ms": 2000,
   "agent_api_timeout_ms": 3000,

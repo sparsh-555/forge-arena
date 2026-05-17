@@ -7,6 +7,7 @@
 
 import express from "express";
 import { createServer } from "http";
+import { readFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { WebSocketServer } from "ws";
@@ -22,6 +23,8 @@ const HARNESS_EVENTS_LOG = path.join(STATE_DIR, "harness-events.jsonl");
 const BUILD_HEALTH_FILE = path.join(STATE_DIR, "build-health.json");
 const TASKS_FILE = path.join(STATE_DIR, "tasks.json");
 const DASHBOARD_DIST = path.join(__dirname, "../../dashboard/dist");
+// game-server/public/ holds all PNG sprites — __dirname is game-server/dist/ at runtime
+const PUBLIC_DIR = path.join(__dirname, "../public");
 
 // Current game state — set by GameLoop when game starts.
 // null during build phase (server shows build health view).
@@ -35,7 +38,10 @@ export function createApp(): express.Application {
   const app = express();
   app.use(express.json());
 
-  // Serve compiled dashboard static files
+  // Serve sprite assets (/assets/agents/, /assets/enemies/, /assets/tiles/)
+  // MUST come before dashboard static so /assets/ requests resolve to PNGs, not JS bundles
+  app.use(express.static(PUBLIC_DIR));
+  // Serve compiled dashboard (index.html, JS bundle, CSS)
   app.use(express.static(DASHBOARD_DIST));
 
   // ── Build Phase: SSE harness events ─────────────────────────────────────────

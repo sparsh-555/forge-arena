@@ -161,13 +161,15 @@ game-server/src/
 
 ### Enemies
 
-| Type | HP | Damage | Behavior | Dungeon Points |
-|---|---|---|---|---|
-| Grunt | 30 | 8 | Move toward nearest agent, attack if adjacent | 1 |
-| Brute | 70 | 18 | Move toward nearest agent, telegraphs heavy strike 1 turn ahead | 2 |
-| Sentinel | 120 | 12 | Blocks every 3rd turn, summons Grunt at 30% HP | 3 |
+| Type | HP | Damage | Behavior | Spawn Location | Dungeon Points |
+|---|---|---|---|---|---|
+| Grunt | 30 | 8 | Move toward nearest agent, attack if adjacent | All rooms | 1 |
+| Brute | 70 | 18 | Move toward nearest agent, telegraphs heavy strike 1 turn ahead | Medium/large rooms | 2 |
+| Sentinel | 120 | 12 | Blocks every 3rd turn, summons Grunt at 30% HP | Large rooms | 3 |
+| Hex Caster | 50 | 14 | Stays at range 3–4 tiles, ranged hex attack (bypasses armor reduction) | Large rooms (>50 tiles), alongside Sentinel (50/50 split) | 2 |
+| Shade | 25 | 10 | Ambushes from unexplored corridors; 50% miss chance on first strike only | Corridors and unexplored tiles | 1 |
 
-Enemy stats are initial values from game-config.json. Live patches may modify them during play.
+Enemy stats are initial values from game-config.json. Live patches may modify grunt/brute/sentinel/hex_caster/shade stats during play.
 
 ### Boss Encounter
 
@@ -217,7 +219,7 @@ When dungeon timer fires (plus any active grace periods):
 - **Seeding**: Seed 1 (highest dungeon score) vs Seed 4. Seed 2 vs Seed 3.
 - **Combat**: Alternating turns (Agent A acts, Agent B acts, repeat). Same stamina/damage system.
 - **Heals**: Estus locked. No healing mid-fight.
-- **Turn cap**: Unlimited in full mode. `FAST_MODE=true` → 20 turns max; higher HP% wins.
+- **Turn cap**: 30 turns in full mode, 20 turns in `FAST_MODE=true`; higher HP% wins. (`arena_turn_cap: 0` in game-config is a bug — default must be 30.)
 - **Win condition**: Opponent reaches 0 HP. Or turn cap exceeded (higher HP% wins).
 - **Eliminated agents**: Stop receiving API calls. Dashboard shows portrait greyed with "ELIMINATED".
 - **Arena patching**: Harness continues patching between turns mid-match. Agents see patches in their payload.
@@ -244,6 +246,46 @@ Leaderboard shown on dashboard throughout. Updates after each dungeon round and 
 - **Dungeon patches**: enemy stat adjustments + new enemy/item spawns in unexplored tiles.
 - **Arena patches**: stamina costs, damage multipliers, equipment load thresholds.
 - Dashboard PATCH FEED shows each patch with metric and reason.
+
+### Configuration Keys (game-config.json)
+
+All patchable values live in `game-config.json`. Workers must read from config — never hardcode these values.
+
+| Key | Default | Patchable | Notes |
+|---|---|---|---|
+| `stamina.heavy_attack_cost` | 30 | Yes | |
+| `stamina.medium_attack_cost` | 20 | Yes | |
+| `stamina.light_attack_cost` | 10 | Yes | |
+| `stamina.block_cost` | 15 | Yes | |
+| `stamina.base_regen_per_turn` | 20 | Yes | |
+| `enemies.grunt_hp` | 30 | Yes | |
+| `enemies.grunt_damage` | 8 | Yes | |
+| `enemies.brute_hp` | 70 | Yes | |
+| `enemies.brute_damage` | 18 | Yes | |
+| `enemies.sentinel_hp` | 120 | Yes | |
+| `enemies.sentinel_damage` | 12 | Yes | |
+| `enemies.hex_caster_hp` | 50 | Yes | |
+| `enemies.hex_caster_damage` | 14 | Yes | |
+| `enemies.shade_hp` | 25 | Yes | |
+| `enemies.shade_damage` | 10 | Yes | |
+| `boss.boss_hp` | 300 | No | |
+| `boss.boss_phase2_threshold` | 0.5 | No | |
+| `agents.starting_hp` | 150 | No | |
+| `agents.starting_stamina` | 100 | No | |
+| `agents.estus_heal_fraction` | 0.6 | No | Fraction of maxHp restored per charge |
+| `agents.estus_count` | 3 | No | Charges per agent |
+| `balance.max_patches_per_phase` | 3 | No | |
+| `balance.patch_trigger_kill_ratio` | 0.5 | No | Kill share threshold to trigger patch |
+| `balance.arena_win_bonus` | 15 | No | Score points for arena winner |
+| `balance.arena_runnerup_bonus` | 5 | No | Score points for arena runner-up |
+| `arena_turn_cap` | 30 | No | Max arena turns (FAST_MODE: 20) |
+| `dungeon_timer_seconds` | 300 | No | FAST_MODE: 120 |
+| `fov_radius` | 6 | No | |
+| `round_interval_ms` | 2000 | No | |
+
+`game-config.baseline.json` holds the read-only defaults. PatchApplier rejects values outside ±30% of baseline.
+
+---
 
 ## Dependency Philosophy
 
@@ -279,12 +321,14 @@ Each personality is a CLAUDE.md file at `personalities/{agentId}/CLAUDE.md`. The
 
 ### Personality Archetypes
 
-| Agent | Core Drive | Item Priority | Combat | Exploration |
-|---|---|---|---|---|
-| aggressive | Maximize damage output at all costs | Highest base damage weapon always. Ignore armor/shield. | Heavy attacks. Never block. Heal only < 20% HP. | Prioritize enemies over items. Engage everything. |
-| cautious | Survive longest, outlast opponents | Max armor first, then shield, then weapon. | Block often. Medium attacks. Heal at < 50% HP. | Clear rooms methodically. Avoid risk. |
-| hoarder | Collect everything, adapt in arena | Collect all items regardless of type. Use backpack swap strategy in arena. | Balanced approach, adapt to opponent gear. | Full map sweep. Never skip a chest. |
-| speedrunner | Race to boss, ignore everything else | Take first weapon found, nothing else. | Light attacks to save stamina for movement. Skip enemies unless blocking path. |
+| Agent | Starting Equipment | Core Drive | Item Priority | Combat | Exploration |
+|---|---|---|---|---|---|
+| aggressive | sword (baseDamage 15) | Maximize damage output at all costs | Highest base damage weapon always. Ignore armor/shield. | Heavy attacks. Never block. Heal only < 20% HP. | Prioritize enemies over items. Engage everything. |
+| cautious | dagger (baseDamage 8) + leather_armor (armorReduction 0.15) | Survive longest, outlast opponents | Max armor first, then shield, then weapon. | Block often. Medium attacks. Heal at < 50% HP. | Clear rooms methodically. Avoid risk. |
+| hoarder | dagger (baseDamage 8) | Collect everything, adapt in arena | Collect all items regardless of type. Use backpack swap strategy in arena. | Balanced approach, adapt to opponent gear. | Full map sweep. Never skip a chest. |
+| speedrunner | dagger (baseDamage 8) | Race to boss, ignore everything else | Take first weapon found, nothing else. | Light attacks to save stamina for movement. Skip enemies unless blocking path. |
+
+**Starting weapon constraint:** Valid weapon names are `sword`, `axe`, `dagger`, `greatsword` only. `greatsword` is chest loot only — never a starting weapon (one-shots grunts, breaks early balance). Starting equipment is fixed per personality; workers must not change these.
 
 ## Scope Model
 

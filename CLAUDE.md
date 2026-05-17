@@ -18,6 +18,7 @@ Invoke these by reading the corresponding skill file:
 | Session start or after reconciler | Planner | `skills/planner.md` |
 | Planner emits a complex task | Subplanner | `skills/subplanner.md` |
 | Task is small enough (1–3 files) | Worker | `skills/worker.md` |
+| All sprint tasks complete, before reconciler | Verifier | `skills/verifier.md` |
 | Every 3 completed tasks or any failure | Reconciler | `skills/reconciler.md` |
 | Build is green, run headless test | Evaluator | `skills/evaluator.md` |
 | Evaluator issues patch suggestion | Balance Worker | `skills/balance-worker.md` |
@@ -71,7 +72,7 @@ Never accumulate more than one sprint of uncommitted work. If the process is int
 
 The harness converges when the Evaluator grades the headless run A or B for two consecutive reconciler cycles.
 
-After convergence: transition to Evolution Mode. Invoke Evaluator continuously to watch live game-events.jsonl and emit patch suggestions. The harness becomes the game master.
+After convergence: read skills/evaluator.md and follow the Evolution Mode section.
 
 ## Mechanical Verification
 

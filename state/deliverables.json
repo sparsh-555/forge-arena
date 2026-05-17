@@ -1,0 +1,99 @@
+{
+  "_schema": "Per-stage deliverable requirements. Read by skills/verifier.md to know what to check.",
+  "_note": "Verifier reads this file and runs each stage's checks against fresh evidence.",
+
+  "worker": {
+    "description": "Code implementation task — any task dispatched to a Worker subagent.",
+    "required_state_updates": [
+      {
+        "file": "state/tasks.json",
+        "check": "completed task array contains this task id",
+        "enforcement": "block — task must be marked completed before handoff"
+      },
+      {
+        "file": "state/harness-events.jsonl",
+        "check": "TASK_COMPLETED event appended with matching task id",
+        "enforcement": "block"
+      }
+    ],
+    "required_build_checks": [
+      {
+        "command": "cd game-server && npx tsc --noEmit 2>&1",
+        "expect": "exit 0, output contains no 'error TS'",
+        "enforcement": "block"
+      },
+      {
+        "command": "cd game-server && npm run build 2>&1",
+        "expect": "exit 0",
+        "enforcement": "block"
+      }
+    ],
+    "conditional_checks": [
+      {
+        "when": "task scope includes server.ts, GameLoop.ts, run-full-game.js, or dashboard/src/",
+        "description": "Live server endpoint check — verifies browser would actually load",
+        "commands": [
+          "node dist/server.js & SERVER_PID=$!; sleep 3",
+          "curl -s -o /dev/null -w 'dashboard: %{http_code}\\n' http://localhost:3000",
+          "curl -s -o /dev/null -w 'agent sprite: %{http_code}\\n' http://localhost:3000/assets/agents/aggressive.png",
+          "curl -s -o /dev/null -w 'tile sprite: %{http_code}\\n' http://localhost:3000/assets/tiles/floor.png",
+          "curl -s -o /dev/null -w 'game-state: %{http_code}\\n' http://localhost:3000/api/game-state",
+          "curl -s -o /dev/null -w 'build-health: %{http_code}\\n' http://localhost:3000/api/build-health",
+          "kill $SERVER_PID 2>/dev/null; wait $SERVER_PID 2>/dev/null"
+        ],
+        "expect": "all five curl lines return 200",
+        "enforcement": "block"
+      }
+    ]
+  },
+
+  "reconciler": {
+    "description": "Build fix task — run after sprint with failing build.",
+    "required_state_updates": [
+      {
+        "file": "state/build-health.json",
+        "check": "grade is not null, last_run is a recent timestamp",
+        "enforcement": "block"
+      }
+    ],
+    "required_build_checks": [
+      {
+        "command": "cd game-server && npx tsc --noEmit 2>&1",
+        "expect": "exit 0",
+        "enforcement": "block"
+      },
+      {
+        "command": "cd game-server && npm run build 2>&1",
+        "expect": "exit 0",
+        "enforcement": "block"
+      }
+    ]
+  },
+
+  "evaluator": {
+    "description": "Evaluation run — three phases, writes grade to build-health.json.",
+    "required_state_updates": [
+      {
+        "file": "state/build-health.json",
+        "check": "grade is A, B, C, D, or F (not null); last_run is recent; history array has new entry",
+        "enforcement": "block"
+      },
+      {
+        "file": "state/harness-events.jsonl",
+        "check": "BUILD_HEALTH event appended",
+        "enforcement": "block"
+      }
+    ]
+  },
+
+  "planner": {
+    "description": "Sprint planning — emits tasks to state/tasks.json.",
+    "required_state_updates": [
+      {
+        "file": "state/tasks.json",
+        "check": "tasks array contains at least 3 items with id, description, priority, and status fields",
+        "enforcement": "block"
+      }
+    ]
+  }
+}

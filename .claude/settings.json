@@ -12,6 +12,30 @@
     ]
   },
   "hooks": {
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /Users/sparshjain/Documents/GitHub/forge-arena/.claude/hooks/subagent-verify.cjs",
+            "timeout": 35
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /Users/sparshjain/Documents/GitHub/forge-arena/.claude/hooks/post-tool-guard.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",
@@ -19,6 +43,11 @@
           {
             "type": "command",
             "command": "node /Users/sparshjain/Documents/GitHub/forge-arena/.claude/hooks/harness-loop.cjs"
+          },
+          {
+            "type": "command",
+            "command": "node /Users/sparshjain/Documents/GitHub/forge-arena/.claude/hooks/context-guard.cjs",
+            "timeout": 5
           }
         ]
       }

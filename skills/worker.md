@@ -36,6 +36,8 @@ If you've drifted, stop and course-correct before writing more code. Scope creep
 - If anything fails, fix it and re-verify. Up to 3 full fix cycles.
 - After verification passes, check for related issues: broken imports in other files referencing your changes, type mismatches at call sites, similar bugs in adjacent code.
 
+**After completing any task, check `state/deliverables.json` for verification requirements that apply to your task type.** For tasks that touch server, game loop, or dashboard files, the deliverables schema includes a live endpoint check — run it. Every listed curl must return 200. The Evaluator runs the same check and will grade D if any asset or endpoint fails.
+
 ### 4. Commit and Handoff
 - Commit all work to your branch.
 - Write a thorough handoff.
