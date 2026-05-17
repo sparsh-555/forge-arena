@@ -443,7 +443,23 @@ export default function GameView() {
       ws = new WebSocket(`ws://${location.host}/ws/game`);
       ws.onmessage = (e) => {
         try {
-          const payload: DashboardPayload = JSON.parse(e.data);
+          const msg = JSON.parse(e.data);
+
+          // Discrete PATCH_EVENT broadcast from broadcastPatch()
+          if (msg.type === "PATCH_EVENT" && msg.patch) {
+            const p = msg.patch as PatchEvent;
+            const patch: PatchEvent = { ...p, timestamp: p.timestamp ?? new Date().toISOString() };
+            setPatches(prev => {
+              if (prev.some(x => x.timestamp === patch.timestamp)) return prev;
+              return [patch, ...prev].slice(0, 10);
+            });
+            setNewPatchId(patch.timestamp);
+            setTimeout(() => setNewPatchId(null), 2500);
+            return;
+          }
+
+          // Full DashboardPayload snapshot (regular broadcast)
+          const payload = msg as DashboardPayload;
           sceneRef.current?.applyPayload(payload);
           // Merge recentPatches from WS snapshot into the patch feed
           if (payload.recentPatches?.length) {
