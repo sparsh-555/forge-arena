@@ -1,0 +1,16 @@
+{
+  "_comment": "Harness configuration. Read by hooks — update these paths when adapting to a new project.",
+  "typescript_check": {
+    "enabled": true,
+    "path": "game-server",
+    "command": "npx tsc --noEmit 2>&1",
+    "fail_pattern": "error TS",
+    "timeout_ms": 30000
+  },
+  "build": {
+    "path": "game-server",
+    "command": "npm run build 2>&1"
+  },
+  "state_dir": "state",
+  "skills_dir": "skills"
+}

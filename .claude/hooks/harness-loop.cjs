@@ -35,7 +35,7 @@ const tasks  = readJSON(TASKS_FILE);
 
 // Converged — hand off to evaluator's Evolution Mode, do not stop
 if (health && health.converged === true) {
-  appendHarnessEvent({ type: 'EVOLUTION_MODE_START', grade: health.grade });
+  appendHarnessEvent({ type: 'CONVERGED', grade: health.grade });
   const reason =
     `HARNESS LOOP — build converged (grade A/B). Entering Evolution Mode. ` +
     `Read skills/evaluator.md and follow the "Evolution Mode" section exactly. ` +
