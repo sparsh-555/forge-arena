@@ -65,6 +65,7 @@ interface DashboardPayload {
   mapWidth: number;
   mapHeight: number;
   recentPatches: Array<{ key: string; oldValue?: number; newValue: number; reason: string; timestamp?: string }>;
+  finalScores?: Partial<Record<AgentId, number>>;
 }
 
 interface PatchEvent {
@@ -88,6 +89,9 @@ class DungeonScene extends Phaser.Scene {
   private bossSprites: Map<string, Phaser.GameObjects.Image> = new Map();
   private bossHpBars: Map<string, { bg: Phaser.GameObjects.Rectangle; fill: Phaser.GameObjects.Rectangle }> = new Map();
   private initialized = false;
+  // Queue payloads that arrive before preload() finishes to avoid missing-texture frames
+  private sceneReady = false;
+  private pendingPayload: DashboardPayload | null = null;
   public onPayload?: (payload: DashboardPayload) => void;
 
   constructor() {
@@ -118,9 +122,20 @@ class DungeonScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.setBackgroundColor("#111111");
+    this.sceneReady = true;
+    // Drain any payload that arrived while textures were still loading
+    if (this.pendingPayload) {
+      this.applyPayload(this.pendingPayload);
+      this.pendingPayload = null;
+    }
   }
 
   applyPayload(payload: DashboardPayload) {
+    // Buffer until preload is done — prevents missing-texture placeholders
+    if (!this.sceneReady) {
+      this.pendingPayload = payload;
+      return;
+    }
     if (payload.tiles && payload.mapWidth && payload.mapHeight) {
       this.updateMap(payload.tiles, payload.mapWidth, payload.mapHeight);
       if (!this.initialized) {
@@ -160,22 +175,23 @@ class DungeonScene extends Phaser.Scene {
     }
   }
 
-  private updateAgents(agents: Record<AgentId, AgentState>, phase: string) {
+  private updateAgents(agents: Record<AgentId, AgentState>, _phase: string) {
     for (const id of AGENT_IDS) {
       const agent = agents[id];
       if (!agent) continue;
       const px = agent.position.x * TILE_SIZE + TILE_SIZE / 2;
       const py = agent.position.y * TILE_SIZE + TILE_SIZE / 2;
 
-      // Sprite
+      // Sprite — always refresh texture in case it loaded after sprite was created
+      const texKey = this.textures.exists(id) ? id : "floor";
       if (!this.agentSprites.has(id)) {
-        const sprite = this.add.image(px, py, id).setDisplaySize(TILE_SIZE - 4, TILE_SIZE - 4).setDepth(10);
+        const sprite = this.add.image(px, py, texKey).setDisplaySize(TILE_SIZE - 4, TILE_SIZE - 4).setDepth(10);
         this.agentSprites.set(id, sprite);
       }
       const sprite = this.agentSprites.get(id)!;
+      if (sprite.texture.key !== texKey) sprite.setTexture(texKey);
       sprite.setPosition(px, py);
       sprite.setAlpha(agent.status === "eliminated" ? 0.3 : 1.0);
-      if (phase.startsWith("ARENA")) sprite.setTexture(id);
 
       // HP bar above sprite
       const barW = TILE_SIZE - 4;
@@ -205,11 +221,13 @@ class DungeonScene extends Phaser.Scene {
       seen.add(e.id);
       const px = e.position.x * TILE_SIZE + TILE_SIZE / 2;
       const py = e.position.y * TILE_SIZE + TILE_SIZE / 2;
+      const enemyTexKey = this.textures.exists(e.tier) ? e.tier : "floor";
       if (!this.enemySprites.has(e.id)) {
-        const sprite = this.add.image(px, py, e.tier).setDisplaySize(TILE_SIZE - 8, TILE_SIZE - 8).setDepth(8);
+        const sprite = this.add.image(px, py, enemyTexKey).setDisplaySize(TILE_SIZE - 8, TILE_SIZE - 8).setDepth(8);
         this.enemySprites.set(e.id, sprite);
       }
       const sprite = this.enemySprites.get(e.id)!;
+      if (sprite.texture.key !== enemyTexKey) sprite.setTexture(enemyTexKey);
       sprite.setPosition(px, py).setVisible(true);
 
       // Enemy HP bar
@@ -376,17 +394,18 @@ function PatchCard({ patch, isNew }: { patch: PatchEvent; isNew: boolean }) {
   );
 }
 
-// ── Kill bar ─────────────────────────────────────────────────────────────────
+// ── Score bar ─────────────────────────────────────────────────────────────────
 
-function KillBar({ id, kills, maxKills }: { id: AgentId; kills: number; maxKills: number }) {
-  const ratio = maxKills > 0 ? kills / maxKills : 0;
+function ScoreBar({ id, score, maxScore, status }: { id: AgentId; score: number; maxScore: number; status?: string }) {
+  const ratio = maxScore > 0 ? score / maxScore : 0;
+  const eliminated = status === "eliminated";
   return (
-    <div className="flex items-center gap-1">
+    <div className={`flex items-center gap-1 ${eliminated ? "opacity-40" : ""}`}>
       <span className={`text-[10px] w-20 truncate ${AGENT_TEXT_COLORS[id]}`}>{id}</span>
       <div className="flex-1 h-1.5 bg-forge-border rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all" style={{ width: `${ratio * 100}%`, backgroundColor: AGENT_COLORS[id] }} />
       </div>
-      <span className="text-[10px] text-forge-dim w-4 text-right">{kills}</span>
+      <span className="text-[10px] text-forge-dim w-6 text-right">{score}</span>
     </div>
   );
 }
@@ -401,20 +420,15 @@ export default function GameView() {
   const [gamePayload, setGamePayload] = useState<DashboardPayload | null>(null);
   const [patches, setPatches] = useState<PatchEvent[]>([]);
   const [newPatchId, setNewPatchId] = useState<string | null>(null);
-  const [phase, setPhase] = useState("DUNGEON");
-  const [timerDisplay, setTimerDisplay] = useState("—");
 
-  // Timer display
-  useEffect(() => {
-    if (!gamePayload) return;
-    const t = gamePayload.dungeonTimer;
-    setPhase(gamePayload.phase);
-    if (typeof t === "number") {
-      const m = Math.floor(t / 60);
-      const s = Math.floor(t % 60);
-      setTimerDisplay(`${m}:${s.toString().padStart(2, "0")}`);
-    }
-  }, [gamePayload]);
+  // Derived display values
+  const timerDisplay = (() => {
+    const t = gamePayload?.dungeonTimer;
+    if (typeof t !== "number") return "—";
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  })();
 
   // Phaser init
   useEffect(() => {
@@ -511,11 +525,14 @@ export default function GameView() {
   }, []);
 
   const agents = gamePayload?.agents;
-  const killCounts = AGENT_IDS.map(id => {
-    const k = agents?.[id]?.kills;
-    return k ? k.grunt + k.brute + k.sentinel : 0;
+  const phase = gamePayload?.phase ?? "DUNGEON";
+  const isEnded = phase === "ENDED";
+  // Show finalScores in ENDED phase, otherwise show live dungeonScore
+  const scores = AGENT_IDS.map(id => {
+    if (isEnded) return gamePayload?.finalScores?.[id] ?? 0;
+    return agents?.[id]?.dungeonScore ?? 0;
   });
-  const maxKills = Math.max(...killCounts, 1);
+  const maxScore = Math.max(...scores, 1);
 
   return (
     <div className="flex h-[calc(100vh-41px)] gap-2 p-2">
@@ -542,11 +559,13 @@ export default function GameView() {
       <div className="w-60 bg-forge-panel border border-forge-border rounded p-2 flex flex-col gap-2 overflow-hidden">
         <div className="text-xs font-bold uppercase text-forge-accent">⚡ Hand of God</div>
 
-        {/* Kill balance */}
+        {/* Scorecard */}
         <div className="flex flex-col gap-1">
-          <div className="text-[10px] text-forge-dim uppercase tracking-wide">Kill Balance</div>
+          <div className="text-[10px] text-forge-dim uppercase tracking-wide">
+            {isEnded ? "Final Score" : "Score"}
+          </div>
           {AGENT_IDS.map((id, i) => (
-            <KillBar key={id} id={id} kills={killCounts[i]} maxKills={maxKills} />
+            <ScoreBar key={id} id={id} score={scores[i]} maxScore={maxScore} status={agents?.[id]?.status} />
           ))}
         </div>
 

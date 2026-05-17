@@ -271,6 +271,12 @@ export function applyAgentAction(
           config
         );
         agent.combat = { ...agent.combat, stamina: result.attackerStaminaAfter };
+        // Track kill if enemy died
+        if (result.defenderHpAfter <= 0) {
+          const t = targetEnemy.tier;
+          const key = t === "grunt" ? "grunt" : t === "brute" ? "brute" : "sentinel";
+          agent.kills = { ...agent.kills, [key]: agent.kills[key] + 1 };
+        }
         // Update enemy HP directly — return enemies array with updated enemy
         const updatedEnemies = state.enemies.map((e, i) =>
           i === targetEnemyIdx ? { ...e, hp: result.defenderHpAfter, isAlive: result.defenderHpAfter > 0 } : e
@@ -599,11 +605,15 @@ export async function teleportToArena(state: GameState): Promise<GameState> {
       return (state.agents[b]?.combat?.hp ?? 0) - (state.agents[a]?.combat?.hp ?? 0);
     });
 
-  // Create arena matchups: seed1 vs seed4, seed2 vs seed3
+  // Create arena matchups. Full bracket requires 4 survivors; degrade gracefully.
   const matchups: ArenaMatchup[] = [];
   if (ranked.length >= 4) {
+    // Full: seed1 vs seed4, seed2 vs seed3 → winners meet in final
     matchups.push({ agentA: ranked[0], agentB: ranked[3], turnCount: 0 });
     matchups.push({ agentA: ranked[1], agentB: ranked[2], turnCount: 0 });
+  } else if (ranked.length >= 2) {
+    // Degraded: skip semis, go straight to a single final
+    matchups.push({ agentA: ranked[0], agentB: ranked[1], turnCount: 0 });
   }
 
   // Transition to ARENA_SEMI1

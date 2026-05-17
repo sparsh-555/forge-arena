@@ -224,6 +224,7 @@ async function main() {
     let arenaBonuses = {};
 
     if (matchups.length >= 2) {
+      // Full bracket: 2 semis + final
       console.error(`[run-full-game] ARENA_SEMI1: ${matchups[0].agentA} vs ${matchups[0].agentB}`);
       const semi1Winner = await runArenaMatch(state, config, matchups[0]);
       state = { ...state, phase: "ARENA_SEMI2" };
@@ -250,6 +251,16 @@ async function main() {
       for (const id of [matchups[0].agentA, matchups[0].agentB, matchups[1].agentA, matchups[1].agentB]) {
         arenaBonuses[id] = arenaBonuses[id] || 0;
       }
+    } else if (matchups.length === 1) {
+      // Degraded: only 2 survivors — skip semis, run a single final
+      console.error(`[run-full-game] ARENA_FINAL (degraded): ${matchups[0].agentA} vs ${matchups[0].agentB}`);
+      state = { ...state, phase: "ARENA_FINAL" };
+      winner = await runArenaMatch(state, config, matchups[0]);
+      matchups[0].winner = winner;
+      console.error(`[run-full-game] FINAL winner: ${winner}`);
+      arenaBonuses[winner] = 15;
+      const runnerUp = matchups[0].agentA === winner ? matchups[0].agentB : matchups[0].agentA;
+      arenaBonuses[runnerUp] = 5;
     }
 
     for (const id of AGENT_IDS) {
