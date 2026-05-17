@@ -12,7 +12,7 @@
 //   1 — game crashed or did not complete
 
 import "dotenv/config";
-import { generateDungeon, computeAgentSpawns, computeEnemySpawns, computeChestContents } from "./dist/DungeonGen.js";
+import { generateDungeon, computeAgentSpawns, computeEnemySpawns, computeChestContents, validateSpawnConnectivity } from "./dist/DungeonGen.js";
 import { runDungeonPhase, teleportToArena, runArenaMatch } from "./dist/GameLoop.js";
 import { resetEnemyAIState } from "./dist/EnemyAI.js";
 import { getFallbackAction } from "./dist/AgentAPI.js";
@@ -109,9 +109,16 @@ async function main() {
     delete process.env.ANTHROPIC_API_KEY;
   }
 
-  // Generate dungeon
-  const map = generateDungeon(seed);
-  const agentSpawns = computeAgentSpawns(map);
+  // Generate dungeon — retry seed if spawns are not connected to boss
+  let map = generateDungeon(seed);
+  let agentSpawns = computeAgentSpawns(map);
+  let attempts = 0;
+  while (!validateSpawnConnectivity(map, agentSpawns) && attempts < 10) {
+    attempts++;
+    console.error(`[run-full-game] Spawn connectivity failed, retrying with seed ${seed + attempts}`);
+    map = generateDungeon(seed + attempts);
+    agentSpawns = computeAgentSpawns(map);
+  }
   const enemySpawns = computeEnemySpawns(map);
   const chestContents = computeChestContents(map);
 

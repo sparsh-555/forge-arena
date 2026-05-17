@@ -58,15 +58,14 @@ export function generateDungeon(seed: number): DungeonMap {
     height: r.getBottom() - r.getTop() + 1,
   }));
 
-  // Boss room = deepest (furthest from map center)
-  const cx = MAP_WIDTH / 2;
-  const cy = MAP_HEIGHT / 2;
+  // Boss room = furthest from bottom-left corner (top-right area)
   let bossRoomIdx = 0;
   let maxDist = -1;
   rooms.forEach((r, i) => {
     const rx = r.x + r.width / 2;
     const ry = r.y + r.height / 2;
-    const d = (rx - cx) ** 2 + (ry - cy) ** 2;
+    // Distance from bottom-left (0, MAP_HEIGHT) — boss goes top-right
+    const d = rx + (MAP_HEIGHT - ry);
     if (d > maxDist) { maxDist = d; bossRoomIdx = i; }
   });
 
@@ -78,46 +77,118 @@ export function generateDungeon(seed: number): DungeonMap {
     tiles[bossY][bossX].type = "boss_entrance";
   }
 
-  return { width: MAP_WIDTH, height: MAP_HEIGHT, tiles, rooms, bossEntrancePosition: { x: bossX, y: bossY } };
+  // Dungeon entrance room = most bottom-left room (agents enter here)
+  let entranceRoomIdx = 0;
+  let minScore = Infinity;
+  rooms.forEach((r, i) => {
+    if (i === bossRoomIdx) return;
+    const rx = r.x + r.width / 2;
+    const ry = r.y + r.height / 2;
+    // Low x + high y = bottom-left
+    const score = rx - (MAP_HEIGHT - ry);
+    if (score < minScore) { minScore = score; entranceRoomIdx = i; }
+  });
+  const entranceRoom = rooms[entranceRoomIdx];
+  const entranceX = Math.round(entranceRoom.x + entranceRoom.width / 2);
+  const entranceY = Math.round(entranceRoom.y + entranceRoom.height / 2);
+  // Mark bottom edge of entrance room as door (visual entrance)
+  const doorY = Math.min(entranceRoom.y + entranceRoom.height, MAP_HEIGHT - 1);
+  if (tiles[doorY]?.[entranceX]) tiles[doorY][entranceX].type = "door";
+
+  return {
+    width: MAP_WIDTH,
+    height: MAP_HEIGHT,
+    tiles,
+    rooms,
+    bossEntrancePosition: { x: bossX, y: bossY },
+    dungeonEntrancePosition: { x: entranceX, y: entranceY },
+  };
+}
+
+/** BFS reachability check — returns true if target is reachable from start on floor tiles. */
+function isReachable(map: DungeonMap, start: Position, target: Position): boolean {
+  const passable = (x: number, y: number) =>
+    x >= 0 && x < map.width && y >= 0 && y < map.height &&
+    map.tiles[y][x].type !== "wall";
+
+  const visited = new Set<string>();
+  const queue: Position[] = [start];
+  visited.add(`${start.x},${start.y}`);
+
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    if (cur.x === target.x && cur.y === target.y) return true;
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      const nx = cur.x + dx, ny = cur.y + dy;
+      const key = `${nx},${ny}`;
+      if (!visited.has(key) && passable(nx, ny)) {
+        visited.add(key);
+        queue.push({ x: nx, y: ny });
+      }
+    }
+  }
+  return false;
 }
 
 /**
- * Compute spawn positions for all 4 agents in distinct rooms.
- * Agents start near room centers, at least 8 tiles apart.
+ * Compute spawn positions for all 4 agents.
+ * All agents spawn clustered in the bottom-left entrance room, spread 1-2 tiles apart.
+ * Validates all spawns can pathfind to boss entrance.
  */
 export function computeAgentSpawns(map: DungeonMap): Record<string, Position> {
   const agentIds = ["aggressive", "cautious", "hoarder", "speedrunner"];
-  const bossPos = map.bossEntrancePosition;
+  const entrance = map.dungeonEntrancePosition;
 
-  // Rank rooms by distance from boss (closest room gets the speedrunner)
-  const candidates = map.rooms
-    .filter(r => r.width >= 3 && r.height >= 3)
-    .map(r => {
-      const rx = Math.round(r.x + r.width / 2);
-      const ry = Math.round(r.y + r.height / 2);
-      const dist = Math.abs(rx - bossPos.x) + Math.abs(ry - bossPos.y);
-      return { room: r, cx: rx, cy: ry, dist };
-    })
-    .sort((a, b) => b.dist - a.dist); // furthest from boss first
-
-  const result: Record<string, Position> = {};
-
-  // Assign agents to the 4 best candidate rooms (spaced at least 8 tiles apart)
-  const picked: typeof candidates = [];
-  for (const c of candidates) {
-    const tooClose = picked.some(p => Math.abs(p.cx - c.cx) + Math.abs(p.cy - c.cy) < 8);
-    if (!tooClose && picked.length < 4) {
-      picked.push(c);
+  // Collect walkable floor tiles near the entrance room (within 5 tiles)
+  const nearEntrance: Position[] = [];
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      const tile = map.tiles[y][x];
+      if (tile.type !== "wall" && tile.type !== "boss_entrance") {
+        const dist = Math.abs(x - entrance.x) + Math.abs(y - entrance.y);
+        if (dist <= 5) nearEntrance.push({ x, y });
+      }
     }
   }
 
-  agentIds.forEach((id, i) => {
-    if (i < picked.length) {
-      result[id] = { x: picked[i].cx, y: picked[i].cy };
+  // Sort by proximity to entrance center, pick 4 well-spread tiles
+  nearEntrance.sort((a, b) =>
+    (Math.abs(a.x - entrance.x) + Math.abs(a.y - entrance.y)) -
+    (Math.abs(b.x - entrance.x) + Math.abs(b.y - entrance.y))
+  );
+
+  const spawns: Position[] = [];
+  for (const candidate of nearEntrance) {
+    if (spawns.length >= 4) break;
+    const tooClose = spawns.some(s => Math.abs(s.x - candidate.x) + Math.abs(s.y - candidate.y) < 2);
+    if (!tooClose) spawns.push(candidate);
+  }
+
+  // Fallback: if we couldn't find 4 spread tiles, pack tighter
+  if (spawns.length < 4) {
+    for (const candidate of nearEntrance) {
+      if (spawns.length >= 4) break;
+      if (!spawns.some(s => s.x === candidate.x && s.y === candidate.y)) {
+        spawns.push(candidate);
+      }
     }
+  }
+
+  const result: Record<string, Position> = {};
+  agentIds.forEach((id, i) => {
+    result[id] = spawns[i] ?? entrance;
   });
 
   return result;
+}
+
+/**
+ * Validate all agent spawns can reach the boss entrance.
+ * Returns true if all connected, false if any spawn is isolated.
+ */
+export function validateSpawnConnectivity(map: DungeonMap, spawns: Record<string, Position>): boolean {
+  const boss = map.bossEntrancePosition;
+  return Object.values(spawns).every(spawn => isReachable(map, spawn, boss));
 }
 
 /**

@@ -58,6 +58,7 @@ export interface DungeonMap {
   tiles: Tile[][];
   rooms: Room[];
   bossEntrancePosition: Position;
+  dungeonEntrancePosition: Position;
 }
 
 export interface Room {
