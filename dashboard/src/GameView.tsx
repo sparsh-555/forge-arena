@@ -534,22 +534,28 @@ function PatchCard({ patch, isNew }: { patch: PatchEvent; isNew: boolean }) {
   const pct = patch.oldValue != null
     ? Math.round(((patch.newValue - patch.oldValue) / patch.oldValue) * 100)
     : null;
+  const isNerf = pct != null && pct < 0;
+  const isBuff = pct != null && pct > 0;
   return (
-    <div className={`rounded border p-2 flex flex-col gap-0.5 transition-all ${isNew ? "border-yellow-400 bg-yellow-400/10" : "border-forge-border bg-forge-panel/50"}`}>
+    <div className={`rounded border p-2 flex flex-col gap-1 transition-all ${isNew ? "border-yellow-400 bg-yellow-400/10 scale-105" : "border-forge-border bg-forge-panel/50"}`}>
       <div className="flex items-center gap-1">
-        <span className="text-yellow-400 text-[10px] font-bold">⚡ PATCH</span>
+        <span className="text-yellow-400 text-[10px] font-bold font-sans tracking-wide">⚡ HAND OF GOD</span>
         {pct != null && (
-          <span className={`text-[10px] font-bold ml-auto ${pct < 0 ? "text-red-400" : "text-green-400"}`}>
-            {pct > 0 ? "+" : ""}{pct}%
+          <span className={`text-[10px] font-black ml-auto font-sans ${isNerf ? "text-red-400" : isBuff ? "text-green-400" : "text-forge-dim"}`}>
+            {isNerf ? "▼" : isBuff ? "▲" : ""}{Math.abs(pct)}%
           </span>
         )}
       </div>
-      <div className="text-[10px] text-forge-text font-mono">{patch.key}</div>
+      <div className="text-[11px] text-forge-text font-bold font-sans tracking-tight">{patch.key}</div>
       {patch.oldValue != null && (
-        <div className="text-[10px] text-forge-dim">{patch.oldValue} → <span className="text-forge-text">{patch.newValue}</span></div>
+        <div className="text-[10px] font-mono">
+          <span className="text-forge-dim line-through">{patch.oldValue}</span>
+          <span className="text-forge-dim mx-1">→</span>
+          <span className={isNerf ? "text-red-400 font-bold" : isBuff ? "text-green-400 font-bold" : "text-forge-text"}>{patch.newValue}</span>
+        </div>
       )}
-      <div className="text-[9px] text-forge-dim italic leading-tight mt-0.5">
-        "{patch.reason?.slice(0, 80)}"
+      <div className="text-[9px] text-forge-text/80 leading-snug font-sans italic border-t border-forge-border/50 pt-1 mt-0.5">
+        "{patch.reason?.slice(0, 120)}"
       </div>
     </div>
   );
