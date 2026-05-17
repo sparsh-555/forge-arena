@@ -1,74 +1,72 @@
 // StateEmitter: broadcasts game state to dashboard via WebSocket.
 // Also writes events to state/game-events.jsonl for the Evaluator to read.
-// Imported by GameLoop. Never contains game logic.
-//
-// Required imports when implementing:
-//   import { appendFileSync } from "fs";
-//   import { fileURLToPath } from "url";
-//   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-//   const EVENTS_LOG = path.join(__dirname, "../../state/game-events.jsonl");
 
+import { appendFileSync } from "fs";
 import path from "path";
-import type { GameEvent, GameState, PatchEvent } from "./types.js";
-// Import when implementing: import { toDashboardPayload } from "./DungeonBridge.js";
+import { fileURLToPath } from "url";
 import type { WebSocket } from "ws";
+import type { GameEvent, GameState, PatchEvent } from "./types.js";
+import { toDashboardPayload } from "./DungeonBridge.js";
 
-// Events log path — append structured events here via logEvent()
-export const EVENTS_LOG_PATH = path.join(
-  path.dirname(new URL(import.meta.url).pathname),
-  "../../state/game-events.jsonl"
-);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export const EVENTS_LOG_PATH = path.resolve(__dirname, "../../state/game-events.jsonl");
 
 // WebSocket clients connected to /ws/game
-// Populated by server.ts when dashboard clients connect
 export const wsClients: Set<WebSocket> = new Set();
 
-// const WS_OPEN = 1; — WebSocket OPEN readyState constant (declare when implementing)
+const WS_OPEN = 1;
 
 /**
  * Broadcast current game state to all connected dashboard clients.
- * Called by GameLoop after every round resolves.
- *
- * Implementation notes:
- * - payload = toDashboardPayload(state)
- * - msg = JSON.stringify(payload)
- * - For each client in wsClients: if ws.readyState === WS_OPEN, ws.send(msg)
- * - Remove dead connections: wsClients.delete(ws) if readyState !== WS_OPEN
  */
-export function broadcast(_state: GameState): void {
-  // payload = toDashboardPayload(state); for each wsClients where readyState === WS_OPEN: ws.send(JSON.stringify(payload))
-  // Remove dead connections: wsClients.delete(ws) if readyState !== WS_OPEN
-  // WS_OPEN = 1 (WebSocket readyState constant)
-  throw new Error("broadcast not implemented");
+export function broadcast(state: GameState): void {
+  const payload = toDashboardPayload(state);
+  const msg = JSON.stringify(payload);
+
+  for (const ws of wsClients) {
+    try {
+      if (ws.readyState === WS_OPEN) {
+        ws.send(msg);
+      } else {
+        wsClients.delete(ws);
+      }
+    } catch {
+      wsClients.delete(ws);
+    }
+  }
 }
 
 /**
- * Append a structured event to game-events.jsonl.
- * Called for every round, combat result, patch, and phase transition.
- * Evaluator tails this file to compute metrics.
- *
- * Implementation: appendFileSync(EVENTS_LOG, JSON.stringify(event) + "\n")
+ * Append a structured event to game-events.jsonl (NDJSON).
  */
-export function logEvent(_event: GameEvent): void {
-  throw new Error("logEvent not implemented");
+export function logEvent(event: GameEvent): void {
+  appendFileSync(EVENTS_LOG_PATH, JSON.stringify(event) + "\n");
 }
 
 /**
  * Broadcast a patch event immediately when a patch lands.
- * Sent to all dashboard clients so the PATCH FEED updates without waiting for next round.
- *
- * Implementation: send { type: "PATCH_EVENT", patch } JSON to all wsClients
  */
-export function broadcastPatch(_patch: PatchEvent): void {
-  throw new Error("broadcastPatch not implemented");
+export function broadcastPatch(patch: PatchEvent): void {
+  const msg = JSON.stringify({ type: "PATCH_EVENT", patch });
+
+  for (const ws of wsClients) {
+    try {
+      if (ws.readyState === WS_OPEN) {
+        ws.send(msg);
+      }
+    } catch {
+      wsClients.delete(ws);
+    }
+  }
 }
 
 /**
  * Send current full game state snapshot to a single newly-connected client.
- * Called by server.ts when a dashboard browser connects or reconnects.
- *
- * Implementation: ws.send(JSON.stringify(toDashboardPayload(state)))
  */
-export function sendSnapshot(_ws: WebSocket, _state: GameState): void {
-  throw new Error("sendSnapshot not implemented");
+export function sendSnapshot(ws: WebSocket, state: GameState): void {
+  if (ws.readyState === WS_OPEN) {
+    const payload = toDashboardPayload(state);
+    ws.send(JSON.stringify(payload));
+  }
 }

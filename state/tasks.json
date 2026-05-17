@@ -1,26 +1,7 @@
 {
   "version": 1,
   "sprint": 1,
-  "tasks": [
-    {
-      "id": "S1-006",
-      "description": "Implement StateEmitter.ts — broadcast, logEvent, broadcastPatch, and sendSnapshot. CRITICAL: PITFALL 1 — wsClients is an in-process Set populated by server.ts WebSocket connection handler. broadcast must work within the same Node.js process. broadcast(state): convert state to DashboardPayload via DungeonBridge.toDashboardPayload, JSON.stringify, send to every WebSocket in wsClients whose readyState is OPEN. Wrap in try-catch per client — one dead connection must not kill the loop. logEvent(event): append one NDJSON line to state/game-events.jsonl using fs.appendFileSync (safe for single-process synchronous game loop). Include event type, round, phase, timestamp, and data. broadcastPatch(patch): construct PatchEvent { type: 'PATCH_APPLIED', key, oldValue, newValue, reason, timestamp }, call logEvent, then broadcast to all clients. sendSnapshot(ws, state): send current DashboardPayload to a single newly-connected WebSocket client. Import DungeonBridge.toDashboardPayload. Path to game-events.jsonl must resolve relative to project root (use path.resolve + fileURLToPath for ESM).",
-      "scope": [
-        "game-server/src/StateEmitter.ts"
-      ],
-      "acceptance": "npm run build exits 0. broadcast sends JSON DashboardPayload to all connected WebSocket clients. logEvent appends valid NDJSON line to state/game-events.jsonl — verify with: node -e \"JSON.parse(require('fs').readFileSync('state/game-events.jsonl','utf8').trim().split('\\n').pop())\". broadcastPatch logs a PATCH_APPLIED event and broadcasts state update. sendSnapshot sends current state to a single new client. Dead client connections do not crash broadcast (try-catch per client). No duplicate event writes. All functions handle empty wsClients Set gracefully.",
-      "acceptance_criteria": [
-        "broadcast calls toDashboardPayload and sends to wsClients — grep StateEmitter.ts for 'toDashboardPayload' and 'wsClients'",
-        "logEvent uses fs.appendFileSync with NDJSON — grep StateEmitter.ts for 'appendFileSync'",
-        "broadcastPatch creates PatchEvent with type PATCH_APPLIED — grep StateEmitter.ts for 'PATCH_APPLIED'",
-        "sendSnapshot sends to a single ws parameter — grep StateEmitter.ts for 'sendSnapshot'",
-        "try-catch wraps per-client send — grep StateEmitter.ts for 'try' or 'readyState'"
-      ],
-      "branch": "worker/S1-006-implement-state-emitter",
-      "priority": 1,
-      "status": "pending"
-    }
-  ],
+  "tasks": [],
   "completed": [
     {
       "id": "S1-001",
@@ -111,6 +92,24 @@
         "findNearestAgent exported — grep EnemyAI.ts for 'findNearestAgent'"
       ],
       "branch": "worker/S1-005-implement-enemy-ai",
+      "priority": 1,
+      "status": "completed"
+    },
+    {
+      "id": "S1-006",
+      "description": "Implement StateEmitter.ts — broadcast, logEvent, broadcastPatch, and sendSnapshot. CRITICAL: PITFALL 1 — wsClients is an in-process Set populated by server.ts WebSocket connection handler. broadcast must work within the same Node.js process. broadcast(state): convert state to DashboardPayload via DungeonBridge.toDashboardPayload, JSON.stringify, send to every WebSocket in wsClients whose readyState is OPEN. Wrap in try-catch per client — one dead connection must not kill the loop. logEvent(event): append one NDJSON line to state/game-events.jsonl using fs.appendFileSync (safe for single-process synchronous game loop). Include event type, round, phase, timestamp, and data. broadcastPatch(patch): construct PatchEvent { type: 'PATCH_APPLIED', key, oldValue, newValue, reason, timestamp }, call logEvent, then broadcast to all clients. sendSnapshot(ws, state): send current DashboardPayload to a single newly-connected WebSocket client. Import DungeonBridge.toDashboardPayload. Path to game-events.jsonl must resolve relative to project root (use path.resolve + fileURLToPath for ESM).",
+      "scope": [
+        "game-server/src/StateEmitter.ts"
+      ],
+      "acceptance": "npm run build exits 0. broadcast sends JSON DashboardPayload to all connected WebSocket clients. logEvent appends valid NDJSON line to state/game-events.jsonl — verify with: node -e \"JSON.parse(require('fs').readFileSync('state/game-events.jsonl','utf8').trim().split('\\n').pop())\". broadcastPatch logs a PATCH_APPLIED event and broadcasts state update. sendSnapshot sends current state to a single new client. Dead client connections do not crash broadcast (try-catch per client). No duplicate event writes. All functions handle empty wsClients Set gracefully.",
+      "acceptance_criteria": [
+        "broadcast calls toDashboardPayload and sends to wsClients — grep StateEmitter.ts for 'toDashboardPayload' and 'wsClients'",
+        "logEvent uses fs.appendFileSync with NDJSON — grep StateEmitter.ts for 'appendFileSync'",
+        "broadcastPatch creates PatchEvent with type PATCH_APPLIED — grep StateEmitter.ts for 'PATCH_APPLIED'",
+        "sendSnapshot sends to a single ws parameter — grep StateEmitter.ts for 'sendSnapshot'",
+        "try-catch wraps per-client send — grep StateEmitter.ts for 'try' or 'readyState'"
+      ],
+      "branch": "worker/S1-006-implement-state-emitter",
       "priority": 1,
       "status": "completed"
     }
