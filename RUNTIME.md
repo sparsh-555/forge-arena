@@ -6,7 +6,7 @@
 - Rewrite sections as priorities change. Do not append contradictions.
 
 ## Current Phase
-BUILD — Sprint 2 (Integration). 3 tasks: AgentAPI+PatchApplier (S2-001, p1), GameLoop (S2-002, p2), run-full-game.js (S2-003, p3). Sequential priorities due to dependencies: GameLoop needs AgentAPI+PatchApplier; run-full-game.js needs GameLoop. Build healthy, evaluator grade F (Phase 1: run-full-game.js stubbed). After S2-003 lands: Phase 1 should pass, triggering re-evaluation.
+BUILD — Sprint 3 (Hardening). Grade: C (Phase 1+2 pass, Phase 3: all fallback decisions, no agent movement). 2 fix tasks: S3-001 (improve fallback actions + AGENT_ACTION event logging), S3-002 (increase API timeout to 10s + round 1 warmup). Both priority 1, independent (different sections of same files but non-overlapping changes).
 
 ## Active Constraints
 - types.ts is being modified in S1-001 (additive only — MAP_WIDTH, EnemyTier expansion, ROUND_STATE, missing fields)

@@ -15,3 +15,9 @@
 {"type":"TASK_COMPLETED","task":"S2-001","sprint":2,"timestamp":"2026-05-16T21:37:00.000Z"}
 {"type":"TASK_COMPLETED","task":"S2-002","sprint":2,"timestamp":"2026-05-16T21:43:00.000Z"}
 {"type":"TASK_COMPLETED","task":"S2-003","sprint":2,"timestamp":"2026-05-16T21:55:00.000Z"}
+{"type":"SPRINT_END","sprint":2,"completed":3,"grade":"F","timestamp":"2026-05-16T13:55:46.334Z"}
+{"type":"VERIFY_PASS","sprint":2,"tasks_verified":3,"timestamp":"2026-05-16T21:58:00.000Z"}
+{"type":"ARCHITECT_PASS","sprint":2,"tasks_verified":3,"timestamp":"2026-05-16T21:59:00.000Z"}
+{"type":"SPRINT_END","sprint":2,"completed":3,"grade":"F","timestamp":"2026-05-16T14:02:25.689Z"}
+{"type":"BUILD_HEALTH","timestamp":"2026-05-16T22:03:00.000Z","grade":"C","sprint":2,"phase1_pass":true,"phase2_pass":true,"phase3_pass":false}
+{"type":"SPRINT_START","sprint":3,"timestamp":"2026-05-16T22:04:00.000Z"}

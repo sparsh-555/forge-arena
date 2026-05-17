@@ -1,22 +1,27 @@
 {
-  "grade": "F",
+  "grade": "C",
   "consecutive_passing": 0,
-  "last_run": "2026-05-16T21:30:00Z",
-  "last_error": "run-full-game.js not implemented",
+  "last_run": "2026-05-16T22:02:00Z",
+  "last_error": null,
   "converged": false,
   "mode": "build",
   "findings": [
-    "Phase 1: run-full-game.js still stubbed — GameLoop, AgentAPI, PatchApplier not yet wired"
+    "Phase 1: PASS — headless smoke test exits 0, GAME_COMPLETE",
+    "Phase 2: PASS — all 5 endpoints return 200",
+    "Phase 3: All decisions were fallback (API timeout too short). Agents never moved — fallback actions lack pathfinding. Enemy movement detected. No AGENT_ACTION events logged to game-events.jsonl."
   ],
   "acceptance_results": {
     "build_passes": true,
-    "headless_exits_0": false,
-    "sprites_load": false,
-    "dashboard_serves": false,
+    "headless_exits_0": true,
+    "sprites_load": true,
+    "dashboard_serves": true,
     "real_decisions_made": false,
-    "patch_events_during_run": false
+    "patch_events_during_run": false,
+    "agent_movement_detected": false,
+    "enemy_movement_detected": true
   },
   "history": [
-    { "grade": "F", "timestamp": "2026-05-16T21:30:00Z" }
+    { "grade": "F", "timestamp": "2026-05-16T21:30:00Z" },
+    { "grade": "C", "timestamp": "2026-05-16T22:02:00Z" }
   ]
 }

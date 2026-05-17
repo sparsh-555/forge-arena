@@ -1,66 +1,36 @@
 {
   "version": 1,
-  "sprint": 2,
-  "tasks": [],
-  "completed": [
+  "sprint": 3,
+  "tasks": [
     {
-      "id": "S2-001",
-      "description": "Implement AgentAPI.ts and PatchApplier.ts — the two remaining independent modules needed before GameLoop can be wired. AgentAPI.ts: loadPersonalityPrompt(agentId) reads personalities/{agentId}/CLAUDE.md using fs.readFileSync, returns the raw markdown string. callClaude(agentId, payload, timeoutMs) constructs a POST to https://api.anthropic.com/v1/messages with model=claude-haiku-4-5 (DUNGEON) or claude-sonnet-4-6 (ARENA_FINAL per MODEL_BY_PHASE), system prompt from the personality file, user message as JSON-serialized AgentStatePayload, max_tokens=300, temperature=0.7. Read ANTHROPIC_API_KEY from process.env (throw if missing). Use AbortController for the timeout. Parse the response JSON, extract the agent action from the content string — expect JSON like { goal: 'move_to_enemy', targetId: 'enemy_0', reasoning: '...' }. Fall back to getFallbackAction(agentId) on any error (network, timeout, parse failure) and log [fallback] in reasoning. handleDecideRoute is the main entry point that wraps callClaude. PatchApplier.ts: readConfig() reads game-config.json with fs.readFileSync and JSON.parse. readBaseline() reads game-config.baseline.json similarly. getNestedValue/setNestedValue use dot-path to access nested config keys (e.g. 'stamina.heavy_attack_cost'). applyPatch(suggestion) validates the new value is within ±30% of baseline, writes the updated config atomically (write to tmp file, fs.renameSync to game-config.json), and returns the old value. Log rejections to stderr with the reason. Both files compile with npm run build. No TODOs or stubs.",
-      "scope": [
-        "game-server/src/AgentAPI.ts",
-        "game-server/src/PatchApplier.ts"
-      ],
-      "acceptance": "npm run build exits 0. AgentAPI: loadPersonalityPrompt returns string content for all 4 agent IDs. callClaude with invalid key returns fallback action (no crash). getFallbackAction returns personality-appropriate defaults. API key read from process.env only. PatchApplier: readConfig returns parsed game-config.json. applyPatch rejects values >30% from baseline. applyPatch writes atomically (tmp file → rename). Rejected patches log to stderr. getNestedValue('stamina.heavy_attack_cost', config) returns 30 (default).",
+      "id": "S3-001",
+      "description": "Fix AgentAPI fallback actions to include movement and targeting. EVALUATOR FINDING: Phase 3 all agents died without moving — fallback actions (attack_medium with no target, block, pass, move_to_boss) don't help agents engage enemies or survive. Fix getFallbackAction in AgentAPI.ts to import findNearestAgent and pathfindStep from EnemyAI, and produce smarter fallbacks: aggressive → attack nearest enemy with targetId set, cautious → move away from nearest enemy (pathfindAway) if adjacent else block, hoarder → move toward nearest item, speedrunner → move toward boss entrance. Also log AGENT_ACTION events with reasoning strings to game-events.jsonl in GameLoop.ts after each agent decision — use logEvent({ type: 'AGENT_ACTION', ... }) with the agentId, goal, targetId, and reasoning. This enables the evaluator's decision-vs-fallback counting.",
+      "scope": ["game-server/src/AgentAPI.ts", "game-server/src/GameLoop.ts"],
+      "acceptance": "npm run build exits 0. getFallbackAction for aggressive includes targetId for nearest enemy. getFallbackAction for cautious includes movement away from threats. GameLoop logs AGENT_ACTION event after each agent decision with reasoning field. NO_API=true FAST_MODE=true headless run: agents move from spawn positions (grep game-events.jsonl for AGENT_ACTION events).",
       "acceptance_criteria": [
-        "loadPersonalityPrompt reads from personalities/{agentId}/CLAUDE.md — grep AgentAPI.ts for 'readFileSync' or 'CLAUDE.md'",
-        "ANTHROPIC_API_KEY read from process.env — grep AgentAPI.ts for 'ANTHROPIC_API_KEY'",
-        "getFallbackAction returns defaults per personality — grep AgentAPI.ts for 'getFallbackAction'",
-        "applyPatch validates against baseline ±30% — grep PatchApplier.ts for '0.3' or 'baseline'",
-        "atomic write uses tmp file + renameSync — grep PatchApplier.ts for 'renameSync' or '.tmp'",
-        "getNestedValue handles dot-path keys — grep PatchApplier.ts for 'getNestedValue'"
+        "AGENT_ACTION events logged in GameLoop — grep GameLoop.ts for 'AGENT_ACTION'",
+        "Fallback for aggressive includes findNearestAgent — grep AgentAPI.ts for 'findNearestAgent' in getFallbackAction context",
+        "Fallback for cautious includes pathfindAway — grep AgentAPI.ts for 'pathfind'",
+        "AGENT_ACTION events contain reasoning field — grep GameLoop.ts for 'reasoning' near logEvent call"
       ],
-      "branch": "worker/S2-001-agent-api-patch-applier",
+      "branch": "worker/S3-001-fix-fallback-and-event-logging",
       "priority": 1,
-      "status": "completed"
+      "status": "pending"
     },
     {
-      "id": "S2-002",
-      "description": "Implement GameLoop.ts — the main game orchestration module. This is the most critical file in the codebase. runDungeonPhase(state, config): main dungeon round loop. Each round (every round_interval_ms=2000): 1) Read game-config.json (picks up patches). 2) Compute FOV for each active agent using rot.js (update tiles[y][x].visibleTo). 3) Fire all 4 POST /decide/:agentId calls in parallel staggered by 150ms each (0, 150, 300, 450ms). 4) Collect responses with 3s timeout. Timed-out agents get fallback { goal: 'pass' }. 5) resolveConflicts(actions) using CONFLICT_PRIORITY from types.ts — lower-priority conflicting action converts to pass. 6) applyAgentAction(state, agentId, action, config): execute the agent's action — move updates position (clamped to map, blocked by walls), attack triggers resolveCombat, pick_up_item adds to backpack, use_estus heals, equip_from_backpack swaps items. 7) resolveEnemyActions(state) via EnemyAI. 8) Apply enemy moves (update enemy.position from newPosition). 9) Apply enemy attacks via resolveEnemyAttack. 10) StateEmitter.broadcast() and logEvent() for ROUND_STATE. 11) Check dungeon timer expiry + grace periods. teleportToArena(state): compute dungeon scores, seed arena bracket, transition phase to ARENA_SEMI1. runArenaMatch(state, config, matchup): alternating turn combat between two agents, turn cap from config.arena_turn_cap (default 30, FAST_MODE 20). resolveConflicts(actions): per CONFLICT_PRIORITY, conflicting actions (same target) convert lower-priority to pass. transitionPhase(state, to): already implemented — reuse it. CRITICAL: call resetEnemyAIState() from EnemyAI at the start of runDungeonPhase (PITFALL 2). CRITICAL: arena_turn_cap must never be 0 — default to 30 (PITFALL 3). Use setInterval for round timing with proper cleanup. All functions use immutable state patterns — create new state objects, never mutate.",
-      "scope": [
-        "game-server/src/GameLoop.ts"
-      ],
-      "acceptance": "npm run build exits 0. runDungeonPhase processes rounds with 2s intervals. Agent actions are resolved per conflict priority. Enemy actions follow agent actions each round. ROUND_STATE events are logged each round. Dungeon timer expiry triggers teleportToArena. teleportToArena seeds arena bracket correctly (seed 1 vs 4, 2 vs 3). runArenaMatch resolves alternating turns with stamina/damage system. Turn cap enforced (no infinite arena matches). resetEnemyAIState called at dungeon phase start. No module-level state leaks. All round-lock invariants respected.",
+      "id": "S3-002",
+      "description": "Fix API timeout and agent survivability. EVALUATOR FINDING: All first-round API calls timed out at 3s. Anthropic Haiku cold-start latency is 4-8 seconds, so initial calls always fall back. Fix: increase agent_api_timeout_ms from 3000 to 10000 in game-config.json. In AgentAPI.callClaude: add exponential backoff retry — if first call times out, retry once with 15s timeout. In GameLoop.ts: add a 2-second initial delay before starting the round loop to give API connections time to warm up. Also ensure agents don't take damage before their first decision — skip enemy attacks in round 1 (agents haven't acted yet).",
+      "scope": ["game-server/src/AgentAPI.ts", "game-server/src/GameLoop.ts", "game-server/game-config.json"],
+      "acceptance": "npm run build exits 0. game-config.json has agent_api_timeout_ms: 10000. AgentAPI retries once on timeout. GameLoop delays first round by 2s or skips enemy attacks in round 1. Headless run with API key: first-round decisions are real (not all fallback).",
       "acceptance_criteria": [
-        "runDungeonPhase calls resetEnemyAIState before loop — grep GameLoop.ts for 'resetEnemyAIState'",
-        "AgentAPI callStagger 150ms between parallel calls — grep GameLoop.ts for '150' or 'stagger'",
-        "CONFLICT_PRIORITY imported and used in resolveConflicts — grep GameLoop.ts for 'CONFLICT_PRIORITY'",
-        "StateEmitter.broadcast called each round — grep GameLoop.ts for 'broadcast'",
-        "ROUND_STATE event logged each round — grep GameLoop.ts for 'ROUND_STATE'",
-        "arena_turn_cap default 30 enforced — grep GameLoop.ts for 'arena_turn_cap' and '30'",
-        "teleportToArena transitions DUNGEON→ARENA_SEMI1 — grep GameLoop.ts for 'ARENA_SEMI1'"
+        "agent_api_timeout_ms = 10000 in game-config.json — grep game-config.json for 'agent_api_timeout_ms'",
+        "Retry logic in callClaude — grep AgentAPI.ts for 'retry' or second fetch attempt",
+        "Round 1 enemy skip or warmup delay — grep GameLoop.ts for 'roundNumber === 1' or 'warmup'"
       ],
-      "branch": "worker/S2-002-implement-game-loop",
-      "priority": 2,
-      "status": "completed"
-    },
-    {
-      "id": "S2-003",
-      "description": "Implement run-full-game.js — the headless game orchestration script. This is the entry point for acceptance testing and evaluator runs. Steps: 1) Load dotenv (import 'dotenv/config' or dotenv.config()). 2) Import generateDungeon and computeAgentSpawns/computeEnemySpawns/computeChestContents from DungeonGen. 3) Import runDungeonPhase, teleportToArena, runArenaMatch from GameLoop. 4) Import startServer, setGameState from server.ts. 5) Read game-config.json. 6) Call resetEnemyAIState() from EnemyAI. 7) Generate dungeon with a random seed. 8) Create initial GameState with 4 agents at spawn positions, enemies at spawn positions, ground items from chest contents. 9) Set initial agent states: starting_hp=150, starting_stamina=100, starting equipment per SPEC (aggressive=sword, cautious=dagger+leather_armor, hoarder=dagger, speedrunner=dagger), estusCount=3. 10) If --headless flag: skip server start, just run phases directly and print results. 11) If no --headless (live mode): start server (same process — PITFALL 1), set game state to play mode, run dungeon and arena phases. 12) After game ends: print GAME_COMPLETE to stdout with final scores per agent. Exit 0 on success. Support NO_API=true env var (skip real API calls, use getFallbackAction for all agent decisions). Support FAST_MODE=true (dungeon_timer=120 instead of 300, arena_turn_cap=20 instead of 30). Support --seed=N flag for deterministic runs.",
-      "scope": [
-        "game-server/run-full-game.js"
-      ],
-      "acceptance": "NO_API=true FAST_MODE=true node run-full-game.js --headless exits 0 and prints GAME_COMPLETE to stdout. All 4 agents make at least 1 decision. Dungeon timer fires and teleport occurs. 2 semis + 1 final resolve. Winner declared with final scores. ROUND_STATE events logged to game-events.jsonl. NO_API=true uses fallback actions only (no real API calls). FAST_MODE=true completes within 90 seconds. --seed=42 produces deterministic output. With real API key: real Claude decisions are made (not all fallback).",
-      "acceptance_criteria": [
-        "--headless flag skips server start — grep run-full-game.js for 'headless'",
-        "GAME_COMPLETE printed to stdout — grep run-full-game.js for 'GAME_COMPLETE'",
-        "NO_API=true uses fallback actions — grep run-full-game.js for 'NO_API' or 'getFallbackAction'",
-        "FAST_MODE=true sets dungeon_timer=120 — grep run-full-game.js for 'FAST_MODE' or '120'",
-        "resetEnemyAIState called before dungeon phase — grep run-full-game.js for 'resetEnemyAIState'",
-        "Same-process server start for live mode — grep run-full-game.js for 'startServer'"
-      ],
-      "branch": "worker/S2-003-implement-run-full-game",
-      "priority": 3,
-      "status": "completed"
+      "branch": "worker/S3-002-fix-api-timeout-and-survival",
+      "priority": 1,
+      "status": "pending"
     }
-  ]
+  ],
+  "completed": []
 }
