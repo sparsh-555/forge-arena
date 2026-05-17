@@ -7,7 +7,6 @@
 
 import express from "express";
 import { createServer } from "http";
-import { readFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { WebSocketServer } from "ws";

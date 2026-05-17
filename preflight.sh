@@ -29,7 +29,7 @@ echo "--- headless smoke ---"
 # 5. SPEC behavioral acceptance tests — run every command in SPEC.md's section
 echo "--- SPEC behavioral tests ---"
 # 5a. ROUND_STATE events exist
-ROUND_COUNT=$(grep -c '"type":"ROUND_STATE"' state/game-events.jsonl 2>/dev/null || echo 0)
+ROUND_COUNT=$(grep '"type":"ROUND_STATE"' state/game-events.jsonl 2>/dev/null | wc -l | tr -d ' ')
 [ "$ROUND_COUNT" -gt 0 ] && ok "ROUND_STATE events ($ROUND_COUNT)" || fail "ROUND_STATE events = 0 (not implemented)"
 
 # 5b. Enemies moved
