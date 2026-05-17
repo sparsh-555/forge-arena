@@ -1,4 +1,5 @@
 {
+  "_comment": "READ ONLY. Never patched. PatchApplier validates all patches against these values. Max ±30% deviation allowed.",
   "stamina": {
     "heavy_attack_cost": 30,
     "medium_attack_cost": 20,
@@ -39,6 +40,6 @@
   "arena_turn_cap": 30,
   "fov_radius": 6,
   "round_interval_ms": 2000,
-  "agent_api_timeout_ms": 10000,
+  "agent_api_timeout_ms": 3000,
   "agent_call_stagger_ms": 150
 }
