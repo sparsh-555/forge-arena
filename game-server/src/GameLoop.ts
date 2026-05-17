@@ -246,15 +246,44 @@ export function applyAgentAction(
     if (action.targetId) {
       // Try to find target entity position
       const targetEnemy = state.enemies.find(e => e.id === action.targetId && e.isAlive);
-      if (targetEnemy) targetPos = targetEnemy.position;
+      if (targetEnemy) { targetPos = targetEnemy.position; }
       else {
         const targetAgent = state.agents[action.targetId as AgentId];
-        if (targetAgent && targetAgent.status !== "eliminated") targetPos = targetAgent.position;
+        if (targetAgent && targetAgent.status !== "eliminated") { targetPos = targetAgent.position; }
+        else {
+          // Check ground items
+          const targetItem = state.groundItems.find(gi => gi.item.id === action.targetId);
+          if (targetItem) { targetPos = targetItem.position; }
+        }
       }
     }
     // For move_to_boss, target the boss entrance
     if (goal === "move_to_boss") {
       targetPos = state.map.bossEntrancePosition;
+    }
+    // For move_to_safe without explicit target: flee from nearest enemy
+    if (goal === "move_to_safe" && !action.targetId) {
+      const nearestEnemy = state.enemies
+        .filter(e => e.isAlive)
+        .sort((a, b) =>
+          (Math.abs(a.position.x - agent.position.x) + Math.abs(a.position.y - agent.position.y)) -
+          (Math.abs(b.position.x - agent.position.x) + Math.abs(b.position.y - agent.position.y))
+        )[0];
+      if (nearestEnemy) {
+        // Move in the opposite direction
+        const dx = agent.position.x - nearestEnemy.position.x;
+        const dy = agent.position.y - nearestEnemy.position.y;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+        if (absDx >= absDy) {
+          targetPos = { x: agent.position.x + (dx > 0 ? 1 : dx < 0 ? -1 : 0), y: agent.position.y };
+        } else {
+          targetPos = { x: agent.position.x, y: agent.position.y + (dy > 0 ? 1 : dy < 0 ? -1 : 0) };
+        }
+        // Clamp to map bounds
+        targetPos.x = Math.max(0, Math.min(state.map.width - 1, targetPos.x));
+        targetPos.y = Math.max(0, Math.min(state.map.height - 1, targetPos.y));
+      }
     }
 
     const next = pathfindStep(agent.position, targetPos, state);

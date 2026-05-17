@@ -292,6 +292,9 @@ async function main() {
     }
     state = { ...state, phase: "ENDED", finalScores };
 
+    // Broadcast final state so dashboard shows arena results
+    broadcast(state);
+
     // Always log GAME_COMPLETE event
     logEvent({
       type: "GAME_COMPLETE",
