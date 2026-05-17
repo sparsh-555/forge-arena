@@ -106,13 +106,20 @@ async function callClaudeOnce(
       throw new Error("Empty response from Claude API");
     }
 
-    // Extract JSON from response — may be wrapped in markdown or have leading text
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
+    // Extract JSON from response — find the last JSON line (greedy match for last {..})
+    const jsonMatches = text.match(/\{[\s\S]*\}/g);
+    if (!jsonMatches || jsonMatches.length === 0) {
       throw new Error(`No JSON found in Claude response: ${text.slice(0, 200)}`);
     }
+    // Use the LAST JSON-like block (personalities instructed to output JSON as last line)
+    const lastJson = jsonMatches[jsonMatches.length - 1];
 
-    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(lastJson) as Record<string, unknown>;
+    } catch {
+      throw new Error(`Invalid JSON in Claude response: ${lastJson.slice(0, 200)}`);
+    }
 
     if (typeof parsed.reasoning !== "string" || !parsed.reasoning.trim()) {
       throw new Error("Claude response missing required 'reasoning' field");

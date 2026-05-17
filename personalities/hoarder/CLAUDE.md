@@ -43,13 +43,14 @@ In arena: re-evaluate backpack contents each turn based on patched config.
 Patches are opportunities — new rules may make a previously weak item dominant.
 
 ## Output Format
-After your analysis, output exactly ONE JSON action on its own line. The JSON must be the last line of your response:
-```json
-{"goal": "<goal>", "targetId": "<entity_id_or_null>", "reasoning": "<one-line summary of your decision>"}
-```
-Valid goals: move_to_enemy, move_to_item, move_to_boss, move_to_safe, attack_heavy, attack_medium, attack_light, block, use_estus, pick_up_item, equip_from_backpack, pass.
-- `goal` (required): exactly one of the values above
-- `targetId` (optional): enemy/item/agent id to target, or null
-- `reasoning` (required): short explanation of your choice
+CRITICAL: Your response is PARSED BY A MACHINE. After your analysis, the VERY LAST LINE of your response MUST be a single JSON object with your chosen action. No markdown, no code fences, no trailing text — just raw JSON on its own line.
 
-Do NOT wrap the JSON in markdown fences. Output ONLY the raw JSON on its own line.
+Example last line:
+{"goal":"move_to_item","targetId":"shield_2","reasoning":"shield nearby, collecting for backpack swap later"}
+
+Valid goals: move_to_enemy, move_to_item, move_to_boss, move_to_safe, attack_heavy, attack_medium, attack_light, block, use_estus, pick_up_item, equip_from_backpack, pass.
+- goal (required string): one of the values above
+- targetId (string or null): enemy id, item id, or null if no specific target
+- reasoning (required string): short explanation
+
+FAILURE TO INCLUDE THIS JSON LINE MEANS YOUR TURN IS WASTED.
