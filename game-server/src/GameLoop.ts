@@ -423,6 +423,20 @@ export async function runDungeonPhase(initialState: GameState, config: GameConfi
         // Resolve conflicts
         const resolved = resolveConflicts(actions);
 
+        // Stamp lastReasoning on each agent so dashboard can show thought bubbles
+        for (const [agentId, action] of Object.entries(actions)) {
+          const agent = state.agents[agentId as AgentId];
+          if (agent) {
+            state = {
+              ...state,
+              agents: {
+                ...state.agents,
+                [agentId]: { ...agent, lastReasoning: action.reasoning },
+              },
+            };
+          }
+        }
+
         // Apply agent actions
         for (const [agentId, action] of Object.entries(resolved)) {
           state = applyAgentAction(state, agentId as AgentId, action, liveConfig);

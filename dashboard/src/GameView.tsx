@@ -60,12 +60,11 @@ interface DashboardPayload {
   enemies: EnemyState[];
   bossInstances?: Record<string, { position: { x: number; y: number }; hp: number; maxHp: number; phase: number; isAlive: boolean }>;
   groundItems?: Array<{ position: { x: number; y: number }; item: { name: string; id: string } }>;
-  map: {
-    width: number;
-    height: number;
-    tiles: Array<Array<{ type: string }>>;
-  };
-  recentPatches: Array<{ key: string; newValue: number; reason: string }>;
+  // Server sends tiles flat (not nested under map)
+  tiles: Array<Array<{ type: string }>>;
+  mapWidth: number;
+  mapHeight: number;
+  recentPatches: Array<{ key: string; oldValue?: number; newValue: number; reason: string; timestamp?: string }>;
 }
 
 interface PatchEvent {
@@ -122,11 +121,11 @@ class DungeonScene extends Phaser.Scene {
   }
 
   applyPayload(payload: DashboardPayload) {
-    if (payload.map) {
-      this.updateMap(payload.map);
+    if (payload.tiles && payload.mapWidth && payload.mapHeight) {
+      this.updateMap(payload.tiles, payload.mapWidth, payload.mapHeight);
       if (!this.initialized) {
-        const mapW = payload.map.width * TILE_SIZE;
-        const mapH = payload.map.height * TILE_SIZE;
+        const mapW = payload.mapWidth * TILE_SIZE;
+        const mapH = payload.mapHeight * TILE_SIZE;
         this.cameras.main.setBounds(0, 0, mapW, mapH);
         this.cameras.main.centerOn(mapW / 2, mapH / 2);
         const scaleX = this.scale.width / mapW;
@@ -141,8 +140,7 @@ class DungeonScene extends Phaser.Scene {
     this.onPayload?.(payload);
   }
 
-  private updateMap(map: DashboardPayload["map"]) {
-    const { width, height, tiles } = map;
+  private updateMap(tiles: Array<Array<{ type: string }>>, width: number, height: number) {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const tile = tiles[y]?.[x];
@@ -447,6 +445,23 @@ export default function GameView() {
         try {
           const payload: DashboardPayload = JSON.parse(e.data);
           sceneRef.current?.applyPayload(payload);
+          // Merge recentPatches from WS snapshot into the patch feed
+          if (payload.recentPatches?.length) {
+            setPatches(prev => {
+              const existingKeys = new Set(prev.map(p => p.timestamp));
+              const newOnes = payload.recentPatches
+                .filter(p => p.timestamp && !existingKeys.has(p.timestamp!))
+                .map(p => ({
+                  key: p.key,
+                  oldValue: p.oldValue,
+                  newValue: p.newValue,
+                  reason: p.reason,
+                  timestamp: p.timestamp ?? new Date().toISOString(),
+                }));
+              if (!newOnes.length) return prev;
+              return [...newOnes, ...prev].slice(0, 10);
+            });
+          }
         } catch { /* ignore malformed */ }
       };
       ws.onclose = () => { retryTimer = window.setTimeout(connect, 2000); };
