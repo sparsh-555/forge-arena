@@ -1,117 +1,59 @@
 {
   "version": 1,
-  "sprint": 1,
-  "tasks": [],
-  "completed": [
+  "sprint": 2,
+  "tasks": [
     {
-      "id": "S1-001",
-      "description": "Fix type gaps in types.ts to match SPEC and game-config.json. Add MAP_WIDTH=30 and MAP_HEIGHT=22 constants. Add 'hex_caster' and 'shade' to EnemyTier union. Add hex_caster_hp, hex_caster_damage, shade_hp, shade_damage to EnemyBaseStats interface. Add 'ROUND_STATE' to GameEventType union. Add optional lastReasoning field to AgentState. Add optional newPosition field to EnemyAction. These gaps cause tsc errors when downstream modules try to access config.enemies.hex_caster_hp or reference ROUND_STATE events. All changes are additive — do not remove or rename existing types.",
-      "scope": [
-        "game-server/src/types.ts"
-      ],
-      "acceptance": "tsc --noEmit exits 0. All existing imports from types.ts still resolve. MAP_WIDTH=30 and MAP_HEIGHT=22 are exported consts. EnemyTier includes all 5 tiers. EnemyBaseStats has all 5 enemy stat pairs. GameEventType includes ROUND_STATE. AgentState has optional lastReasoning. EnemyAction has optional newPosition. Verify: grep -c 'MAP_WIDTH' types.ts returns >=1, grep -c 'hex_caster' types.ts returns >=2, grep -c 'ROUND_STATE' types.ts returns >=1.",
+      "id": "S2-001",
+      "description": "Implement AgentAPI.ts and PatchApplier.ts — the two remaining independent modules needed before GameLoop can be wired. AgentAPI.ts: loadPersonalityPrompt(agentId) reads personalities/{agentId}/CLAUDE.md using fs.readFileSync, returns the raw markdown string. callClaude(agentId, payload, timeoutMs) constructs a POST to https://api.anthropic.com/v1/messages with model=claude-haiku-4-5 (DUNGEON) or claude-sonnet-4-6 (ARENA_FINAL per MODEL_BY_PHASE), system prompt from the personality file, user message as JSON-serialized AgentStatePayload, max_tokens=300, temperature=0.7. Read ANTHROPIC_API_KEY from process.env (throw if missing). Use AbortController for the timeout. Parse the response JSON, extract the agent action from the content string — expect JSON like { goal: 'move_to_enemy', targetId: 'enemy_0', reasoning: '...' }. Fall back to getFallbackAction(agentId) on any error (network, timeout, parse failure) and log [fallback] in reasoning. handleDecideRoute is the main entry point that wraps callClaude. PatchApplier.ts: readConfig() reads game-config.json with fs.readFileSync and JSON.parse. readBaseline() reads game-config.baseline.json similarly. getNestedValue/setNestedValue use dot-path to access nested config keys (e.g. 'stamina.heavy_attack_cost'). applyPatch(suggestion) validates the new value is within ±30% of baseline, writes the updated config atomically (write to tmp file, fs.renameSync to game-config.json), and returns the old value. Log rejections to stderr with the reason. Both files compile with npm run build. No TODOs or stubs.",
+      "scope": ["game-server/src/AgentAPI.ts", "game-server/src/PatchApplier.ts"],
+      "acceptance": "npm run build exits 0. AgentAPI: loadPersonalityPrompt returns string content for all 4 agent IDs. callClaude with invalid key returns fallback action (no crash). getFallbackAction returns personality-appropriate defaults. API key read from process.env only. PatchApplier: readConfig returns parsed game-config.json. applyPatch rejects values >30% from baseline. applyPatch writes atomically (tmp file → rename). Rejected patches log to stderr. getNestedValue('stamina.heavy_attack_cost', config) returns 30 (default).",
       "acceptance_criteria": [
-        "MAP_WIDTH and MAP_HEIGHT exported as const in types.ts — grep types.ts for 'export const MAP_WIDTH'",
-        "EnemyTier includes 'hex_caster' and 'shade' — grep types.ts for 'hex_caster.*shade' or verify union has 5 members",
-        "EnemyBaseStats has hex_caster_hp, hex_caster_damage, shade_hp, shade_damage — grep types.ts for 'hex_caster_hp'",
-        "ROUND_STATE appears in GameEventType union — grep types.ts for 'ROUND_STATE'",
-        "AgentState has lastReasoning?: string — grep types.ts for 'lastReasoning'",
-        "EnemyAction has newPosition?: Position — grep types.ts for 'newPosition'"
+        "loadPersonalityPrompt reads from personalities/{agentId}/CLAUDE.md — grep AgentAPI.ts for 'readFileSync' or 'CLAUDE.md'",
+        "ANTHROPIC_API_KEY read from process.env — grep AgentAPI.ts for 'ANTHROPIC_API_KEY'",
+        "getFallbackAction returns defaults per personality — grep AgentAPI.ts for 'getFallbackAction'",
+        "applyPatch validates against baseline ±30% — grep PatchApplier.ts for '0.3' or 'baseline'",
+        "atomic write uses tmp file + renameSync — grep PatchApplier.ts for 'renameSync' or '.tmp'",
+        "getNestedValue handles dot-path keys — grep PatchApplier.ts for 'getNestedValue'"
       ],
-      "branch": "worker/S1-001-fix-types-gaps",
+      "branch": "worker/S2-001-agent-api-patch-applier",
       "priority": 1,
-      "status": "completed"
+      "status": "pending"
     },
     {
-      "id": "S1-002",
-      "description": "Implement DungeonGen.ts — all 5 stubbed functions. Use rot.js ROT.Map.Digger (NOT BspDungeon — does not exist in rot.js 2.2.0). MAP_WIDTH=30, MAP_HEIGHT=22 (import from types.ts). generateDungeon(seed): create a Digger map, generate ~20 rooms connected by corridors, convert to DungeonMap with Tile[][] grid. Mark boss_entrance tile in the deepest room (furthest from center). computeAgentSpawns: place 4 agents in 4 different rooms, each at least 8 tiles apart. computeEnemySpawns: place grunts in all rooms (1-2 per room), brutes in medium/large rooms, sentinels and hex_casters 50/50 in large rooms, shades in corridors/unexplored. computeChestContents: scatter 6-8 chests with random items from the valid weapon list (sword/axe/dagger/greatsword) plus armor/shield/estus/potions. spawnEnemyInUnexplored: place one enemy of given tier on an unexplored floor tile. Import ROT from 'rot-js' as ESM default import. Set ROT.RNG.setSeed(seed) for deterministic generation.",
-      "scope": [
-        "game-server/src/DungeonGen.ts"
-      ],
-      "acceptance": "npm run build exits 0. generateDungeon(42) returns a DungeonMap with width=30, height=22, tiles array of 22 rows × 30 cols. At least 15 rooms generated. Boss entrance tile present and marked. computeAgentSpawns returns 4 positions in distinct rooms. computeEnemySpawns returns at least 15 enemies with tier distribution including grunts, brutes, and sentinels. computeChestContents returns items with valid weapon names only. spawnEnemyInUnexplored returns a valid EnemyState. All functions use immutable patterns — create new objects, never mutate inputs. ROT.RNG.setSeed called before generation.",
+      "id": "S2-002",
+      "description": "Implement GameLoop.ts — the main game orchestration module. This is the most critical file in the codebase. runDungeonPhase(state, config): main dungeon round loop. Each round (every round_interval_ms=2000): 1) Read game-config.json (picks up patches). 2) Compute FOV for each active agent using rot.js (update tiles[y][x].visibleTo). 3) Fire all 4 POST /decide/:agentId calls in parallel staggered by 150ms each (0, 150, 300, 450ms). 4) Collect responses with 3s timeout. Timed-out agents get fallback { goal: 'pass' }. 5) resolveConflicts(actions) using CONFLICT_PRIORITY from types.ts — lower-priority conflicting action converts to pass. 6) applyAgentAction(state, agentId, action, config): execute the agent's action — move updates position (clamped to map, blocked by walls), attack triggers resolveCombat, pick_up_item adds to backpack, use_estus heals, equip_from_backpack swaps items. 7) resolveEnemyActions(state) via EnemyAI. 8) Apply enemy moves (update enemy.position from newPosition). 9) Apply enemy attacks via resolveEnemyAttack. 10) StateEmitter.broadcast() and logEvent() for ROUND_STATE. 11) Check dungeon timer expiry + grace periods. teleportToArena(state): compute dungeon scores, seed arena bracket, transition phase to ARENA_SEMI1. runArenaMatch(state, config, matchup): alternating turn combat between two agents, turn cap from config.arena_turn_cap (default 30, FAST_MODE 20). resolveConflicts(actions): per CONFLICT_PRIORITY, conflicting actions (same target) convert lower-priority to pass. transitionPhase(state, to): already implemented — reuse it. CRITICAL: call resetEnemyAIState() from EnemyAI at the start of runDungeonPhase (PITFALL 2). CRITICAL: arena_turn_cap must never be 0 — default to 30 (PITFALL 3). Use setInterval for round timing with proper cleanup. All functions use immutable state patterns — create new state objects, never mutate.",
+      "scope": ["game-server/src/GameLoop.ts"],
+      "acceptance": "npm run build exits 0. runDungeonPhase processes rounds with 2s intervals. Agent actions are resolved per conflict priority. Enemy actions follow agent actions each round. ROUND_STATE events are logged each round. Dungeon timer expiry triggers teleportToArena. teleportToArena seeds arena bracket correctly (seed 1 vs 4, 2 vs 3). runArenaMatch resolves alternating turns with stamina/damage system. Turn cap enforced (no infinite arena matches). resetEnemyAIState called at dungeon phase start. No module-level state leaks. All round-lock invariants respected.",
       "acceptance_criteria": [
-        "generateDungeon(42) produces map with correct dimensions — write a quick smoke test or verify tsc accepts DungeonMap return type",
-        "ROT.Map.Digger imported from 'rot-js' — grep DungeonGen.ts for 'ROT.Map.Digger'",
-        "MAP_WIDTH and MAP_HEIGHT imported from types.ts — grep DungeonGen.ts for 'MAP_WIDTH'",
-        "Boss entrance tile set to 'boss_entrance' type — grep DungeonGen.ts for 'boss_entrance'",
-        "computeEnemySpawns produces hex_caster entries (not just grunt/brute/sentinel) — grep DungeonGen.ts for 'hex_caster'"
+        "runDungeonPhase calls resetEnemyAIState before loop — grep GameLoop.ts for 'resetEnemyAIState'",
+        "AgentAPI callStagger 150ms between parallel calls — grep GameLoop.ts for '150' or 'stagger'",
+        "CONFLICT_PRIORITY imported and used in resolveConflicts — grep GameLoop.ts for 'CONFLICT_PRIORITY'",
+        "StateEmitter.broadcast called each round — grep GameLoop.ts for 'broadcast'",
+        "ROUND_STATE event logged each round — grep GameLoop.ts for 'ROUND_STATE'",
+        "arena_turn_cap default 30 enforced — grep GameLoop.ts for 'arena_turn_cap' and '30'",
+        "teleportToArena transitions DUNGEON→ARENA_SEMI1 — grep GameLoop.ts for 'ARENA_SEMI1'"
       ],
-      "branch": "worker/S1-002-implement-dungeon-gen",
-      "priority": 1,
-      "status": "completed"
+      "branch": "worker/S2-002-implement-game-loop",
+      "priority": 2,
+      "status": "pending"
     },
     {
-      "id": "S1-003",
-      "description": "Implement CombatSystem.ts — all 6 stubbed functions. calcStaminaCost(action, config): return config.stamina[action + '_cost'] or 0 for pass/use_estus/equip_from_backpack. calcDamage(inventory, attackType, armorReduction): get equipped weapon's baseDamage (default 5 if no weapon), multiply by attackMultiplier (heavy=1.5, medium=1.0, light=0.6), then multiply by (1 - armorReduction). Return integer damage (min 1). calcEquipmentLoad(inventory): sum loadContribution from all 4 equipped slots, return 0-100. calcStaminaRegen(combat, config): base regen from config, apply load tier modifier from LOAD_REGEN_MODIFIER. resolveCombat: compute attacker damage via calcDamage, subtract from defender HP (with block reduction if blocking), return CombatResult with damage dealt, remaining HP, stamina after cost. resolveEnemyAttack: simplified version using enemy tier base damage from EnemyBaseStats. Import all needed types and constants from types.ts. Never hardcode config values — always read from the config parameter.",
-      "scope": [
-        "game-server/src/CombatSystem.ts"
-      ],
-      "acceptance": "npm run build exits 0. calcStaminaCost for heavy_attack returns config value. calcDamage with baseDamage=15, heavy attack, 0 armorReduction returns 22 (15*1.5). calcDamage with baseDamage=15, heavy attack, 0.3 armorReduction returns 15 (floor(15*1.5*0.7)). calcDamage never returns below 1. calcEquipmentLoad with empty inventory returns 0. calcStaminaRegen at light load returns full base regen; at heavy load returns base * 0.8. resolveCombat with block reduces damage by blockReduction fraction. resolveEnemyAttack for grunt returns damage close to config.enemies.grunt_damage. All functions are pure — no side effects, no module-level state.",
+      "id": "S2-003",
+      "description": "Implement run-full-game.js — the headless game orchestration script. This is the entry point for acceptance testing and evaluator runs. Steps: 1) Load dotenv (import 'dotenv/config' or dotenv.config()). 2) Import generateDungeon and computeAgentSpawns/computeEnemySpawns/computeChestContents from DungeonGen. 3) Import runDungeonPhase, teleportToArena, runArenaMatch from GameLoop. 4) Import startServer, setGameState from server.ts. 5) Read game-config.json. 6) Call resetEnemyAIState() from EnemyAI. 7) Generate dungeon with a random seed. 8) Create initial GameState with 4 agents at spawn positions, enemies at spawn positions, ground items from chest contents. 9) Set initial agent states: starting_hp=150, starting_stamina=100, starting equipment per SPEC (aggressive=sword, cautious=dagger+leather_armor, hoarder=dagger, speedrunner=dagger), estusCount=3. 10) If --headless flag: skip server start, just run phases directly and print results. 11) If no --headless (live mode): start server (same process — PITFALL 1), set game state to play mode, run dungeon and arena phases. 12) After game ends: print GAME_COMPLETE to stdout with final scores per agent. Exit 0 on success. Support NO_API=true env var (skip real API calls, use getFallbackAction for all agent decisions). Support FAST_MODE=true (dungeon_timer=120 instead of 300, arena_turn_cap=20 instead of 30). Support --seed=N flag for deterministic runs.",
+      "scope": ["game-server/run-full-game.js"],
+      "acceptance": "NO_API=true FAST_MODE=true node run-full-game.js --headless exits 0 and prints GAME_COMPLETE to stdout. All 4 agents make at least 1 decision. Dungeon timer fires and teleport occurs. 2 semis + 1 final resolve. Winner declared with final scores. ROUND_STATE events logged to game-events.jsonl. NO_API=true uses fallback actions only (no real API calls). FAST_MODE=true completes within 90 seconds. --seed=42 produces deterministic output. With real API key: real Claude decisions are made (not all fallback).",
       "acceptance_criteria": [
-        "calcDamage uses weapon baseDamage × attackMultiplier × (1 - armorReduction) — grep CombatSystem.ts for 'baseDamage' and 'attackMultiplier' and 'armorReduction'",
-        "calcStaminaCost reads from config.stamina — grep CombatSystem.ts for 'config.stamina'",
-        "calcEquipmentLoad sums loadContribution from equipped slots — grep CombatSystem.ts for 'loadContribution'",
-        "resolveCombat returns CombatResult with damage dealt — grep CombatSystem.ts for 'CombatResult'",
-        "LOAD_REGEN_MODIFIER imported from types.ts — grep CombatSystem.ts for 'LOAD_REGEN_MODIFIER'"
+        "--headless flag skips server start — grep run-full-game.js for 'headless'",
+        "GAME_COMPLETE printed to stdout — grep run-full-game.js for 'GAME_COMPLETE'",
+        "NO_API=true uses fallback actions — grep run-full-game.js for 'NO_API' or 'getFallbackAction'",
+        "FAST_MODE=true sets dungeon_timer=120 — grep run-full-game.js for 'FAST_MODE' or '120'",
+        "resetEnemyAIState called before dungeon phase — grep run-full-game.js for 'resetEnemyAIState'",
+        "Same-process server start for live mode — grep run-full-game.js for 'startServer'"
       ],
-      "branch": "worker/S1-003-implement-combat-system",
-      "priority": 1,
-      "status": "completed"
-    },
-    {
-      "id": "S1-004",
-      "description": "Implement DungeonBridge.ts — all 4 stubbed functions. This module is the boundary between GameState and external consumers. getVisibleEntities(state, agentId): use rot.js FOV (ROT.FOV.PreciseShadowcasting) with radius from game-config (import fov_radius=6). Compute visible tiles for the agent, then collect VisibleEntity objects for all enemies, items, other agents, boss entrances, bosses, and chests within visible tiles. Each VisibleEntity includes distance (Manhattan). toAgentPayload(state, agentId): build AgentStatePayload with the agent's own state + visibleEntities from getVisibleEntities + formatted recentPatches. toDashboardPayload(state): build DashboardPayload with full tiles array, all agents, enemies, bossInstances, groundItems, recentPatches, arenaMatchups, finalScores, dungeonTimer. formatPatchesForAgent(state): map state.recentPatches to human-readable strings like 'stamina.heavy_attack_cost changed from 30 to 25: reduce aggression dominance'. Import ROT from 'rot-js'. This is a pure data transformation module — no side effects, no I/O.",
-      "scope": [
-        "game-server/src/DungeonBridge.ts"
-      ],
-      "acceptance": "npm run build exits 0. getVisibleEntities returns entities within FOV radius of the agent — entities outside radius 6 are excluded. toAgentPayload returns an AgentStatePayload with the correct agentId, phase, position, combat, inventory, dungeonScore, timeRemaining, visibleEntities, recentPatches, roundNumber. toDashboardPayload returns DashboardPayload with tiles, agents, enemies, groundItems, recentPatches, arenaMatchups, finalScores, dungeonTimer, mapWidth, mapHeight. formatPatchesForAgent returns string[] with human-readable descriptions. All functions are pure — inputs are not mutated. FOV computation uses rot.js properly (callbacks or array-based).",
-      "acceptance_criteria": [
-        "ROT.FOV.PreciseShadowcasting imported — grep DungeonBridge.ts for 'ROT.FOV' or 'PreciseShadowcasting'",
-        "toAgentPayload returns AgentStatePayload shape with visibleEntities array — grep DungeonBridge.ts for 'visibleEntities'",
-        "toDashboardPayload includes tiles, mapWidth, mapHeight — grep DungeonBridge.ts for 'mapWidth'",
-        "formatPatchesForAgent maps recentPatches to string array — grep DungeonBridge.ts for 'formatPatchesForAgent'",
-        "getVisibleEntities computes distance field — grep DungeonBridge.ts for 'distance'"
-      ],
-      "branch": "worker/S1-004-implement-dungeon-bridge",
-      "priority": 1,
-      "status": "completed"
-    },
-    {
-      "id": "S1-005",
-      "description": "Implement EnemyAI.ts — resolveEnemyActions, resolveOneEnemy, findNearestAgent, pathfindStep, and resetEnemyAIState. This is rule-based only — zero Claude API calls. CRITICAL: PITFALL 2 — module-level Maps/Sets (bruteTurnCounters, sentinelTurnCounters, sentinelHasSummoned) must be wrapped in resetEnemyAIState() which is called at game start. Per-tier behavior: Grunt — pathfind toward nearest agent (A* via rot.js ROT.Path.AStar), attack if isAdjacent, damage = config.enemies.grunt_damage. Brute — move toward nearest agent, on odd turns telegraph 'heavy_strike' (set telegraphedAction on EnemyState), on even turns execute if adjacent to target. Sentinel — counts turns; every 3rd turn: block (reduce incoming damage 50%); at or below 30% HP: summon one grunt on nearest empty tile (once only). Hex Caster — maintain distance 3-4 from nearest agent; if too close, pathfind away; if at range, hex attack (bypasses armor). Shade — if on unexplored tile and first strike: 50% miss chance; otherwise attack nearest agent. findNearestAgent: returns closest living agent. pathfindStep: use ROT.Path.AStar to compute next tile toward target, return single step. Import EnemyAction with newPosition for moves. Use Manhattan distance for isAdjacent. All functions use immutable patterns on state.",
-      "scope": [
-        "game-server/src/EnemyAI.ts"
-      ],
-      "acceptance": "npm run build exits 0. resolveEnemyActions iterates all alive enemies and returns EnemyAction[] with one action per enemy. Grunt moves toward nearest agent when not adjacent, attacks when adjacent. Brute alternates telegraph/attack. Sentinel blocks on turn 3,6,9... and summons grunt once at ≤30% HP. Hex Caster maintains range 3-4, attacks from range. Shade has first-strike miss chance only from unexplored tiles. findNearestAgent returns closest living agent by Manhattan distance. pathfindStep returns adjacent position toward target using A*. resetEnemyAIState clears all internal counters — safe for multiple game runs in same process. EnemyAction includes newPosition for move actions. No Claude API calls anywhere in this module.",
-      "acceptance_criteria": [
-        "ROT.Path.AStar imported — grep EnemyAI.ts for 'ROT.Path' or 'AStar'",
-        "resetEnemyAIState exported and clears bruteTurnCounters/sentinelTurnCounters/sentinelHasSummoned — grep EnemyAI.ts for 'resetEnemyAIState'",
-        "resolveEnemyActions produces EnemyAction[] with enemyId and action fields — grep EnemyAI.ts for 'EnemyAction'",
-        "Hex caster behavior maintains range 3-4 — grep EnemyAI.ts for 'hex_caster'",
-        "Shade behavior has miss chance on first strike from unexplored tiles — grep EnemyAI.ts for 'shade'",
-        "findNearestAgent exported — grep EnemyAI.ts for 'findNearestAgent'"
-      ],
-      "branch": "worker/S1-005-implement-enemy-ai",
-      "priority": 1,
-      "status": "completed"
-    },
-    {
-      "id": "S1-006",
-      "description": "Implement StateEmitter.ts — broadcast, logEvent, broadcastPatch, and sendSnapshot. CRITICAL: PITFALL 1 — wsClients is an in-process Set populated by server.ts WebSocket connection handler. broadcast must work within the same Node.js process. broadcast(state): convert state to DashboardPayload via DungeonBridge.toDashboardPayload, JSON.stringify, send to every WebSocket in wsClients whose readyState is OPEN. Wrap in try-catch per client — one dead connection must not kill the loop. logEvent(event): append one NDJSON line to state/game-events.jsonl using fs.appendFileSync (safe for single-process synchronous game loop). Include event type, round, phase, timestamp, and data. broadcastPatch(patch): construct PatchEvent { type: 'PATCH_APPLIED', key, oldValue, newValue, reason, timestamp }, call logEvent, then broadcast to all clients. sendSnapshot(ws, state): send current DashboardPayload to a single newly-connected WebSocket client. Import DungeonBridge.toDashboardPayload. Path to game-events.jsonl must resolve relative to project root (use path.resolve + fileURLToPath for ESM).",
-      "scope": [
-        "game-server/src/StateEmitter.ts"
-      ],
-      "acceptance": "npm run build exits 0. broadcast sends JSON DashboardPayload to all connected WebSocket clients. logEvent appends valid NDJSON line to state/game-events.jsonl — verify with: node -e \"JSON.parse(require('fs').readFileSync('state/game-events.jsonl','utf8').trim().split('\\n').pop())\". broadcastPatch logs a PATCH_APPLIED event and broadcasts state update. sendSnapshot sends current state to a single new client. Dead client connections do not crash broadcast (try-catch per client). No duplicate event writes. All functions handle empty wsClients Set gracefully.",
-      "acceptance_criteria": [
-        "broadcast calls toDashboardPayload and sends to wsClients — grep StateEmitter.ts for 'toDashboardPayload' and 'wsClients'",
-        "logEvent uses fs.appendFileSync with NDJSON — grep StateEmitter.ts for 'appendFileSync'",
-        "broadcastPatch creates PatchEvent with type PATCH_APPLIED — grep StateEmitter.ts for 'PATCH_APPLIED'",
-        "sendSnapshot sends to a single ws parameter — grep StateEmitter.ts for 'sendSnapshot'",
-        "try-catch wraps per-client send — grep StateEmitter.ts for 'try' or 'readyState'"
-      ],
-      "branch": "worker/S1-006-implement-state-emitter",
-      "priority": 1,
-      "status": "completed"
+      "branch": "worker/S2-003-implement-run-full-game",
+      "priority": 3,
+      "status": "pending"
     }
-  ]
+  ],
+  "completed": []
 }
