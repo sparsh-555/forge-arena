@@ -301,6 +301,17 @@ export async function runDungeonPhase(initialState: GameState, config: GameConfi
         const actions: Record<AgentId, AgentAction> = {} as Record<AgentId, AgentAction>;
         for (const r of results) { actions[r.agentId] = r.action; }
 
+        // Log AGENT_ACTION events for evaluator decision counting
+        for (const [aId, action] of Object.entries(actions)) {
+          logEvent({
+            type: "AGENT_ACTION",
+            timestamp: new Date().toISOString(),
+            round: roundNumber,
+            phase: state.phase,
+            data: { agentId: aId, goal: action.goal, targetId: action.targetId ?? null, reasoning: action.reasoning },
+          });
+        }
+
         // Resolve conflicts
         const resolved = resolveConflicts(actions);
 
@@ -333,8 +344,9 @@ export async function runDungeonPhase(initialState: GameState, config: GameConfi
           return e;
         });
 
-        // Apply enemy attacks
-        const enemiesAfterAttacks = enemies.map(e => {
+        // Apply enemy attacks (skip round 1 — agents haven't had a chance to act yet)
+        const skipEnemyAttacks = roundNumber === 1;
+        const enemiesAfterAttacks = skipEnemyAttacks ? enemies : enemies.map(e => {
           const ea = enemyActions.find(a => a.enemyId === e.id);
           if (!ea || ea.action !== "attack" || !ea.targetAgentId || !e.isAlive) return e;
           const target = state.agents[ea.targetAgentId];

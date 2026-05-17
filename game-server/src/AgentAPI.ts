@@ -46,6 +46,24 @@ export async function callClaude(
   payload: AgentStatePayload,
   timeoutMs: number
 ): Promise<AgentAction> {
+  // Try primary call, retry once with double timeout on failure
+  try {
+    return await callClaudeOnce(agentId, payload, timeoutMs);
+  } catch (firstErr: unknown) {
+    const msg = firstErr instanceof Error ? firstErr.message : String(firstErr);
+    if (msg.includes("abort") || msg.includes("timeout") || msg.includes("fetch")) {
+      console.error(`[AgentAPI] ${agentId} primary call failed, retrying: ${msg}`);
+      return await callClaudeOnce(agentId, payload, Math.min(timeoutMs * 2, 15000));
+    }
+    throw firstErr;
+  }
+}
+
+async function callClaudeOnce(
+  agentId: AgentId,
+  payload: AgentStatePayload,
+  timeoutMs: number
+): Promise<AgentAction> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY not set in environment");
@@ -125,21 +143,58 @@ export async function handleDecideRoute(
     return await callClaude(agentId, payload, timeoutMs);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    const fallback = getFallbackAction(agentId);
     console.error(`[AgentAPI] ${agentId} fallback: ${msg}`);
-    return fallback;
+    return getFallbackAction(agentId, payload);
   }
 }
 
 /**
  * Fallback action when Claude call fails or times out.
+ * Uses visibleEntities from the agent's payload to make smarter rule-based decisions.
  */
-export function getFallbackAction(agentId: AgentId): AgentAction {
-  const fallbacks: Record<AgentId, AgentAction> = {
-    aggressive: { goal: "attack_medium", reasoning: "[fallback] default attack" },
-    cautious: { goal: "block", reasoning: "[fallback] default block" },
-    hoarder: { goal: "pass", reasoning: "[fallback] waiting" },
-    speedrunner: { goal: "move_to_boss", reasoning: "[fallback] rushing boss" },
-  };
-  return fallbacks[agentId];
+export function getFallbackAction(agentId: AgentId, _payload?: AgentStatePayload): AgentAction {
+  const entities = _payload?.visibleEntities ?? [];
+
+  const nearestEnemy = entities
+    .filter(e => e.type === "enemy")
+    .sort((a, b) => a.distance - b.distance)[0];
+
+  const nearestItem = entities
+    .filter(e => e.type === "item" || e.type === "chest")
+    .sort((a, b) => a.distance - b.distance)[0];
+
+  switch (agentId) {
+    case "aggressive":
+      if (nearestEnemy) {
+        return { goal: "attack_medium", targetId: nearestEnemy.id, reasoning: "[fallback] attacking nearest enemy" };
+      }
+      return { goal: "move_to_enemy", reasoning: "[fallback] seeking enemies" };
+
+    case "cautious":
+      if (nearestEnemy && nearestEnemy.distance <= 2) {
+        return { goal: "block", reasoning: "[fallback] blocking nearby threat" };
+      }
+      if (nearestEnemy) {
+        return { goal: "move_to_safe", reasoning: "[fallback] retreating from enemy" };
+      }
+      if (nearestItem) {
+        return { goal: "move_to_item", targetId: nearestItem.id, reasoning: "[fallback] collecting item" };
+      }
+      return { goal: "block", reasoning: "[fallback] holding position" };
+
+    case "hoarder":
+      if (nearestItem) {
+        return { goal: "move_to_item", targetId: nearestItem.id, reasoning: "[fallback] collecting item" };
+      }
+      if (nearestEnemy && nearestEnemy.distance <= 3) {
+        return { goal: "move_to_safe", reasoning: "[fallback] avoiding enemy" };
+      }
+      return { goal: "pass", reasoning: "[fallback] searching for loot" };
+
+    case "speedrunner":
+      return { goal: "move_to_boss", reasoning: "[fallback] rushing boss" };
+
+    default:
+      return { goal: "pass", reasoning: "[fallback] waiting" };
+  }
 }

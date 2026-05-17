@@ -1,11 +1,15 @@
 {
   "version": 1,
   "sprint": 3,
-  "tasks": [
+  "tasks": [],
+  "completed": [
     {
       "id": "S3-001",
       "description": "Fix AgentAPI fallback actions to include movement and targeting. EVALUATOR FINDING: Phase 3 all agents died without moving — fallback actions (attack_medium with no target, block, pass, move_to_boss) don't help agents engage enemies or survive. Fix getFallbackAction in AgentAPI.ts to import findNearestAgent and pathfindStep from EnemyAI, and produce smarter fallbacks: aggressive → attack nearest enemy with targetId set, cautious → move away from nearest enemy (pathfindAway) if adjacent else block, hoarder → move toward nearest item, speedrunner → move toward boss entrance. Also log AGENT_ACTION events with reasoning strings to game-events.jsonl in GameLoop.ts after each agent decision — use logEvent({ type: 'AGENT_ACTION', ... }) with the agentId, goal, targetId, and reasoning. This enables the evaluator's decision-vs-fallback counting.",
-      "scope": ["game-server/src/AgentAPI.ts", "game-server/src/GameLoop.ts"],
+      "scope": [
+        "game-server/src/AgentAPI.ts",
+        "game-server/src/GameLoop.ts"
+      ],
       "acceptance": "npm run build exits 0. getFallbackAction for aggressive includes targetId for nearest enemy. getFallbackAction for cautious includes movement away from threats. GameLoop logs AGENT_ACTION event after each agent decision with reasoning field. NO_API=true FAST_MODE=true headless run: agents move from spawn positions (grep game-events.jsonl for AGENT_ACTION events).",
       "acceptance_criteria": [
         "AGENT_ACTION events logged in GameLoop — grep GameLoop.ts for 'AGENT_ACTION'",
@@ -15,12 +19,16 @@
       ],
       "branch": "worker/S3-001-fix-fallback-and-event-logging",
       "priority": 1,
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "S3-002",
       "description": "Fix API timeout and agent survivability. EVALUATOR FINDING: All first-round API calls timed out at 3s. Anthropic Haiku cold-start latency is 4-8 seconds, so initial calls always fall back. Fix: increase agent_api_timeout_ms from 3000 to 10000 in game-config.json. In AgentAPI.callClaude: add exponential backoff retry — if first call times out, retry once with 15s timeout. In GameLoop.ts: add a 2-second initial delay before starting the round loop to give API connections time to warm up. Also ensure agents don't take damage before their first decision — skip enemy attacks in round 1 (agents haven't acted yet).",
-      "scope": ["game-server/src/AgentAPI.ts", "game-server/src/GameLoop.ts", "game-server/game-config.json"],
+      "scope": [
+        "game-server/src/AgentAPI.ts",
+        "game-server/src/GameLoop.ts",
+        "game-server/game-config.json"
+      ],
       "acceptance": "npm run build exits 0. game-config.json has agent_api_timeout_ms: 10000. AgentAPI retries once on timeout. GameLoop delays first round by 2s or skips enemy attacks in round 1. Headless run with API key: first-round decisions are real (not all fallback).",
       "acceptance_criteria": [
         "agent_api_timeout_ms = 10000 in game-config.json — grep game-config.json for 'agent_api_timeout_ms'",
@@ -29,8 +37,7 @@
       ],
       "branch": "worker/S3-002-fix-api-timeout-and-survival",
       "priority": 1,
-      "status": "pending"
+      "status": "completed"
     }
-  ],
-  "completed": []
+  ]
 }
