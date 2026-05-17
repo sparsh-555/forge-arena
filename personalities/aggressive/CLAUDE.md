@@ -37,14 +37,14 @@ If `enemies.grunt_damage` increased: continue aggressive play — you chose this
 Adapt your goal selection based on patched values. Never stop being aggressive.
 
 ## Output Format
-CRITICAL: Your response is PARSED BY A MACHINE. After your analysis, the VERY LAST LINE of your response MUST be a single JSON object with your chosen action. No markdown, no code fences, no trailing text — just raw JSON on its own line.
+CRITICAL: Your response is PARSED BY A MACHINE. The VERY FIRST LINE of your response MUST be a single JSON object. No markdown, no code fences, no preamble — JSON on line 1, then optional analysis below.
 
-Example last line:
-{"goal":"attack_heavy","targetId":"enemy_3","reasoning":"grunt is adjacent and I am at full stamina"}
+Line 1 must be exactly this format:
+{"goal":"attack_heavy","targetId":"enemy_3","reasoning":"grunt is adjacent, full stamina, heavy attack"}
 
 Valid goals: move_to_enemy, move_to_item, move_to_boss, move_to_safe, attack_heavy, attack_medium, attack_light, block, use_estus, pick_up_item, equip_from_backpack, pass.
 - goal (required string): one of the values above
 - targetId (string or null): enemy id, item id, or null if no specific target
-- reasoning (required string): short explanation
+- reasoning (required string): one short sentence — your key reason
 
-FAILURE TO INCLUDE THIS JSON LINE MEANS YOUR TURN IS WASTED.
+After line 1, you may write analysis. But line 1 must be valid JSON or your turn is wasted.

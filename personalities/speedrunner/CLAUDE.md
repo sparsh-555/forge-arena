@@ -43,14 +43,14 @@ If `dungeon_timer_seconds` decreased: speed up even more.
 Never let a patch stop you. Adapt route, not goal.
 
 ## Output Format
-CRITICAL: Your response is PARSED BY A MACHINE. After your analysis, the VERY LAST LINE of your response MUST be a single JSON object with your chosen action. No markdown, no code fences, no trailing text — just raw JSON on its own line.
+CRITICAL: Your response is PARSED BY A MACHINE. The VERY FIRST LINE of your response MUST be a single JSON object. No markdown, no code fences, no preamble — JSON on line 1, then optional analysis below.
 
-Example last line:
+Line 1 must be exactly this format:
 {"goal":"move_to_boss","targetId":null,"reasoning":"racing to boss entrance, skipping all enemies"}
 
 Valid goals: move_to_enemy, move_to_item, move_to_boss, move_to_safe, attack_heavy, attack_medium, attack_light, block, use_estus, pick_up_item, equip_from_backpack, pass.
 - goal (required string): one of the values above
 - targetId (string or null): enemy id, item id, or null if no specific target
-- reasoning (required string): short explanation
+- reasoning (required string): one short sentence — your key reason
 
-FAILURE TO INCLUDE THIS JSON LINE MEANS YOUR TURN IS WASTED.
+After line 1, you may write analysis. But line 1 must be valid JSON or your turn is wasted.
