@@ -8,7 +8,10 @@ import { MAP_WIDTH, MAP_HEIGHT } from "./types.js";
 const ITEM_POOL = [
   "sword", "axe", "dagger", "greatsword",
   "leather_armor", "chain_armor", "plate_armor", "shield",
-  "estus", "strength_potion"
+  "estus", "strength_potion",
+  // Extra copies of high-value items for more variety
+  "estus", "strength_potion", "sword", "shield",
+  "axe", "chain_armor", "dagger", "greatsword",
 ];
 
 function roomArea(r: Room): number {
@@ -304,7 +307,7 @@ export function computeEnemySpawns(map: DungeonMap): Array<{
  */
 export function computeChestContents(map: DungeonMap): Record<string, string[]> {
   const contents: Record<string, string[]> = {};
-  const chestCount = 6 + Math.floor(ROT.RNG.getUniform() * 3); // 6-8
+  const chestCount = 8 + Math.floor(ROT.RNG.getUniform() * 5); // 8-12
 
   // Pick random non-boss rooms
   const nonBossRooms = map.rooms.filter(r => {
@@ -330,8 +333,8 @@ export function computeChestContents(map: DungeonMap): Record<string, string[]> 
     const key = `${pos.x},${pos.y}`;
     placed.add(key);
 
-    // 1-3 items per chest
-    const itemCount = 1 + Math.floor(ROT.RNG.getUniform() * 3);
+    // 2-4 items per chest
+    const itemCount = 2 + Math.floor(ROT.RNG.getUniform() * 3);
     const items: string[] = [];
     for (let j = 0; j < itemCount; j++) {
       items.push(ITEM_POOL[Math.floor(ROT.RNG.getUniform() * ITEM_POOL.length)]);
