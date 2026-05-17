@@ -6,27 +6,11 @@ You assess game quality through a three-phase live product test. You grade the *
 
 ## Build Mode
 
-Run after the Reconciler confirms a green build. Grade the game across three phases in order. Stop at the first failing phase and assign the corresponding grade.
+Run after the Reconciler confirms a green build. Grade the game across two phases in order. Stop at the first failing phase and assign the corresponding grade.
 
 ---
 
-### Phase 1 — Headless smoke test
-
-Checks that the game logic runs without crashing.
-
-```bash
-cd game-server
-NO_API=true FAST_MODE=true node run-full-game.js --headless 2>&1
-echo "EXIT: $?"
-```
-
-**Pass criteria:** exits 0, stdout contains `GAME_COMPLETE`.
-
-If this fails → grade **F**. Stop here.
-
----
-
-### Phase 2 — Live infrastructure test
+### Phase 1 — Live infrastructure test
 
 Checks that the server starts and the browser would actually load the game. This catches broken static serving, missing sprites, and dead endpoints before spending API budget.
 
@@ -61,11 +45,11 @@ If any curl returns non-200 → grade **D** (live demo is broken). Stop here.
 
 ---
 
-### Phase 3 — Real game test
+### Phase 2 — Full live game test
 
-Checks that the full live demo works: real Claude API decisions, dashboard in play mode, patches firing. Only run if Phase 1 and Phase 2 pass.
+Runs the complete game with real Claude API calls and checks gameplay quality. No headless mode. No NO_API flag. This is the only test that matters.
 
-**If `ANTHROPIC_API_KEY` is not set:** skip Phase 3. Grade cannot exceed **C**. Note this in findings.
+**If `ANTHROPIC_API_KEY` is not set:** skip Phase 2. Grade cannot exceed **C**. Note this in findings.
 
 ```bash
 cd game-server
@@ -73,58 +57,114 @@ cd game-server
 # Clear previous game events so analysis is clean
 > ../state/game-events.jsonl
 
-# Start full live game with FAST_MODE (120s dungeon + ~2min arena ≈ <4min total)
-# timeout 300 gives sufficient buffer; full-mode 300s dungeon would always be killed at 120
-FAST_MODE=true timeout 300 node run-full-game.js &
+# Start the full live game — FAST_MODE keeps dungeon to 120s, still real API calls
+# No --headless. No NO_API. This runs exactly as the demo would.
+FAST_MODE=true timeout 600 node run-full-game.js 2>&1 | tee /tmp/forge-arena-run.log &
 GAME_PID=$!
 sleep 5
 
 # Verify dashboard switched to play mode
 GAME_MODE=$(curl -sf http://localhost:3000/api/game-state 2>/dev/null | grep -o '"mode":"[^"]*"' | cut -d'"' -f4)
-echo "game mode: $GAME_MODE"  # must be "play"
+echo "game mode: $GAME_MODE"
 
-# Verify sprites still load while game is running
-curl -s -o /dev/null -w "sprites during game: %{http_code}\n" http://localhost:3000/assets/agents/aggressive.png
-
-# Visual snapshot — screenshot the running game for vision evaluation below
-npx --yes playwright screenshot --wait-for-timeout=5000 \
+# Visual snapshot for vision evaluation
+npx --yes playwright screenshot --wait-for-timeout=8000 \
   http://localhost:3000 /tmp/forge-arena-visual.png 2>/dev/null \
   && echo "visual_snapshot: saved to /tmp/forge-arena-visual.png" \
   || echo "visual_snapshot: skipped (playwright unavailable)"
 
-# Wait for game to finish (FAST_MODE: ~4min max)
+# Wait for the full game to complete
 wait $GAME_PID
 GAME_EXIT=$?
 echo "game exit: $GAME_EXIT"
-
-# Analyse decisions — count fallback vs real
-FALLBACK=$(grep -c '"\[fallback\]"' ../state/game-events.jsonl 2>/dev/null || echo 0)
-DECISIONS=$(grep -c '"reasoning"' ../state/game-events.jsonl 2>/dev/null || echo 0)
-PATCHES=$(grep -c '"type":"PATCH_APPLIED"' ../state/game-events.jsonl 2>/dev/null || echo 0)
-echo "decisions: $DECISIONS, fallback: $FALLBACK, patches: $PATCHES"
-
-kill $GAME_PID 2>/dev/null
-wait $GAME_PID 2>/dev/null
+grep "GAME_COMPLETE" /tmp/forge-arena-run.log && echo "GAME_COMPLETE: true" || echo "GAME_COMPLETE: false"
 ```
 
-**Pass criteria:**
-- `game exit: 0` and output contains `GAME_COMPLETE`
-- `game mode: play` (dashboard switched to play mode)
-- `sprites during game: 200`
-- At least 1 real decision: `DECISIONS > FALLBACK` (not all fallback)
-- At least 1 patch applied: `PATCHES >= 1`
+Now run the gameplay quality checks. These are the criteria that actually matter:
+
+```bash
+# Check 1 — Fallback rate (most important)
+# Agents returning "[fallback]" means the LLM never decided anything — broken API, wrong timeout, or truncated response.
+node -e "
+const fs = require('fs');
+const lines = fs.readFileSync('../state/game-events.jsonl','utf8').trim().split('\n')
+  .map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+const decisions = lines.filter(e => e.type === 'AGENT_ACTION');
+const fallbacks = decisions.filter(e => e.data?.reasoning?.startsWith?.('[fallback]'));
+const rate = decisions.length > 0 ? fallbacks.length / decisions.length : 1;
+console.log('TOTAL_DECISIONS:', decisions.length);
+console.log('FALLBACK_DECISIONS:', fallbacks.length);
+console.log('FALLBACK_RATE:', (rate * 100).toFixed(1) + '%');
+console.log('FALLBACK_PASS:', rate < 0.40 ? 'true' : 'false');
+" 2>/dev/null
+
+# Check 2 — Agent mobility
+# Every agent must leave its spawn position. Agents frozen at spawn = pathfinding or movement broken.
+node -e "
+const fs = require('fs');
+const lines = fs.readFileSync('../state/game-events.jsonl','utf8').trim().split('\n')
+  .map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+const rounds = lines.filter(e => e.type === 'ROUND_STATE');
+if (rounds.length < 2) { console.log('AGENT_MOBILITY: SKIP (fewer than 2 rounds)'); process.exit(0); }
+const spawn = rounds[0].agents;
+const ids = ['aggressive','cautious','hoarder','speedrunner'];
+const stuck = ids.filter(id => {
+  const spawnPos = spawn[id]?.position;
+  if (!spawnPos) return false;
+  return !rounds.some(rs => {
+    const pos = rs.agents[id]?.position;
+    return pos && Math.abs(pos.x - spawnPos.x) + Math.abs(pos.y - spawnPos.y) >= 5;
+  });
+});
+console.log('STUCK_AGENTS:', stuck.length === 0 ? 'none' : stuck.join(','));
+console.log('MOBILITY_PASS:', stuck.length === 0 ? 'true' : 'false');
+" 2>/dev/null
+
+# Check 3 — Boss triggered
+node -e "
+const fs = require('fs');
+const lines = fs.readFileSync('../state/game-events.jsonl','utf8').trim().split('\n')
+  .map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+const bossEvents = lines.filter(e => ['BOSS_SPAWNED','BOSS_TRIGGERED','BOSS_KILLED'].includes(e.type));
+console.log('BOSS_EVENTS:', bossEvents.length);
+console.log('BOSS_PASS:', bossEvents.length > 0 ? 'true' : 'false');
+" 2>/dev/null
+
+# Check 4 — Arena progression (dungeon must end and arena must start)
+node -e "
+const fs = require('fs');
+const lines = fs.readFileSync('../state/game-events.jsonl','utf8').trim().split('\n')
+  .map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+const arenaStart = lines.some(e => e.type === 'ARENA_START' || e.phase === 'ARENA_SEMI1');
+const arenaEnd = lines.some(e => e.type === 'ARENA_FINAL_END' || e.type === 'GAME_ENDED');
+console.log('ARENA_STARTED:', arenaStart);
+console.log('ARENA_COMPLETED:', arenaEnd);
+" 2>/dev/null
+
+# Check 5 — Patches fired
+PATCHES=$(grep -c '"type":"PATCH_APPLIED"' ../state/game-events.jsonl 2>/dev/null || echo 0)
+echo "PATCHES_APPLIED: $PATCHES"
+```
+
+**Pass criteria for Phase 2:**
+- `GAME_COMPLETE: true` (game ran to completion)
+- `game mode: play` (dashboard switched out of build view)
+- `FALLBACK_RATE < 40%` (agents are making real LLM decisions)
+- `STUCK_AGENTS: none` (all 4 agents navigated from spawn)
+- `ARENA_STARTED: true` (dungeon timer fired and teleport happened)
+- `PATCHES_APPLIED >= 1`
+
+**Partial pass (grade B):** `FALLBACK_RATE < 60%` AND at least 2 agents mobile AND `ARENA_STARTED: true`. Any single criterion failing beyond this → grade C.
 
 **Behavioral acceptance tests** (run after the game exits):
 
-First, `cd` back to the project root if still in `game-server/`. The SPEC.md behavioral tests use paths relative to the project root (e.g. `state/game-events.jsonl`, `dashboard/src/`, `personalities/`).
-
-Read the `## Behavioral Acceptance Tests` section of `SPEC.md`. Run each command listed there. Record pass/fail per test. Any behavioral test that fails prevents grade A — record in `findings` and downgrade from A to B.
+`cd` back to the project root. Read the `## Behavioral Acceptance Tests` section of `SPEC.md`. Run each command listed there. Record pass/fail per test. Any behavioral test that fails prevents grade A.
 
 **Visual rendering check** (run after behavioral tests):
 
-If `/tmp/forge-arena-visual.png` was saved during the game run, read it now using your vision capability. Read the `## Visual Acceptance Criteria` section of `SPEC.md` and evaluate the screenshot against each criterion listed there.
+If `/tmp/forge-arena-visual.png` was saved, read it using your vision capability. Evaluate against `## Visual Acceptance Criteria` in `SPEC.md`.
 
-If all criteria pass: `VISUAL_CHECK: PASS`. If any fail: `VISUAL_CHECK: FAIL` — record the specific failing criterion in findings and downgrade from A to B. If the file does not exist (playwright unavailable): record as `VISUAL_CHECK: SKIPPED`, grade unaffected.
+If all criteria pass: `VISUAL_CHECK: PASS`. If any fail: `VISUAL_CHECK: FAIL` — record failing criterion and downgrade from A to B. If file missing: `VISUAL_CHECK: SKIPPED`, grade unaffected.
 
 ---
 
@@ -132,11 +172,11 @@ If all criteria pass: `VISUAL_CHECK: PASS`. If any fail: `VISUAL_CHECK: FAIL` �
 
 | Grade | Condition |
 |---|---|
-| **A** | All 3 phases pass. Real decisions made. ≥1 patch applied. All SPEC behavioral acceptance tests pass. |
-| **B** | All 3 phases pass. Real decisions made. Missing patches OR ≥1 SPEC behavioral test fails. |
-| **C** | Phase 1+2 pass. Phase 3 skipped (no API key) OR all decisions are `[fallback]`. |
-| **D** | Phase 1 passes. Phase 2 fails (live demo broken — sprites 404, server crash, dead endpoint). |
-| **F** | Phase 1 fails (game doesn't even run). |
+| **A** | Both phases pass. Fallback < 20%. All 4 agents mobile. Boss triggered. Arena completed. All SPEC behavioral tests pass. |
+| **B** | Both phases pass. Fallback < 40%. ≥2 agents mobile. Arena started. Patches fired. |
+| **C** | Phase 1 passes. Phase 2 ran but gameplay broken: fallback ≥ 40%, or agents frozen, or arena never started. Or no API key. |
+| **D** | Build passes. Phase 1 fails (sprites 404, server crash, dead endpoint). |
+| **F** | Build fails. |
 
 ---
 
@@ -153,14 +193,17 @@ If all criteria pass: `VISUAL_CHECK: PASS`. If any fail: `VISUAL_CHECK: FAIL` �
   "last_error": null,
   "converged": false,
   "mode": "build",
-  "findings": ["Phase 2: all assets 200", "Phase 3: patches never fired — patch-queue wiring broken in GameLoop"],
+  "findings": ["Phase 1: all assets 200", "Phase 2: fallback rate 38% — API timeout at limit, increase agent_api_timeout_ms"],
   "acceptance_results": {
     "build_passes": true,
-    "headless_exits_0": true,
     "sprites_load": true,
     "dashboard_serves": true,
-    "real_decisions_made": true,
-    "patch_events_during_run": false
+    "game_complete": true,
+    "fallback_rate_pass": true,
+    "all_agents_mobile": false,
+    "boss_triggered": false,
+    "arena_started": true,
+    "patch_events_during_run": true
   },
   "history": [{ "grade": "B", "timestamp": "..." }]
 }

@@ -6,10 +6,17 @@
 - Rewrite sections as priorities change. Do not append contradictions.
 
 ## Current Phase
-BUILD — Sprint 3 (Hardening). Grade: C (Phase 1+2 pass, Phase 3: all fallback decisions, no agent movement). 2 fix tasks: S3-001 (improve fallback actions + AGENT_ACTION event logging), S3-002 (increase API timeout to 10s + round 1 warmup). Both priority 1, independent (different sections of same files but non-overlapping changes).
+BUILD — Sprint 1. Clean slate. Previous dry run (dry-run-5) reached Grade B but the game was non-functional: 100% fallback decisions, agents frozen at spawn, no boss, no meaningful gameplay. Root causes have been fixed in the harness (evaluator now runs full live game, not headless). Start fresh.
+
+## Critical Constraints (Learned From Dry-Run-5 — Do Not Repeat These Failures)
+
+- **`max_tokens` in AgentAPI MUST be ≥ 600.** 300 truncates the response before the JSON action is emitted. Results in 100% fallback rate silently — the build appears healthy but the game is broken.
+- **`agent_api_timeout_ms` MUST be ≥ 8000ms.** Haiku round-trip is 3–6s. A 3s timeout causes every primary call to abort.
+- **JSON action block MUST appear FIRST in personality response, before any analysis.** If JSON is last, the analysis fills the token budget and JSON is truncated. Personality CLAUDE.md files must say: emit the JSON line first on its own line, then optionally add prose.
+- **DungeonGen MUST validate all 4 spawn positions can pathfind to the boss entrance.** Reject and regenerate the map if any spawn is unreachable. Speedrunner sat at (1,1) for 70 rounds because this was not checked.
+- **Evaluator no longer runs headless.** It runs `FAST_MODE=true node run-full-game.js` with real API. Grade B now requires fallback < 40% and all agents mobile. Do not target headless acceptance criteria.
 
 ## Active Constraints
-- types.ts is being modified in S1-001 (additive only — MAP_WIDTH, EnemyTier expansion, ROUND_STATE, missing fields)
 - game-config.baseline.json is read-only — PatchApplier validates against it, never writes it
 - No LLM SDK — direct Anthropic REST calls only (fetch API)
 - ANTHROPIC_API_KEY must ALWAYS come from `process.env` — NEVER hardcoded

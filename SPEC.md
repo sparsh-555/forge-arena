@@ -32,21 +32,19 @@ A browser-based AI agent dungeon RPG. Four AI agents with distinct personalities
 # 1. Build passes
 cd game-server && npm run build   # exit 0, zero TypeScript errors
 
-# 2. Headless full game run
-node run-full-game.js --headless  # exit 0, prints "GAME_COMPLETE" to stdout
-                                   # all 4 agents make at least 1 decision
-                                   # dungeon timer fires and teleport occurs
-                                   # 2 semis + 1 final resolve
-                                   # winner declared with final score
+# 2. Full live game run (FAST_MODE for speed — real API, no --headless, no NO_API)
+cd game-server
+FAST_MODE=true node run-full-game.js   # exit 0, prints "GAME_COMPLETE"
+                                        # all 4 agents leave spawn positions
+                                        # dungeon timer fires and teleport occurs
+                                        # 2 semis + 1 final resolve
+                                        # winner declared with final score
+                                        # fallback rate < 40% of total decisions
 
-# 3. Fast mode headless (demo config)
-FAST_MODE=true node run-full-game.js --headless  # exit 0, completes in < 90 seconds
+# 3. Patch applies mid-game
+# state/patch-queue.jsonl contains at least 1 entry after run
 
-# 4. Patch applies mid-game
-# game-config.json written during headless run reflects at least 1 patch event
-# patch-queue.jsonl contains at least 1 entry after run
-
-# 5. Dashboard serves
+# 4. Dashboard serves
 cd game-server && npm run build && node dist/server.js &
 curl http://localhost:3000/api/game-state  # returns JSON with mode field
 ```
@@ -88,18 +86,28 @@ console.log('ENEMIES_MOVED:', moved);
 " 2>/dev/null
 # Must print: ENEMIES_MOVED: true
 
-# 7. Agent movement — all active agents must leave their spawn positions
+# 7. Agent movement — ALL 4 agents must leave their spawn positions by at least 5 tiles
 node -e "
 const fs = require('fs');
 const lines = fs.readFileSync('state/game-events.jsonl','utf8').trim().split('\n')
   .map(l => { try { return JSON.parse(l); } catch { return null; } })
   .filter(e => e && e.type === 'ROUND_STATE');
 if (lines.length < 2) { console.log('AGENTS_MOVED: SKIP'); process.exit(0); }
-const first = lines[0].agents, last = lines[lines.length-1].agents;
-const moved = Object.keys(first).some(id => last[id] && (last[id].position.x !== first[id].position.x || last[id].position.y !== first[id].position.y));
-console.log('AGENTS_MOVED:', moved);
+const spawn = lines[0].agents;
+const ids = ['aggressive','cautious','hoarder','speedrunner'];
+const stuck = ids.filter(id => {
+  const sp = spawn[id]?.position;
+  if (!sp) return false;
+  return !lines.some(rs => {
+    const p = rs.agents[id]?.position;
+    return p && Math.abs(p.x - sp.x) + Math.abs(p.y - sp.y) >= 5;
+  });
+});
+console.log('STUCK_AGENTS:', stuck.length === 0 ? 'none' : stuck.join(','));
+console.log('AGENTS_MOVED:', stuck.length === 0);
 " 2>/dev/null
 # Must print: AGENTS_MOVED: true
+# STUCK_AGENTS must be 'none' — any agent frozen at spawn is a grade-blocking failure
 
 # 8. Dungeon scores — at least 2 agents must have earned points
 node -e "
@@ -157,8 +165,12 @@ kill $SERVER_PID 2>/dev/null; wait $SERVER_PID 2>/dev/null
 - Patches must be validated against game-config.baseline.json before writing. Values outside ±30% of baseline are rejected.
 - Round lock is mandatory: round N+1 does not start until all of round N's agent actions are resolved.
 - Personality CLAUDE.md files must include a `## Patch Awareness` section instructing agents to read `recent_patches` and adapt strategy.
-- All four personality files must be generated before the QA evaluator runs its first headless test.
+- All four personality files must be generated before the evaluator runs.
 - ANTHROPIC_API_KEY must be read from environment — never hardcoded.
+- **AgentAPI `max_tokens` must be ≥ 600.** 300 tokens truncates the response before the JSON action block is written. This silently causes 100% fallback decisions — the most expensive failure mode.
+- **AgentAPI timeout must be ≥ 8000ms.** Anthropic API round-trip for Haiku is 3–6s under normal load. A 3s timeout guarantees primary call failure on every round.
+- **JSON action block must appear FIRST in the agent response, before any analysis.** Putting JSON last causes truncation when the analysis fills the token budget. Personality CLAUDE.md files must instruct: emit the JSON line first, then optionally add reasoning prose.
+- **DungeonGen must validate all 4 spawn positions for pathfinding connectivity to the boss entrance** before returning a map. Reject and regenerate if any spawn is unreachable. An agent stuck at its spawn for the entire dungeon phase means pathfinding is broken at generation time.
 
 ## Architecture Constraints
 
@@ -222,7 +234,7 @@ This event is the source of truth for behavioral verification (enemy movement, a
 **Round loop (DUNGEON phase):**
 1. GameLoop reads `game-config.json` (picks up any patches written since last round)
 2. Fire all 4 `POST /decide/:agentId` calls in parallel (staggered by 150ms each: 0ms, 150ms, 300ms, 450ms)
-3. Collect responses with 3s timeout. Timed-out agents receive `{ goal: "pass" }`.
+3. Collect responses with **8s timeout minimum** (read from `game-config.json` key `agent_api_timeout_ms`, default 8000). Timed-out agents receive `{ goal: "pass" }`.
 4. Resolve conflicts using fixed priority: `aggressive > cautious > hoarder > speedrunner`
 5. Resolve agent actions, then resolve enemy actions (rule-based, no API call)
 6. Update GameState, write to `state/game-events.jsonl`
@@ -411,6 +423,7 @@ All patchable values live in `game-config.json`. Workers must read from config �
 | `dungeon_timer_seconds` | 300 | No | FAST_MODE: 120 |
 | `fov_radius` | 6 | No | |
 | `round_interval_ms` | 2000 | No | |
+| `agent_api_timeout_ms` | 8000 | No | Minimum 8000. Lower values guarantee primary call failure on every round. |
 
 `game-config.baseline.json` holds the read-only defaults. PatchApplier rejects values outside ±30% of baseline.
 
@@ -521,8 +534,9 @@ Both scripts live at the repo root and must be executable (`chmod +x`).
 
 All acceptance tests pass:
 - `npm run build` exits 0
-- `node run-full-game.js --headless` exits 0 and prints `GAME_COMPLETE`
-- `FAST_MODE=true node run-full-game.js --headless` completes in < 90 seconds
+- `FAST_MODE=true node run-full-game.js` exits 0 and prints `GAME_COMPLETE`
+- All 4 agents leave their spawn positions during the run (no stuck agents)
+- Fallback rate < 40% of total agent decisions
 - All 4 personality CLAUDE.md files exist with all required sections
 - Dashboard serves and shows all three panels (map, reasoning, patch feed)
-- At least 1 patch event written to state/patch-queue.jsonl during headless run
+- At least 1 patch event written to state/patch-queue.jsonl during the run
