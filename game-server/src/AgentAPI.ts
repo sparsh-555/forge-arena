@@ -1,8 +1,7 @@
 // AgentAPI: handles all Claude API calls for agent decisions.
-// POST /decide/:agentId receives agent state, calls Claude with personality CLAUDE.md,
-// returns AgentAction.
+// Called by GameLoop for each agent every round. No Express route — direct function calls only.
 //
-// TODO (workers implementing this file): add these imports at top:
+// Required imports when implementing:
 //   import { readFileSync } from "fs";
 //   import path from "path";
 //   import { fileURLToPath } from "url";

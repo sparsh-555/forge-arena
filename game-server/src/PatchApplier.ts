@@ -2,10 +2,8 @@
 // Never modifies game-config.baseline.json.
 // Uses tmp → rename pattern to prevent race conditions with GameLoop reads.
 //
-// TODO (workers implementing this file): add these imports at top:
+// Required imports when implementing:
 //   import { readFileSync, writeFileSync, renameSync } from "fs";
-//
-// File paths (workers: declare these when implementing):
 //   import { fileURLToPath } from "url";
 //   const __dirname = path.dirname(fileURLToPath(import.meta.url));
 //   const CONFIG_PATH = path.join(__dirname, "../game-config.json");

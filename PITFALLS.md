@@ -265,3 +265,54 @@ agents: {
 Types include them, sprites exist, but `computeEnemySpawns` never spawns them. Add:
 - Large rooms (>50 tiles): 50% sentinel, 50% hex_caster
 - Corridor/unexplored spawns: shade
+
+---
+
+## PITFALL 11: Dashboard Cannot Switch Between Build Log and Game View
+
+**What broke:** Once `setGameState()` is called and mode flips to "play", the HarnessView disappears forever. Judges cannot see the harness build history after the game starts.
+
+**Fix in App.tsx — add `viewOverride` state:**
+```tsx
+const [viewOverride, setViewOverride] = useState<"build" | "play" | null>(null);
+const activeView = viewOverride ?? mode;
+
+// In header, when mode === "play":
+<button onClick={() => setViewOverride(activeView === "build" ? "play" : "build")}>
+  {activeView === "build" ? "▶ Game" : "📋 Build Log"}
+</button>
+```
+The status badge always reflects real server mode (LIVE/BUILDING). The toggle only affects which view renders.
+
+**Fix in server.ts — add `/api/harness-log` endpoint:**
+```ts
+app.get("/api/harness-log", (_req, res) => {
+  try {
+    const raw = readFileSync(HARNESS_EVENTS_LOG, "utf8");
+    const lines = raw.split("\n").filter(Boolean).map(l => JSON.parse(l));
+    res.json(lines);
+  } catch (err: any) {
+    if (err.code === "ENOENT") return res.json([]);
+    throw err;
+  }
+});
+```
+
+**Fix in server.ts — add `/api/task-state` endpoint:**
+```ts
+app.get("/api/task-state", (_req, res) => {
+  try {
+    res.json(JSON.parse(readFileSync(TASKS_FILE, "utf8")));
+  } catch (err: any) {
+    if (err.code === "ENOENT") return res.json({ sprint: 1, tasks: [] });
+    throw err;
+  }
+});
+```
+
+**HarnessView.tsx — on mount, fetch historical log before subscribing to SSE:**
+```ts
+// On mount: fetch /api/harness-log → setEvents(history.reverse().slice(0, 200))
+// Then open SSE /api/harness-events and prepend live events to the top
+// Also poll /api/task-state every 5s for task queue with checkmarks
+```

@@ -2,7 +2,7 @@
 // Owns the round timer, round lock, conflict resolution, phase transitions.
 // Calls AgentAPI, EnemyAI, CombatSystem, PatchApplier. Never calls Claude directly.
 //
-// TODO (workers implementing this file): also import at top:
+// Required imports when implementing:
 //   import { AGENT_IDS, CONFLICT_PRIORITY } from "./types.js";
 //   import { callClaude, getFallbackAction } from "./AgentAPI.js";
 //   import { resolveEnemyActions } from "./EnemyAI.js";

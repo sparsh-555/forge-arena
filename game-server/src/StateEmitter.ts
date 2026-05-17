@@ -2,7 +2,7 @@
 // Also writes events to state/game-events.jsonl for the Evaluator to read.
 // Imported by GameLoop. Never contains game logic.
 //
-// TODO (workers implementing this file): add this import at top:
+// Required imports when implementing:
 //   import { appendFileSync } from "fs";
 //   import { fileURLToPath } from "url";
 //   const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -10,10 +10,10 @@
 
 import path from "path";
 import type { GameEvent, GameState, PatchEvent } from "./types.js";
-// TODO (workers): import { toDashboardPayload } from "./DungeonBridge.js"; when implementing broadcast/sendSnapshot
+// Import when implementing: import { toDashboardPayload } from "./DungeonBridge.js";
 import type { WebSocket } from "ws";
 
-// Events log path — workers use this when implementing logEvent
+// Events log path — append structured events here via logEvent()
 export const EVENTS_LOG_PATH = path.join(
   path.dirname(new URL(import.meta.url).pathname),
   "../../state/game-events.jsonl"
@@ -23,7 +23,7 @@ export const EVENTS_LOG_PATH = path.join(
 // Populated by server.ts when dashboard clients connect
 export const wsClients: Set<WebSocket> = new Set();
 
-// TODO (workers): const WS_OPEN = 1; — WebSocket OPEN readyState constant
+// const WS_OPEN = 1; — WebSocket OPEN readyState constant (declare when implementing)
 
 /**
  * Broadcast current game state to all connected dashboard clients.
@@ -36,8 +36,9 @@ export const wsClients: Set<WebSocket> = new Set();
  * - Remove dead connections: wsClients.delete(ws) if readyState !== WS_OPEN
  */
 export function broadcast(_state: GameState): void {
-  // Workers: use toDashboardPayload(state) and WS_OPEN when implementing
-  // payload = toDashboardPayload(state); send JSON to all wsClients where readyState === WS_OPEN
+  // payload = toDashboardPayload(state); for each wsClients where readyState === WS_OPEN: ws.send(JSON.stringify(payload))
+  // Remove dead connections: wsClients.delete(ws) if readyState !== WS_OPEN
+  // WS_OPEN = 1 (WebSocket readyState constant)
   throw new Error("broadcast not implemented");
 }
 
