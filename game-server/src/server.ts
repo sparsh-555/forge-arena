@@ -7,6 +7,7 @@
 
 import express from "express";
 import { createServer } from "http";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { WebSocketServer } from "ws";
@@ -52,13 +53,34 @@ export function createApp(): express.Application {
   // - Read existing lines from HARNESS_EVENTS_LOG, send each as: "data: <line>\n\n"
   // - Watch file with fs.watchFile, send new lines as they appear
   // - On client disconnect (req.on("close")): stop watcher and unwatchFile
-  app.get("/api/harness-events", (_req, res) => {
+  app.get("/api/harness-events", (req, res) => {
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
-    // TODO: stream HARNESS_EVENTS_LOG (existing + new lines) as SSE
-    void HARNESS_EVENTS_LOG;
     res.write("data: {\"type\":\"connected\"}\n\n");
+
+    // Tail the file: watch for new bytes appended and stream them as SSE
+    let fileSize = 0;
+    try { fileSize = fs.statSync(HARNESS_EVENTS_LOG).size; } catch { /* file may not exist yet */ }
+
+    const interval = setInterval(() => {
+      try {
+        const stat = fs.statSync(HARNESS_EVENTS_LOG);
+        if (stat.size <= fileSize) return;
+        const stream = fs.createReadStream(HARNESS_EVENTS_LOG, { start: fileSize, end: stat.size - 1 });
+        let buf = "";
+        stream.on("data", (chunk) => { buf += chunk.toString(); });
+        stream.on("end", () => {
+          fileSize = stat.size;
+          const lines = buf.split("\n").filter(l => l.trim());
+          for (const line of lines) {
+            try { JSON.parse(line); res.write(`data: ${line}\n\n`); } catch { /* skip malformed */ }
+          }
+        });
+      } catch { /* file not ready */ }
+    }, 500);
+
+    req.on("close", () => clearInterval(interval));
   });
 
   // ── Build Phase: full harness event log (historical replay) ─────────────────
@@ -72,9 +94,15 @@ export function createApp(): express.Application {
   // - Return JSON array of event objects, oldest first
   // - On ENOENT: return []
   app.get("/api/harness-log", (_req, res) => {
-    // TODO: read HARNESS_EVENTS_LOG, parse all NDJSON lines, return as array
-    void HARNESS_EVENTS_LOG;
-    res.json([]);
+    try {
+      const raw = fs.readFileSync(HARNESS_EVENTS_LOG, "utf8");
+      const events = raw.split("\n").filter(l => l.trim()).map(l => {
+        try { return JSON.parse(l); } catch { return null; }
+      }).filter(Boolean);
+      res.json(events);
+    } catch {
+      res.json([]);
+    }
   });
 
   // ── Build Phase: task queue state ───────────────────────────────────────────
@@ -86,9 +114,12 @@ export function createApp(): express.Application {
   // - Return parsed object (includes sprint number and tasks array)
   // - On ENOENT: return { sprint: 1, tasks: [] }
   app.get("/api/task-state", (_req, res) => {
-    // TODO: read TASKS_FILE and return parsed JSON
-    void TASKS_FILE;
-    res.json({ sprint: 1, tasks: [] });
+    try {
+      const raw = fs.readFileSync(TASKS_FILE, "utf8");
+      res.json(JSON.parse(raw));
+    } catch {
+      res.json({ sprint: 1, tasks: [] });
+    }
   });
 
   // ── Build Phase: build health snapshot ──────────────────────────────────────
@@ -98,9 +129,12 @@ export function createApp(): express.Application {
   // - Try readFileSync(BUILD_HEALTH_FILE, "utf8"), JSON.parse
   // - Catch ENOENT: return { grade: null, status: "not_started" }
   app.get("/api/build-health", (_req, res) => {
-    // TODO: read and return BUILD_HEALTH_FILE
-    void BUILD_HEALTH_FILE;
-    res.json({ grade: null, status: "not_started", converged: false });
+    try {
+      const raw = fs.readFileSync(BUILD_HEALTH_FILE, "utf8");
+      res.json(JSON.parse(raw));
+    } catch {
+      res.json({ grade: null, status: "not_started", converged: false, consecutive_passing: 0, history: [] });
+    }
   });
 
   // ── Mode detection + game state snapshot ─────────────────────────────────────
