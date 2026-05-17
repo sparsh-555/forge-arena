@@ -235,10 +235,11 @@ async function main() {
         scores[id] = 0;
         continue;
       }
-      const itemCount = agent.inventory.backpack.length;
+      const backpackCount = agent.inventory.backpack.length;
+      const equippedCount = Object.values(agent.inventory.equipped).filter(e => e != null).length;
       const dScore = (agent.kills.grunt * 1) + (agent.kills.brute * 2) +
                      (agent.kills.sentinel * 3) + (agent.bossKilled ? 5 : 0) +
-                     (itemCount * 0.5);
+                     (backpackCount * 2) + (equippedCount * 3);
       agent.dungeonScore = Math.floor(dScore);
       scores[id] = agent.dungeonScore;
     }

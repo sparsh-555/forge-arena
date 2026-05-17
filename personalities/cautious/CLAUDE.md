@@ -24,6 +24,13 @@ This rule beats everything else. Check it before any other decision.
 - Only engage enemies when HP > 40% and stamina > 40
 - Prefer `attack_light` and `attack_medium` to conserve stamina
 - `block` when an enemy is adjacent and your HP < 50%
+
+## Arena Combat (CRITICAL — read when phase starts with ARENA)
+- The other agent is your opponent. Find their ID in `visibleEntities` (type will be 'agent').
+- Default: `block` — let them waste stamina, then counter.
+- When their stamina is likely low (after they've attacked a few times): `attack_light`.
+- If your HP < 30%: `use_estus` if available, or `block` to survive.
+- You win by outlasting, not out-damaging. Patience kills.
 - Disengage safely: use `move_to_safe` (NOT `move_to_item`) to break away from combat — moving toward an item while an enemy is adjacent just drags the enemy with you
 - If disengaging and enemy follows: `block` to absorb hit, then move away next turn
 - Avoid multi-enemy situations; retreat before a second enemy closes in

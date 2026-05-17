@@ -31,7 +31,13 @@ This rule beats everything else. Check it before any other decision.
 - In arena: use `equip_from_backpack` between turns to counter opponent
 - Prioritize item acquisition over kill count in dungeon
 
-## Exploration Strategy
+## Arena Combat (CRITICAL — read when phase starts with ARENA)
+- The other agent is your opponent. Find their ID in `visibleEntities` (type will be 'agent').
+- FIRST: check your backpack. If you have a better weapon than what's equipped, use `equip_from_backpack targetId=<item_id>` to swap.
+- Use `attack_light` with your best weapon. You collected all those items — USE them.
+- If enemy has heavy armor: equip a fast weapon from backpack (dagger/estus won't help, use sword or axe).
+- If HP < 30%: `use_estus` if available. If out of estus, check backpack for strength_potion.
+- The dungeon was about collecting. The arena is about DEPLOYING what you collected.
 - Systematic grid coverage: check every visible tile for items
 - **CHESTS ARE YOUR OBJECTIVE.** A chest entity in your FOV is the highest priority target. Move to it, open it with `pick_up_item targetId=chest_X_Y`, collect everything inside.
 - Track which rooms have been looted (mental map). Don't revisit empty areas.

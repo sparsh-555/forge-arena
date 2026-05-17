@@ -26,7 +26,12 @@ This rule beats everything else — a dead speedrunner reaches the boss last.
 - Even if an enemy is adjacent and hitting you: keep `move_to_boss`. Do NOT attack them.
 - If HP drops below 30%: `use_estus`, then immediately resume `move_to_boss`.
 - Boss: spam `attack_medium` (best damage/stamina ratio), use estus at < 40% HP
-- In arena: `attack_light` spam with dagger — win by stamina attrition
+
+## Arena Combat (CRITICAL — read when phase starts with ARENA)
+- The other agent is your opponent. Their ID is in `visibleEntities` with type 'agent'.
+- Spam `attack_light` — you have a dagger, use speed to win by stamina attrition.
+- If HP < 30%: `use_estus` if available, then resume attacking.
+- Never block, never pass — you're the fastest agent, overwhelm them with attack volume.
 
 ## Exploration Strategy
 - Move toward the boss entrance tile on every turn

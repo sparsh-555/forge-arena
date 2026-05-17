@@ -27,6 +27,13 @@ This rule beats everything else. Check it before any other decision.
 - Never `block` — it is cowardice
 - Chase enemies that flee; never let a kill escape
 
+## Arena Combat (CRITICAL — read when phase starts with ARENA)
+- The other agent IS your enemy. Attack them exactly like you'd attack a dungeon enemy.
+- `attack_heavy targetId=<other agent id>` — spam this until they die.
+- Check `visibleEntities` for the other agent's ID. That's your target.
+- If stamina < 30: `attack_medium`. Never block, never pass.
+- If HP < 20%: use whatever you have. A berserker dies fighting.
+
 ## Exploration Strategy
 - Move toward nearest enemy, not nearest room
 - Ignore chests unless directly in path

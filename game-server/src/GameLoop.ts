@@ -856,12 +856,14 @@ export async function runArenaMatch(
     if (aAgent && aAgent.status !== "eliminated" && aAgent.combat.hp > 0) {
       const payload = toAgentPayload(currentState, aId);
       const action = await handleDecideRoute(aId, payload, arenaTimeout);
+      logEvent({ type: "AGENT_ACTION", timestamp: new Date().toISOString(), round: turnCount, phase: currentState.phase, data: { agentId: aId, goal: action.goal, targetId: action.targetId ?? null, reasoning: action.reasoning } });
       currentState = applyAgentAction(currentState, aId, action, config);
     }
 
     // Check if B is dead
     const bAfter = currentState.agents[bId];
     if (bAfter && (bAfter.status === "eliminated" || bAfter.combat.hp <= 0)) {
+      logEvent({ type: "ARENA_KNOCKOUT", timestamp: new Date().toISOString(), round: turnCount, phase: currentState.phase, data: { winner: aId, loser: bId, turnCount } });
       return aId;
     }
 
@@ -870,12 +872,14 @@ export async function runArenaMatch(
     if (bAgent && bAgent.status !== "eliminated" && bAgent.combat.hp > 0) {
       const payload = toAgentPayload(currentState, bId);
       const action = await handleDecideRoute(bId, payload, arenaTimeout);
+      logEvent({ type: "AGENT_ACTION", timestamp: new Date().toISOString(), round: turnCount, phase: currentState.phase, data: { agentId: bId, goal: action.goal, targetId: action.targetId ?? null, reasoning: action.reasoning } });
       currentState = applyAgentAction(currentState, bId, action, config);
     }
 
     // Check if A is dead
     const aAfter = currentState.agents[aId];
     if (aAfter && (aAfter.status === "eliminated" || aAfter.combat.hp <= 0)) {
+      logEvent({ type: "ARENA_KNOCKOUT", timestamp: new Date().toISOString(), round: turnCount, phase: currentState.phase, data: { winner: bId, loser: aId, turnCount } });
       return bId;
     }
 
