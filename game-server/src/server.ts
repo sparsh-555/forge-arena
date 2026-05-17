@@ -9,7 +9,7 @@ import express from "express";
 import { createServer } from "http";
 import { readFileSync } from "fs";
 import path from "path";
-import { fileURLToPath, pathToFileURL } from "url";
+import { fileURLToPath } from "url";
 import { WebSocketServer } from "ws";
 import type { GameState } from "./types.js";
 import { wsClients, sendSnapshot } from "./StateEmitter.js";
@@ -53,29 +53,13 @@ export function createApp(): express.Application {
   // - Read existing lines from HARNESS_EVENTS_LOG, send each as: "data: <line>\n\n"
   // - Watch file with fs.watchFile, send new lines as they appear
   // - On client disconnect (req.on("close")): stop watcher and unwatchFile
-  app.get("/api/harness-events", (req, res) => {
+  app.get("/api/harness-events", (_req, res) => {
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
-
-    let lastSize = 0;
-
-    const sendNewLines = () => {
-      try {
-        const content = readFileSync(HARNESS_EVENTS_LOG, "utf8");
-        if (content.length > lastSize) {
-          const newLines = content.slice(lastSize).split("\n").filter(l => l.trim());
-          for (const line of newLines) res.write(`data: ${line}\n\n`);
-          lastSize = content.length;
-        }
-      } catch {
-        // File not yet created — ignore
-      }
-    };
-
-    sendNewLines();
-    const interval = setInterval(sendNewLines, 500);
-    req.on("close", () => clearInterval(interval));
+    // TODO: stream HARNESS_EVENTS_LOG (existing + new lines) as SSE
+    void HARNESS_EVENTS_LOG;
+    res.write("data: {\"type\":\"connected\"}\n\n");
   });
 
   // ── Build Phase: full harness event log (historical replay) ─────────────────
@@ -89,13 +73,9 @@ export function createApp(): express.Application {
   // - Return JSON array of event objects, oldest first
   // - On ENOENT: return []
   app.get("/api/harness-log", (_req, res) => {
-    try {
-      const content = readFileSync(HARNESS_EVENTS_LOG, "utf8");
-      const events = content.split("\n").filter(l => l.trim()).map(l => JSON.parse(l) as unknown);
-      res.json(events);
-    } catch {
-      res.json([]);
-    }
+    // TODO: read HARNESS_EVENTS_LOG, parse all NDJSON lines, return as array
+    void HARNESS_EVENTS_LOG;
+    res.json([]);
   });
 
   // ── Build Phase: task queue state ───────────────────────────────────────────
@@ -107,12 +87,9 @@ export function createApp(): express.Application {
   // - Return parsed object (includes sprint number and tasks array)
   // - On ENOENT: return { sprint: 1, tasks: [] }
   app.get("/api/task-state", (_req, res) => {
-    try {
-      const content = readFileSync(TASKS_FILE, "utf8");
-      res.json(JSON.parse(content) as unknown);
-    } catch {
-      res.json({ sprint: 1, tasks: [] });
-    }
+    // TODO: read TASKS_FILE and return parsed JSON
+    void TASKS_FILE;
+    res.json({ sprint: 1, tasks: [] });
   });
 
   // ── Build Phase: build health snapshot ──────────────────────────────────────
@@ -122,12 +99,9 @@ export function createApp(): express.Application {
   // - Try readFileSync(BUILD_HEALTH_FILE, "utf8"), JSON.parse
   // - Catch ENOENT: return { grade: null, status: "not_started" }
   app.get("/api/build-health", (_req, res) => {
-    try {
-      const content = readFileSync(BUILD_HEALTH_FILE, "utf8");
-      res.json(JSON.parse(content) as unknown);
-    } catch {
-      res.json({ grade: null, status: "not_started", converged: false });
-    }
+    // TODO: read and return BUILD_HEALTH_FILE
+    void BUILD_HEALTH_FILE;
+    res.json({ grade: null, status: "not_started", converged: false });
   });
 
   // ── Mode detection + game state snapshot ─────────────────────────────────────
@@ -176,7 +150,5 @@ export function startServer(): void {
   });
 }
 
-// Start server only when run directly — prevents double-bind when imported by run-full-game.js
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  startServer();
-}
+// Start server when run directly
+startServer();
