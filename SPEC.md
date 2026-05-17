@@ -539,6 +539,50 @@ The harness operates with full internet access. During construction, harness age
 - **Battle-tested mechanics**: Tuxemon's combat system has years of community refinement behind its design patterns.
 - **Legal compliance**: Both projects have permissive licenses; attribution is included in the dashboard.
 
+## Planned Obstacles & Proactive Mitigations
+
+The planner identified these risks during the architecture phase and designed mitigations before any code was written. Each obstacle was anticipated, not discovered by accident.
+
+### PITFALL 1 — Server Self-Invocation Guard
+- **Risk**: The harness repeatedly invokes `server.ts` during the build phase, causing `EADDRINUSE` port conflicts. Without a guard, every new run crashes.
+- **Mitigation**: `startServer()` returns immediately if the server is already running (singleton pattern). Port 3000 bound once, reused across restarts.
+
+### PITFALL 2 — Enemy AI State Leak Between Runs
+- **Risk**: Module-level `Map` and `Set` variables in `EnemyAI.ts` accumulate state across multiple game runs in the same process. Brute turn counters and sentinel summon flags carry over, causing enemies to behave as if run N+1 is a continuation of run N.
+- **Mitigation**: `resetEnemyAIState()` exported function clears all module-level state. Called at the top of `main()` in `run-full-game.js` before every run.
+
+### PITFALL 3 — JSON Output Truncation
+- **Risk**: LLM output has a `max_tokens` budget. If the personality's analysis prose fills the budget before the JSON action block, the action is truncated, and the round is wasted. Observed at `max_tokens=300` with 100% fallback rate.
+- **Mitigation**: `max_tokens` set to 600 minimum. Personality files mandate JSON-first output — the action line MUST appear on line 1 of the response, before any analysis prose. Parser extracts the first valid JSON object containing `goal` and `reasoning` fields.
+
+### PITFALL 4 — API Timeout vs Model Latency
+- **Risk**: Anthropic API calls to Haiku take 2-6 seconds under normal load. Timeouts set too low cause premature abort; timeouts set too high stall the game loop. Retry logic with capped timeouts makes the second attempt equal to the first, defeating the purpose.
+- **Mitigation**: Base timeout 15s with retry at `max(2× base, 20s)` — retry always gets more time than the first attempt. FAST_MODE sets 3.5s timeout with no retry to keep rounds fast during headless tests.
+
+### PITFALL 5 — Chest vs GroundItem Type Confusion
+- **Risk**: Agents see `chest` entities in their FOV and attempt `pick_up_item` on them. But chests are map tiles (`state.map.tiles`), not items in `state.groundItems`. The action silently fails because the target ID doesn't exist in the ground items array. Agents get stuck in loops targeting the same chest for 15+ rounds.
+- **Mitigation**: `applyAgentAction` intercepts `pick_up_item` targets matching `chest_X_Y` pattern, parses position from the ID, collects all items at that position into the backpack, and marks the chest tile as `chest_open`.
+
+### PITFALL 6 — Dungeon PvP Targeting
+- **Risk**: Agents see each other in FOV during the dungeon phase and attack rival agents instead of enemies. Attacks between agents in dungeon are blocked (PvP disabled), so these actions waste turns. All 4 agents can die having fought each other instead of enemies.
+- **Mitigation**: `getVisibleEntities` excludes other agents from FOV during dungeon phases. Agents only see each other in arena phases where PvP is intended. This ensures they focus on enemies during exploration.
+
+### PITFALL 7 — 4-Directional Adjacency Enforcement
+- **Risk**: The attack code resolves combat without checking whether the target is adjacent. Agents can attack enemies from any distance. Enemy AI uses 4-directional pathfinding but agent attacks had no adjacency requirement, making distance meaningless.
+- **Mitigation**: `isAdjacent()` check added to both agent-vs-enemy and agent-vs-agent combat paths in `applyAgentAction`. Attacks only connect if the target is cardinally adjacent (N/S/E/W, no diagonals).
+
+### PITFALL 8 — Pathfinding Ignores Item Positions
+- **Risk**: Movement code resolves target positions by searching `state.enemies` and `state.agents`, but never `state.groundItems`. Agents using `move_to_item` with valid item IDs find no matching target and stay in place. Loot-focused personalities (hoarder, cautious) become completely immobile.
+- **Mitigation**: Target resolution in movement handler extended to search `state.groundItems` as a third fallback after enemies and agents. `move_to_safe` without a target ID now computes a flee direction away from the nearest enemy.
+
+### PITFALL 9 — Enemy Swarm Targeting
+- **Risk**: `findNearestAgent` always returns the absolute closest agent by Manhattan distance. All enemies converge on the same target (typically the fastest-moving agent), creating an unrealistic gang-up effect. The targeted agent dies rapidly while others roam untouched.
+- **Mitigation**: Weighted random selection replaces deterministic nearest-pick. 60% chance nearest agent, 25% second-nearest, 10% third, 5% fourth. Enemies spread across multiple targets, creating more dynamic encounters.
+
+### PITFALL 10 — Eliminated Agent Score Wipe
+- **Risk**: The dungeon score calculation in `run-full-game.js` checked `agent.status === "eliminated"` and zeroed the score. An agent who killed 5 enemies before dying got score 0. Surviving agents with 0 kills could outrank them for arena seeding.
+- **Mitigation**: Score calculation reads `agent.kills` directly regardless of elimination status. Dead agents retain their kill count for arena seeding purposes. The `eliminated` check was removed from the score loop.
+
 ### Out of Scope
 - Multiplayer (human players)
 - Infinite dungeon levels (single floor only)

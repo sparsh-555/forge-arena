@@ -56,7 +56,7 @@ export async function callClaude(
     const isTransient = msg.includes("abort") || msg.includes("timeout") || msg.includes("fetch");
     if (isTransient && timeoutMs > 5000) {
       console.error(`[AgentAPI] ${agentId} primary call failed, retrying: ${msg}`);
-      return await callClaudeOnce(agentId, payload, Math.min(timeoutMs * 2, 15000));
+      return await callClaudeOnce(agentId, payload, Math.max(timeoutMs * 2, 20000));
     }
     throw firstErr;
   }

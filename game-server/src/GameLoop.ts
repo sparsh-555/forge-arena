@@ -462,7 +462,7 @@ function choosePatch(
   // ── Rule 1: Mass casualties → enemies too lethal ──────────────────────────
   // If ≥2 agents are already dead, reduce grunt HP so the remaining can survive.
   if (eliminated.length >= 2) {
-    const newVal = Math.floor(config.enemies.grunt_hp * 0.85);
+    const newVal = Math.max(1, Math.floor(config.enemies.grunt_hp * 0.85));
     return { key: "enemies.grunt_hp", newValue: newVal, timestamp: ts,
       reason: `${eliminated.length} agents eliminated — grunt HP reduced to keep game alive` };
   }
@@ -470,7 +470,7 @@ function choosePatch(
   // ── Rule 2: No one is scoring → game is too hard ──────────────────────────
   const totalScore = agentStats.reduce((s, a) => s + a.score, 0);
   if (totalScore === 0 && state.roundNumber > 6) {
-    const newVal = Math.floor(config.enemies.grunt_hp * 0.85);
+    const newVal = Math.max(1, Math.floor(config.enemies.grunt_hp * 0.85));
     return { key: "enemies.grunt_hp", newValue: newVal, timestamp: ts,
       reason: "all agents at 0 score — reducing grunt HP to open up play" };
   }

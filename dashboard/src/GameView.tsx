@@ -658,7 +658,7 @@ function ArenaView({ payload, agents }: { payload: DashboardPayload; agents: Rec
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-3 p-4 bg-gradient-to-b from-forge-panel/50 to-transparent">
+    <div className="flex-1 flex flex-col items-center justify-center gap-3 p-4 bg-[#1a1210] relative" style={{ backgroundImage: "url('/assets/tiles/arena_brick.png')", backgroundRepeat: "repeat", backgroundSize: "64px 64px", imageRendering: "pixelated" }}>
       {/* Phase banner */}
       <div className="flex items-center gap-3">
         <div className="h-px w-12 bg-forge-border" />
