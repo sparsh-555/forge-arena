@@ -156,34 +156,52 @@ export function createApp(): express.Application {
   return app;
 }
 
-export function startServer(): void {
-  const app = createApp();
-  const httpServer = createServer(app);
+export function startServer(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const app = createApp();
+    const httpServer = createServer(app);
 
-  // ── WebSocket server for live game state ─────────────────────────────────────
-  const wss = new WebSocketServer({ server: httpServer, path: "/ws/game" });
+    // ── WebSocket server for live game state ─────────────────────────────────────
+    const wss = new WebSocketServer({ server: httpServer, path: "/ws/game" });
 
-  wss.on("connection", (ws) => {
-    wsClients.add(ws);
+    wss.on("connection", (ws) => {
+      wsClients.add(ws);
 
-    // Send current snapshot immediately on connect (handles reconnection)
-    if (currentGameState !== null) {
-      sendSnapshot(ws, currentGameState);
-    }
+      // Send current snapshot immediately on connect (handles reconnection)
+      if (currentGameState !== null) {
+        sendSnapshot(ws, currentGameState);
+      }
 
-    ws.on("close", () => wsClients.delete(ws));
-    ws.on("error", () => wsClients.delete(ws));
-  });
+      ws.on("close", () => wsClients.delete(ws));
+      ws.on("error", () => wsClients.delete(ws));
+    });
 
-  httpServer.listen(PORT, () => {
-    console.error(`forge-arena server running at http://localhost:${PORT}`);
-    console.error(`Dashboard: http://localhost:${PORT}`);
-    console.error(`Game WS:   ws://localhost:${PORT}/ws/game`);
-    console.error(`State dir: ${STATE_DIR}`);
+    httpServer.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "EADDRINUSE") {
+        reject(new Error(
+          `Port ${PORT} is already in use.\n` +
+          `  Free it with: kill $(lsof -t -i:${PORT})\n` +
+          `  Or set PORT=<other> env var to use a different port.`
+        ));
+      } else {
+        reject(err);
+      }
+    });
+
+    httpServer.listen(PORT, () => {
+      console.error(`forge-arena server running at http://localhost:${PORT}`);
+      console.error(`Dashboard: http://localhost:${PORT}`);
+      console.error(`Game WS:   ws://localhost:${PORT}/ws/game`);
+      console.error(`State dir: ${STATE_DIR}`);
+      resolve();
+    });
   });
 }
 
 // Self-invocation guard — only start server when run directly, not when imported (PITFALL 1)
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  startServer();
+  startServer().catch((err) => {
+    console.error(`[server] Fatal: ${err.message}`);
+    process.exit(1);
+  });
 }
