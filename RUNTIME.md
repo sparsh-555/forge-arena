@@ -165,24 +165,16 @@ All implemented during the final polish sprint.
 - Agent panels and Hand of God remain visible during transition.
 
 ### Harness Build Stats
-- **Build Health panel** (HarnessView) now shows build telemetry:
-  - **Time**: 2h 47m 32s — total harness runtime
-  - **Tokens**: 664.12k — total tokens consumed across all agents
-  - **GitHub repos found**: 2 — SpelunkyClassicHD + Tuxemon
-- Provides judges with concrete metrics about harness resource consumption.
+- **Build Health panel** (HarnessView) shows placeholder build-stat fields (time / tokens / repos). These are static display values, NOT instrumented telemetry — the harness does not currently measure real runtime or token totals. Do not present them as measured metrics.
 
 ### Game Logo
 - **Logo** (`game-server/public/assets/ui/logo.png`) placed in the header bar alongside "forge-arena" title.
 - Rendered with `pixelArt` image-rendering for crisp scaling.
 - Also used in loading/transition screens.
 
-### Autonomous Resource Discovery (SPEC)
-- **SPEC.md** documents the harness's autonomous GitHub search:
-  - An Explore agent searched for "pixel art dungeon sprite sheet 32x32" → found SpelunkyClassicHD
-  - An Architect agent searched for "turn based battle system" → found Tuxemon
-  - Asset extraction pipeline auto-generated: `extract_spelunky.py` parses GameMaker .yy manifests
-  - Battle mechanics reference informed arena turn-based UI design
-- This narrative proves the harness independently discovered and integrated external resources.
+### External Assets
+- Sprite assets are Spelunky Classic HD-derived, pulled in via `extract_spelunky.py` (parses GameMaker .yy manifests) → `game-server/public/assets/`.
+- The "autonomous GitHub discovery" framing in SPEC.md is aspirational narrative, not a measured or logged event. Only Spelunky assets were actually used; Tuxemon was referenced but contributed no code or assets. Do not present asset sourcing as autonomous discovery.
 
 ## Sprint 6 — Demo Polish (2026-05-17)
 

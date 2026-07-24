@@ -6,7 +6,7 @@
 
 ## What This Is
 
-forge-arena is a multi-agent harness built on Claude Code. Point it at a locked spec and walk away. Three hours later it has assembled a playable, networked, dungeon-crawling game — complete with combat, loot, boss fights, and four AI agents with distinct personalities — and transitions seamlessly into a live game master that patches game rules in real time as the agents compete.
+forge-arena is a multi-agent harness built on Claude Code. Point it at a locked spec and walk away. It assembles a playable, networked, dungeon-crawling game — combat, loot, boss fights, and four AI agents with distinct personalities — then transitions into a live game master that patches game rules in real time as the agents compete.
 
 Two modes, one session:
 
@@ -30,7 +30,7 @@ Aggressive wins with 36 points (14 kills). Cautious survives at 142 HP. Per-agen
 ![Arena winner screen](docs/screenshots/arena-winner.png)
 
 **Build logs — harness convergence**
-Sprint-by-sprint task completion, ASSET_DISCOVERY events (found SpelunkyClassicHD + Tuxemon on GitHub), grade history F → C → C → B → B, and CONVERGED status. 2h 47m, 664k tokens, 2 GitHub repos found autonomously.
+Sprint-by-sprint task completion, grade history F → C → C → B → B, and CONVERGED status (the harness converges on two consecutive B-or-better grades). Sprite assets are Spelunky-derived, pulled in via a custom extraction script (`extract_spelunky.py`).
 
 ![Build logs and harness activity](docs/screenshots/build-logs.png)
 
